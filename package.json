@@ -7,12 +7,14 @@
     "node": ">=24.18.0 <25.0.0"
   },
   "scripts": {
-    "build": "pnpm --filter @scanner-sweep/web build",
+    "action:build": "pnpm --filter @scanner-sweep/action build",
+    "build": "pnpm -r build",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "compare": "node packages/action/src/cli.mjs",
     "dev": "pnpm --filter @scanner-sweep/web dev",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint": "oxlint .",
+    "lint": "oxlint . --ignore-pattern 'dist/**'",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck"
   },

@@ -15,9 +15,18 @@ catalogs:
     "@types/react-dom":
       specifier: ^19.2.3
       version: 19.2.5
+    "@vercel/ncc":
+      specifier: ^0.45.0
+      version: 0.45.0
     "@vitejs/plugin-react":
       specifier: ^6.1.1
       version: 6.1.1
+    pixelmatch:
+      specifier: ^7.2.0
+      version: 7.2.0
+    pngjs:
+      specifier: ^7.0.0
+      version: 7.0.0
     react:
       specifier: ^19.2.7
       version: 19.2.8
@@ -71,6 +80,25 @@ importers:
       vite:
         specifier: "catalog:"
         version: 8.2.2(@types/node@24.13.3)
+      vitest:
+        specifier: "catalog:"
+        version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3))
+
+  packages/action:
+    dependencies:
+      pixelmatch:
+        specifier: "catalog:"
+        version: 7.2.0
+      pngjs:
+        specifier: "catalog:"
+        version: 7.0.0
+    devDependencies:
+      "@scanner-sweep/report":
+        specifier: workspace:*
+        version: link:../report
+      "@vercel/ncc":
+        specifier: "catalog:"
+        version: 0.45.0
       vitest:
         specifier: "catalog:"
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3))
@@ -464,6 +492,13 @@ packages:
         integrity: sha512-AnzbBERsrLKtk2XSfTbYRLjQPdy116Sty4q+T+Bp3IC4l6jNBvreVPAHmpq9qhXQM7CXZPjLVmGMw9sy+hxQ3w==,
       }
 
+  "@vercel/ncc@0.45.0":
+    resolution:
+      {
+        integrity: sha512-8zPi1yO2mHpoKTD+e+Bf0ZT3e+sWHSOyGapm9s7b5R0gxJi3CiFTqmeQiMEyu6ejrz2s09M8JkEoUaTWjBJPQQ==,
+      }
+    hasBin: true
+
   "@vitejs/plugin-react@6.1.1":
     resolution:
       {
@@ -770,6 +805,20 @@ packages:
         integrity: sha512-qcJu88Q2IWqJsDD529JKMdwGm/dvInW4HvQnRwiH9JtihJvzGOscDtHE3x1pBKeUOTysQ8kVmLnJ2kJu7yhcGA==,
       }
     engines: { node: ">=12" }
+
+  pixelmatch@7.2.0:
+    resolution:
+      {
+        integrity: sha512-xhcb4yHu9sM/G7foGzoLtXYcC0zHEaOXXjRKhGup0fw78Nf2Tkiapv4EQyMzrbcmQPsllAI7DbFY2UT7PlI9Pg==,
+      }
+    hasBin: true
+
+  pngjs@7.0.0:
+    resolution:
+      {
+        integrity: sha512-LKWqWJRhstyYo9pGvgor/ivk2w94eSjE3RGVuzLGlr3NmD8bf7RcYGze1mNdEHRP6TRP6rMuDHk5t44hnTRyow==,
+      }
+    engines: { node: ">=14.19.0" }
 
   postcss@8.5.26:
     resolution:
@@ -1111,6 +1160,8 @@ snapshots:
     dependencies:
       csstype: 3.2.3
 
+  "@vercel/ncc@0.45.0": {}
+
   "@vitejs/plugin-react@6.1.1(vite@8.2.2(@types/node@24.13.3))":
     dependencies:
       "@rolldown/pluginutils": 1.0.1
@@ -1266,6 +1317,12 @@ snapshots:
   picocolors@1.1.1: {}
 
   picomatch@4.0.7: {}
+
+  pixelmatch@7.2.0:
+    dependencies:
+      pngjs: 7.0.0
+
+  pngjs@7.0.0: {}
 
   postcss@8.5.26:
     dependencies:

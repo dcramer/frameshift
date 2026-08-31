@@ -1,0 +1,19 @@
+{
+  "name": "@scanner-sweep/action",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "ncc build src/action.mjs -o ../../dist --minify --license THIRD_PARTY_LICENSES.txt",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "pixelmatch": "catalog:",
+    "pngjs": "catalog:"
+  },
+  "devDependencies": {
+    "@scanner-sweep/report": "workspace:*",
+    "@vercel/ncc": "catalog:",
+    "vitest": "catalog:"
+  }
+}

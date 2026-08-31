@@ -27,6 +27,8 @@ GitHub Action for creating visual-diff reports.
 - Install: `pnpm install`
 - Develop: `pnpm dev`
 - Build: `pnpm build`
+- Rebuild the action: `pnpm action:build`
+- Compare PNG directories: `pnpm compare -- --baseline <dir> --candidate <dir> --output <dir>`
 - Test: `pnpm test`
 - Typecheck: `pnpm typecheck`
 - Lint: `pnpm lint`
@@ -37,7 +39,9 @@ GitHub Action for creating visual-diff reports.
 
 - `apps/web` owns the static review interface.
 - `packages/report` owns the versioned report contract and validation.
-- A future action package will create reports. It must not import the web app.
+- `packages/action` owns PNG comparison, report generation, and the GitHub
+  Action entry point. It must not import the web app.
+- `action.yml` and `dist/` are the public GitHub Action boundary.
 - The web app can import the report package.
 - Use immutable Git commit SHAs for report URLs. Do not load reports from a
   moving branch name.
@@ -51,8 +55,8 @@ GitHub Action for creating visual-diff reports.
   locations.
 - Render report labels and paths as text. Do not use raw HTML.
 - Never place a GitHub token in client code.
-- A future GitHub Action must use the minimum required permissions. Pin
-  third-party actions to full commit SHAs.
+- The GitHub Action must not require repository or GitHub API permissions. Pin
+  third-party workflow actions to full commit SHAs.
 - Keep generated action bundles reproducible and verify them in CI.
 
 ## Workflow

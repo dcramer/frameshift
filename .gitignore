@@ -1,5 +1,7 @@
 node_modules/
-dist/
+**/dist/
+!/dist/
+!/dist/**
 coverage/
 .vercel/
 .DS_Store

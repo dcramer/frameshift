@@ -1,8 +1,8 @@
 # Scanner Sweep
 
-Scanner Sweep turns visual-diff reports into a focused review interface. It is
-designed for reports created in GitHub Actions and stored at immutable Git
-revisions.
+Scanner Sweep compares PNG screenshots and turns the resulting visual-diff
+reports into a focused review interface. Its reusable GitHub Action creates the
+report. Its static web app displays reports stored at immutable Git revisions.
 
 The first version is a static Vercel app. GitHub serves report JSON and image
 files. Scanner Sweep does not need a database, object storage, or server-side
@@ -11,10 +11,42 @@ runtime.
 ## Repository layout
 
 - `apps/web`: Static report viewer.
+- `packages/action`: PNG comparison and GitHub Action source.
 - `packages/report`: Versioned report types and validation.
+- `action.yml` and `dist/`: Published GitHub Action entry point and bundle.
 
-The reusable GitHub Action will join the repository after the report boundary
-is stable.
+## Use the GitHub Action
+
+Capture baseline and candidate PNG files before this step. Matching relative
+paths identify the same screenshot.
+
+```yaml
+permissions:
+  contents: read
+
+steps:
+  - uses: actions/checkout@<full-commit-sha>
+  - name: Compare screenshots
+    id: visual-diff
+    uses: dcramer/scanner-sweep@<full-commit-sha>
+    with:
+      baseline: path/to/baseline
+      candidate: path/to/candidate
+      output: path/to/report
+  - name: Show change count
+    run: echo "${{ steps.visual-diff.outputs.changes }} visual changes"
+```
+
+Pin Scanner Sweep and other third-party actions to full commit SHAs. The
+`changes` output counts changed, added, and removed images. A visual change does
+not fail the action.
+
+The output directory contains `report.json` and only the images required for
+review. Changed pairs include baseline, candidate, and pixel-diff images. Added
+or removed files include only the available image.
+
+The action reads and writes local files only. It does not call the GitHub API
+and does not need a token.
 
 ## Run locally
 
@@ -41,3 +73,23 @@ only the available side. Unchanged images have no published review image.
 
 All report paths are relative to `report.json`. The viewer validates them
 before it creates image URLs.
+
+## Develop the action
+
+Run the comparison without GitHub Actions:
+
+```sh
+pnpm compare -- \
+  --baseline path/to/baseline \
+  --candidate path/to/candidate \
+  --output path/to/report
+```
+
+After action source or dependencies change, rebuild the committed bundle:
+
+```sh
+pnpm action:build
+```
+
+Tests fail when `dist/index.mjs` or its third-party license notices do not match
+the source.
