@@ -40,6 +40,9 @@ catalogs:
       specifier: ~4.1.11
       version: 4.1.11
 
+overrides:
+  github-actionlint>adm-zip: 0.6.0
+
 importers:
   .:
     devDependencies:
@@ -1134,12 +1137,12 @@ packages:
         integrity: sha512-zTCVGpyFsGWBhllOyKlTw/vnr6D9qxsfSDyfbyZmTyjHw5N/VuvzHpHoQjm2ZJzn4RJgx5w4r7V0er69CmLgPQ==,
       }
 
-  adm-zip@0.5.18:
+  adm-zip@0.6.0:
     resolution:
       {
-        integrity: sha512-ufJnssQGbxzLNS1Ho9bCtX4rQKCCvoVuDLHoJyc3F9dOGDB4BkWs2Ci0kv53lqocAEQ/Cbi+I2XCsNYGqVYqng==,
+        integrity: sha512-XleryMhbuksdKtofnWZ9Sk+4CUTbms4Mb/EU32SZwToAyZ5RgVos/ki8n+yr0LWHOGKuakbXTuuYNHLQjhddgg==,
       }
-    engines: { node: ">=12.0" }
+    engines: { node: ">=14.0" }
 
   assertion-error@2.0.1:
     resolution:
@@ -2142,7 +2145,7 @@ snapshots:
       convert-source-map: 2.0.0
       tinyrainbow: 3.1.1
 
-  adm-zip@0.5.18: {}
+  adm-zip@0.6.0: {}
 
   assertion-error@2.0.1: {}
 
@@ -2186,7 +2189,7 @@ snapshots:
 
   github-actionlint@1.7.12:
     dependencies:
-      adm-zip: 0.5.18
+      adm-zip: 0.6.0
       tar: 7.5.22
 
   jiti@2.7.0: {}

@@ -2,6 +2,9 @@ packages:
   - "apps/*"
   - "packages/*"
 
+overrides:
+  "github-actionlint>adm-zip": "0.6.0"
+
 catalog:
   "@types/node": "^24.13.3"
   "@types/react": "^19.2.18"
