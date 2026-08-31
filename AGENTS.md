@@ -1,0 +1,66 @@
+# Agent Instructions
+
+## Purpose
+
+Scanner Sweep is a static visual-diff viewer. It will also own a reusable
+GitHub Action for creating visual-diff reports.
+
+## Core Rules
+
+- Write concise, direct prose. Use short sentences and active voice.
+- Prefer the smallest design that closes a proven need.
+- Use `pnpm`. Do not use npm or Yarn.
+- Keep the web app static. Do not add a server, database, or Vercel Function
+  without a requirement that needs one.
+- Treat reports and images as untrusted input.
+- Keep GitHub permissions and repository ownership explicit at each boundary.
+- Use original science-fiction visuals. Do not copy game assets, logos, fonts,
+  sound effects, or protected interface artwork.
+
+## Runtime
+
+- Node.js: 24.18.0
+- pnpm: 11.20.0
+
+## Commands
+
+- Install: `pnpm install`
+- Develop: `pnpm dev`
+- Build: `pnpm build`
+- Test: `pnpm test`
+- Typecheck: `pnpm typecheck`
+- Lint: `pnpm lint`
+- Format: `pnpm format`
+- Run all checks: `pnpm check`
+
+## Architecture
+
+- `apps/web` owns the static review interface.
+- `packages/report` owns the versioned report contract and validation.
+- A future action package will create reports. It must not import the web app.
+- The web app can import the report package.
+- Use immutable Git commit SHAs for report URLs. Do not load reports from a
+  moving branch name.
+- Load public report files directly from `raw.githubusercontent.com`. Do not
+  proxy image bytes through Vercel.
+
+## Security Boundaries
+
+- Validate every report before rendering it.
+- Reject absolute paths, backslashes, path traversal, and unexpected image
+  locations.
+- Render report labels and paths as text. Do not use raw HTML.
+- Never place a GitHub token in client code.
+- A future GitHub Action must use the minimum required permissions. Pin
+  third-party actions to full commit SHAs.
+- Keep generated action bundles reproducible and verify them in CI.
+
+## Workflow
+
+- Search all consumers before changing the report schema.
+- Use a hard schema cutover unless compatibility is required.
+- Add tests at the package that owns the changed behavior.
+- After changes, run the smallest relevant tests, typecheck, lint, and format
+  checks. Run `pnpm check` before review when practical.
+- Keep durable decisions in this file, the README, or code beside the owning
+  boundary. Do not keep completed implementation plans.

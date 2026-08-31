@@ -1,0 +1,24 @@
+{
+  "name": "scanner-sweep",
+  "private": true,
+  "version": "0.0.0",
+  "packageManager": "pnpm@11.20.0",
+  "engines": {
+    "node": ">=24.18.0 <25.0.0"
+  },
+  "scripts": {
+    "build": "pnpm --filter @scanner-sweep/web build",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "dev": "pnpm --filter @scanner-sweep/web dev",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "oxlint .",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "devDependencies": {
+    "oxlint": "^1.79.0",
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3"
+  }
+}
