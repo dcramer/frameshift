@@ -19,7 +19,7 @@ export function parseScanSource(params: URLSearchParams): ScanSource | null {
   return { ref, repo };
 }
 
-export function reportBaseUrl(source: ScanSource): string {
+function reportBaseUrl(source: ScanSource): string {
   const [owner, repository] = source.repo.split("/");
   return `https://raw.githubusercontent.com/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}/${source.ref}`;
 }

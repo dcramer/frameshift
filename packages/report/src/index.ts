@@ -50,7 +50,7 @@ function parseFile(value: unknown): VisualDiffFile {
     unchanged: [],
   }[status];
   const images = isRecord(value.images) ? value.images : undefined;
-  const actualKeys = images ? Object.keys(images).sort() : [];
+  const actualKeys = images ? Object.keys(images).toSorted() : [];
 
   if (status === "unchanged") {
     if (value.image !== undefined || value.images !== undefined) {
@@ -61,7 +61,7 @@ function parseFile(value: unknown): VisualDiffFile {
     if (images) {
       if (
         actualKeys.length !== expectedKeys.length ||
-        actualKeys.some((key, index) => key !== [...expectedKeys].sort()[index])
+        actualKeys.some((key, index) => key !== expectedKeys.toSorted()[index])
       ) {
         throw new Error(`Invalid visual diff images for ${status}`);
       }

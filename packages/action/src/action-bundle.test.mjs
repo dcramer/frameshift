@@ -4,8 +4,9 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { PNG } from "pngjs";
 import { afterEach, describe, expect, it } from "vitest";
+
+import { runActionSmoke } from "./smoke.mjs";
 
 const DIFF_DIR = path.dirname(fileURLToPath(import.meta.url));
 const PACKAGE_DIR = path.resolve(DIFF_DIR, "..");
@@ -53,44 +54,14 @@ describe("visual diff action bundle", () => {
   });
 
   it("runs without installed dependencies and writes the changes output", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "scanner-sweep-run-"));
-    tempDirectories.push(root);
-    const baseline = path.join(root, "baseline");
-    const candidate = path.join(root, "candidate");
-    const output = path.join(root, "report");
-    const githubOutput = path.join(root, "github-output.txt");
-    await Promise.all([fs.mkdir(baseline), fs.mkdir(candidate)]);
-
-    const before = new PNG({ height: 1, width: 1 });
-    before.data.set([255, 255, 255, 255]);
-    const after = new PNG({ height: 1, width: 1 });
-    after.data.set([0, 0, 0, 255]);
-    await Promise.all([
-      fs.writeFile(path.join(baseline, "home.png"), PNG.sync.write(before)),
-      fs.writeFile(path.join(candidate, "home.png"), PNG.sync.write(after)),
-    ]);
-
-    execFileSync(process.execPath, [path.join(ACTION_DIR, "index.mjs")], {
-      cwd: root,
-      env: {
-        ...process.env,
-        GITHUB_OUTPUT: githubOutput,
-        INPUT_BASELINE: baseline,
-        INPUT_CANDIDATE: candidate,
-        INPUT_OUTPUT: output,
+    await expect(runActionSmoke()).resolves.toEqual({
+      changes: 3,
+      summary: {
+        added: 1,
+        changed: 1,
+        removed: 1,
+        unchanged: 0,
       },
-      stdio: "pipe",
-    });
-
-    await expect(fs.readFile(githubOutput, "utf8")).resolves.toBe(
-      "changes=1\n",
-    );
-    const report = JSON.parse(
-      await fs.readFile(path.join(output, "report.json"), "utf8"),
-    );
-    expect(report).toMatchObject({
-      summary: { added: 0, changed: 1, removed: 0, unchanged: 0 },
-      version: 1,
     });
   });
 });

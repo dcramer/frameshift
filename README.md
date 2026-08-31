@@ -93,3 +93,13 @@ pnpm action:build
 
 Tests fail when `dist/index.mjs` or its third-party license notices do not match
 the source.
+
+Run the bundled action against changed, added, and removed PNG fixtures:
+
+```sh
+pnpm action:smoke
+```
+
+Repository CI also invokes the checked-out action through `uses: ./`. This
+tests GitHub's Action input and output wiring in addition to the local bundle
+test.

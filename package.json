@@ -2,25 +2,31 @@
   "name": "scanner-sweep",
   "private": true,
   "version": "0.0.0",
-  "packageManager": "pnpm@11.20.0",
+  "packageManager": "pnpm@11.24.0",
   "engines": {
-    "node": ">=24.18.0 <25.0.0"
+    "node": ">=24.20.0 <25.0.0"
   },
   "scripts": {
     "action:build": "pnpm --filter @scanner-sweep/action build",
+    "action:smoke": "pnpm --filter @scanner-sweep/action smoke",
     "build": "pnpm -r build",
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm knip && pnpm build",
     "compare": "node packages/action/src/cli.mjs",
     "dev": "pnpm --filter @scanner-sweep/web dev",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint": "oxlint . --ignore-pattern 'dist/**'",
+    "knip": "knip",
+    "lint": "pnpm lint:code && pnpm lint:workflows",
+    "lint:code": "oxlint . --ignore-pattern 'dist/**' --react-plugin --jsx-a11y-plugin --vitest-plugin --node-plugin -D correctness -D suspicious -A react-in-jsx-scope --deny-warnings",
+    "lint:workflows": "github-actionlint",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck"
   },
   "devDependencies": {
-    "oxlint": "^1.79.0",
-    "prettier": "^3.8.1",
-    "typescript": "^5.9.3"
+    "github-actionlint": "1.7.12",
+    "knip": "6.33.0",
+    "oxlint": "^1.80.0",
+    "prettier": "^3.9.6",
+    "typescript": "^7.0.2"
   }
 }

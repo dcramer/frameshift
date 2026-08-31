@@ -70,7 +70,7 @@ describe("compareDirectories", () => {
     expect(report.files).toEqual([{ file: "home.png", status: "unchanged" }]);
     await expect(
       fs.stat(path.join(paths.output, "images/home.png")),
-    ).rejects.toThrow();
+    ).rejects.toThrow("ENOENT");
   });
 
   it("writes a diff for changed pixels", async () => {

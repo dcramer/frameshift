@@ -139,7 +139,7 @@ export async function compareDirectories({ baseline, candidate, output }) {
   ]);
   const names = [
     ...new Set([...baselineFiles.keys(), ...candidateFiles.keys()]),
-  ].sort((left, right) => left.localeCompare(right));
+  ].toSorted((left, right) => left.localeCompare(right));
 
   await fs.rm(output, { force: true, recursive: true });
   await fs.mkdir(output, { recursive: true });

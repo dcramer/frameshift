@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "ncc build src/action.mjs -o ../../dist --minify --license THIRD_PARTY_LICENSES.txt",
+    "smoke": "node src/smoke.mjs",
     "test": "vitest run"
   },
   "dependencies": {

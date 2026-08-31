@@ -18,9 +18,22 @@ jobs:
         run: corepack enable
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 24.18.0
+          node-version: 24.20.0
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Check repository
         run: pnpm check
+      - name: Prepare action smoke fixture
+        run: node packages/action/src/qa.mjs prepare "$RUNNER_TEMP/scanner-sweep-action"
+      - name: Run checked-out action
+        id: scanner-sweep
+        uses: ./
+        with:
+          baseline: ${{ runner.temp }}/scanner-sweep-action/baseline
+          candidate: ${{ runner.temp }}/scanner-sweep-action/candidate
+          output: ${{ runner.temp }}/scanner-sweep-action/report
+      - name: Verify action smoke report
+        env:
+          ACTION_CHANGES: ${{ steps.scanner-sweep.outputs.changes }}
+        run: node packages/action/src/qa.mjs verify "$RUNNER_TEMP/scanner-sweep-action"

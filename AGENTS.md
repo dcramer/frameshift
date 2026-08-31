@@ -19,8 +19,8 @@ GitHub Action for creating visual-diff reports.
 
 ## Runtime
 
-- Node.js: 24.18.0
-- pnpm: 11.20.0
+- Node.js: 24.20.0
+- pnpm: 11.24.0
 
 ## Commands
 
@@ -28,6 +28,7 @@ GitHub Action for creating visual-diff reports.
 - Develop: `pnpm dev`
 - Build: `pnpm build`
 - Rebuild the action: `pnpm action:build`
+- Smoke-test the bundled action: `pnpm action:smoke`
 - Compare PNG directories: `pnpm compare -- --baseline <dir> --candidate <dir> --output <dir>`
 - Test: `pnpm test`
 - Typecheck: `pnpm typecheck`
@@ -64,6 +65,8 @@ GitHub Action for creating visual-diff reports.
 - Search all consumers before changing the report schema.
 - Use a hard schema cutover unless compatibility is required.
 - Add tests at the package that owns the changed behavior.
+- Keep direct dependencies current. Match Node type definitions to the
+  supported Node major instead of using types from a newer runtime.
 - After changes, run the smallest relevant tests, typecheck, lint, and format
   checks. Run `pnpm check` before review when practical.
 - Keep durable decisions in this file, the README, or code beside the owning

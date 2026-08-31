@@ -1,0 +1,90 @@
+#!/usr/bin/env node
+import fs from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { parseVisualDiffReport } from "@scanner-sweep/report";
+import { PNG } from "pngjs";
+
+const expectedSummary = {
+  added: 1,
+  changed: 1,
+  removed: 1,
+  unchanged: 0,
+};
+
+async function writePng(file, color) {
+  const image = new PNG({ height: 2, width: 2 });
+  for (let index = 0; index < image.data.length; index += 4) {
+    image.data.set(color, index);
+  }
+  await fs.writeFile(file, PNG.sync.write(image));
+}
+
+export async function prepareActionQa(root) {
+  await fs.mkdir(root);
+  const baseline = path.join(root, "baseline");
+  const candidate = path.join(root, "candidate");
+  await Promise.all([fs.mkdir(baseline), fs.mkdir(candidate)]);
+  await Promise.all([
+    writePng(path.join(baseline, "changed.png"), [255, 255, 255, 255]),
+    writePng(path.join(candidate, "changed.png"), [0, 0, 0, 255]),
+    writePng(path.join(baseline, "removed.png"), [255, 255, 255, 255]),
+    writePng(path.join(candidate, "added.png"), [0, 0, 0, 255]),
+  ]);
+  return { baseline, candidate, output: path.join(root, "report") };
+}
+
+export async function verifyActionQa(
+  root,
+  changes = process.env.ACTION_CHANGES,
+) {
+  if (changes !== undefined && changes !== "3") {
+    throw new Error(`Expected 3 changes, received ${changes}`);
+  }
+
+  const reportRoot = path.join(root, "report");
+  const report = parseVisualDiffReport(
+    JSON.parse(await fs.readFile(path.join(reportRoot, "report.json"), "utf8")),
+  );
+  if (JSON.stringify(report.summary) !== JSON.stringify(expectedSummary)) {
+    throw new Error(
+      `Unexpected report summary: ${JSON.stringify(report.summary)}`,
+    );
+  }
+
+  const images = report.files.flatMap((file) =>
+    Object.values(file.images ?? {}),
+  );
+  await Promise.all(
+    images.map((image) =>
+      fs.access(path.join(reportRoot, ...image.split("/"))),
+    ),
+  );
+  return report;
+}
+
+async function main() {
+  const command = process.argv[2];
+  const root = process.argv[3] ? path.resolve(process.argv[3]) : undefined;
+  if (!root || !["prepare", "verify"].includes(command)) {
+    throw new Error("Usage: qa.mjs <prepare|verify> <fixture-directory>");
+  }
+  if (command === "prepare") {
+    await prepareActionQa(root);
+    console.log(`prepared action smoke fixture at ${root}`);
+  } else {
+    await verifyActionQa(root);
+    console.log("verified action smoke report");
+  }
+}
+
+if (
+  process.argv[1] &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
+  main().catch((error) => {
+    console.error(error instanceof Error ? error.stack : error);
+    process.exitCode = 1;
+  });
+}
