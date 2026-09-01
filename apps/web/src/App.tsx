@@ -35,6 +35,8 @@ const COMPARISON_MODES: { label: string; value: ComparisonMode }[] = [
   { label: "Blend", value: "blend" },
 ];
 
+const COMPARISON_MODE_STORAGE_KEY = "frameshift:comparison-mode";
+
 const PROJECT_URL = "https://github.com/dcramer/frameshift";
 const SAMPLE_PATH = "/sample/";
 const SETUP_PATH = "/setup/";
@@ -44,6 +46,19 @@ function displayName(file: string): string {
     .replace(/\.png$/, "")
     .replace(/__/g, " · ")
     .replace(/-/g, " ");
+}
+
+function initialComparisonMode(): ComparisonMode {
+  if (typeof window === "undefined") return "difference";
+  try {
+    const savedMode = window.localStorage.getItem(COMPARISON_MODE_STORAGE_KEY);
+    if (COMPARISON_MODES.some((item) => item.value === savedMode)) {
+      return savedMode as ComparisonMode;
+    }
+  } catch {
+    // Storage can be unavailable in privacy-restricted browser contexts.
+  }
+  return "difference";
 }
 
 function BrandMark() {
@@ -300,9 +315,18 @@ function ImagePanel({
   onPreview(image: PreviewImage): void;
   source: ImageSource;
 }) {
-  const [mode, setMode] = useState<ComparisonMode>("difference");
+  const [mode, setMode] = useState<ComparisonMode>(initialComparisonMode);
   const [split, setSplit] = useState(50);
   const [blend, setBlend] = useState(50);
+
+  function selectMode(nextMode: ComparisonMode) {
+    setMode(nextMode);
+    try {
+      window.localStorage.setItem(COMPARISON_MODE_STORAGE_KEY, nextMode);
+    } catch {
+      // The selected mode still works for this page when storage is blocked.
+    }
+  }
 
   function previewImage(label: string, path: string): PreviewImage {
     const alt = `${displayName(file.file)} ${label.toLowerCase()}`;
@@ -337,6 +361,7 @@ function ImagePanel({
   if (file.status === "changed") {
     const before = previewImage("Before", file.images.baseline);
     const after = previewImage("After", file.images.candidate);
+    const difference = previewImage("Difference", file.images.diff);
 
     return (
       <section className="comparison-viewer">
@@ -351,7 +376,7 @@ function ImagePanel({
                 aria-pressed={mode === item.value}
                 data-label={item.label}
                 key={item.value}
-                onClick={() => setMode(item.value)}
+                onClick={() => selectMode(item.value)}
                 title={item.label}
                 type="button"
               >
@@ -367,7 +392,14 @@ function ImagePanel({
             {previewFigure("After", file.images.candidate)}
           </div>
         ) : mode === "difference" ? (
-          previewFigure("Difference", file.images.diff, "difference-figure")
+          <button
+            aria-label="Open difference image full screen"
+            className="image-trigger difference-trigger"
+            onClick={() => onPreview(difference)}
+            type="button"
+          >
+            <img alt={difference.alt} src={difference.src} />
+          </button>
         ) : (
           <figure className="interactive-comparison">
             <figcaption>
