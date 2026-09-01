@@ -27,6 +27,7 @@ interface PreviewImage {
 }
 
 type ComparisonMode = "blend" | "difference" | "side-by-side" | "split";
+type ImageScale = "actual" | "fit";
 
 const COMPARISON_MODES: { label: string; value: ComparisonMode }[] = [
   { label: "Difference", value: "difference" },
@@ -118,13 +119,6 @@ function GitHubIcon() {
       />
     </svg>
   );
-}
-
-function statusLabel(status: VisualDiffFile["status"]): string {
-  if (status === "added") return "Added screenshot";
-  if (status === "removed") return "Removed screenshot";
-  if (status === "unchanged") return "Unchanged screenshot";
-  return "Changed screenshot";
 }
 
 function SourceForm() {
@@ -324,6 +318,7 @@ function ImagePanel({
   source: ImageSource;
 }) {
   const [mode, setMode] = useState<ComparisonMode>(initialComparisonMode);
+  const [scale, setScale] = useState<ImageScale>("fit");
   const [split, setSplit] = useState(50);
   const [blend, setBlend] = useState(50);
 
@@ -372,11 +367,24 @@ function ImagePanel({
     const difference = previewImage("Difference", file.images.diff);
 
     return (
-      <section className="comparison-viewer">
+      <section className="comparison-viewer" data-scale={scale}>
         <header className="comparison-toolbar">
-          <strong>
-            {COMPARISON_MODES.find((item) => item.value === mode)?.label}
-          </strong>
+          <fieldset className="scale-switch" aria-label="Image scale">
+            <button
+              aria-pressed={scale === "fit"}
+              onClick={() => setScale("fit")}
+              type="button"
+            >
+              Fit
+            </button>
+            <button
+              aria-pressed={scale === "actual"}
+              onClick={() => setScale("actual")}
+              type="button"
+            >
+              1:1
+            </button>
+          </fieldset>
           <fieldset className="mode-switch" aria-label="Comparison mode">
             {COMPARISON_MODES.map((item) => (
               <button
@@ -389,78 +397,127 @@ function ImagePanel({
                 type="button"
               >
                 <ComparisonModeIcon mode={item.value} />
+                <span>{item.label}</span>
               </button>
             ))}
           </fieldset>
         </header>
 
         {mode === "side-by-side" ? (
-          <div className="comparison-grid comparison-grid-pair">
-            {previewFigure("Before", file.images.baseline)}
-            {previewFigure("After", file.images.candidate)}
+          <div className="comparison-scroll" key={mode}>
+            <div className="comparison-pair">
+              <div className="comparison-pane">
+                <span className="canvas-label">
+                  <i
+                    aria-hidden="true"
+                    className="legend-swatch legend-before"
+                  />
+                  Before
+                </span>
+                <button
+                  aria-label="Open before image full screen"
+                  className="image-trigger"
+                  onClick={() => onPreview(before)}
+                  type="button"
+                >
+                  <img alt={before.alt} src={before.src} />
+                </button>
+              </div>
+              <div className="comparison-pane">
+                <span className="canvas-label">
+                  <i
+                    aria-hidden="true"
+                    className="legend-swatch legend-after"
+                  />
+                  After
+                </span>
+                <button
+                  aria-label="Open after image full screen"
+                  className="image-trigger"
+                  onClick={() => onPreview(after)}
+                  type="button"
+                >
+                  <img alt={after.alt} src={after.src} />
+                </button>
+              </div>
+            </div>
           </div>
         ) : mode === "difference" ? (
-          <button
-            aria-label="Open difference image full screen"
-            className="image-trigger difference-trigger"
-            onClick={() => onPreview(difference)}
-            type="button"
-          >
-            <img alt={difference.alt} src={difference.src} />
-          </button>
+          <div className="comparison-scroll" key={mode}>
+            <button
+              aria-label="Open difference image full screen"
+              className="image-trigger difference-trigger"
+              onClick={() => onPreview(difference)}
+              type="button"
+            >
+              <img alt={difference.alt} src={difference.src} />
+            </button>
+          </div>
         ) : (
-          <figure className="interactive-comparison">
-            <figcaption>
-              <button onClick={() => onPreview(before)} type="button">
-                <i aria-hidden="true" className="legend-swatch legend-before" />
-                Before
-                <small>Open</small>
-              </button>
-              <span>
-                {mode === "split"
-                  ? "Drag to reveal"
-                  : `${blend}% after opacity`}
-              </span>
-              <button onClick={() => onPreview(after)} type="button">
-                <i aria-hidden="true" className="legend-swatch legend-after" />
-                After
-                <small>Open</small>
-              </button>
-            </figcaption>
-            <div className="comparison-canvas">
-              <img alt={before.alt} src={before.src} />
-              <div
-                aria-hidden="true"
-                className="comparison-overlay"
-                style={
-                  mode === "split"
-                    ? { clipPath: `inset(0 0 0 ${split}%)` }
-                    : { opacity: blend / 100 }
-                }
-              >
-                <img alt="" src={after.src} />
-              </div>
-              {mode === "split" && (
-                <>
-                  <div
+          <>
+            <div className="comparison-scroll" key={mode}>
+              <div className="comparison-canvas">
+                <img alt={before.alt} src={before.src} />
+                <div
+                  aria-hidden="true"
+                  className="comparison-overlay"
+                  style={
+                    mode === "split"
+                      ? { clipPath: `inset(0 0 0 ${split}%)` }
+                      : { opacity: blend / 100 }
+                  }
+                >
+                  <img alt="" src={after.src} />
+                </div>
+                <button
+                  className="canvas-label canvas-label-before"
+                  onClick={() => onPreview(before)}
+                  type="button"
+                >
+                  <i
                     aria-hidden="true"
-                    className="comparison-divider"
-                    style={{ left: `${split}%` }}
-                  >
-                    <span>↔</span>
-                  </div>
-                  <input
-                    aria-label="Position image comparison divider"
-                    aria-valuetext={`${split}% before, ${100 - split}% after`}
-                    className="comparison-range comparison-range-overlay"
-                    max="100"
-                    min="0"
-                    onChange={(event) => setSplit(Number(event.target.value))}
-                    type="range"
-                    value={split}
+                    className="legend-swatch legend-before"
                   />
-                </>
-              )}
+                  Before
+                  <span aria-hidden="true">↗</span>
+                </button>
+                <button
+                  className="canvas-label canvas-label-after"
+                  onClick={() => onPreview(after)}
+                  type="button"
+                >
+                  <i
+                    aria-hidden="true"
+                    className="legend-swatch legend-after"
+                  />
+                  After
+                  <span aria-hidden="true">↗</span>
+                </button>
+                {mode === "split" && (
+                  <>
+                    <span aria-hidden="true" className="canvas-hint">
+                      Drag to reveal
+                    </span>
+                    <div
+                      aria-hidden="true"
+                      className="comparison-divider"
+                      style={{ left: `${split}%` }}
+                    >
+                      <span>↔</span>
+                    </div>
+                    <input
+                      aria-label="Position image comparison divider"
+                      aria-valuetext={`${split}% before, ${100 - split}% after`}
+                      className="comparison-range comparison-range-overlay"
+                      max="100"
+                      min="0"
+                      onChange={(event) => setSplit(Number(event.target.value))}
+                      type="range"
+                      value={split}
+                    />
+                  </>
+                )}
+              </div>
             </div>
             {mode === "blend" && (
               <div className="blend-control">
@@ -476,7 +533,7 @@ function ImagePanel({
                 <output>{blend}%</output>
               </div>
             )}
-          </figure>
+          </>
         )}
       </section>
     );
@@ -503,6 +560,7 @@ function ImageLightbox({
   onClose(): void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
+  const [size, setSize] = useState<ImageScale>("actual");
 
   useEffect(() => {
     const element = dialog.current;
@@ -518,25 +576,85 @@ function ImageLightbox({
     >
       <div className="lightbox-frame">
         <header>
-          <div>
-            <p className="kicker">Image preview</p>
+          <div className="lightbox-title">
             <h2 id="image-lightbox-title">{image.label}</h2>
             <code>{image.file}</code>
           </div>
-          <button
-            aria-label="Close full-screen image"
-            onClick={() => dialog.current?.close()}
-            type="button"
-          >
-            ×
-          </button>
+          <div className="lightbox-actions">
+            <fieldset aria-label="Image size" className="lightbox-size">
+              <button
+                aria-pressed={size === "fit"}
+                onClick={() => setSize("fit")}
+                type="button"
+              >
+                Fit
+              </button>
+              <button
+                aria-pressed={size === "actual"}
+                onClick={() => setSize("actual")}
+                type="button"
+              >
+                1:1
+              </button>
+            </fieldset>
+            <a href={image.src} rel="noreferrer" target="_blank">
+              Original ↗
+            </a>
+            <button
+              aria-label="Close full-screen image"
+              className="lightbox-close"
+              onClick={() => dialog.current?.close()}
+              type="button"
+            >
+              ×
+            </button>
+          </div>
         </header>
-        <div className="lightbox-canvas">
-          <img alt={image.alt} src={image.src} />
-        </div>
-        <footer>Press Esc to close.</footer>
+        {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- Native-size images scroll inside this keyboard-accessible region. */}
+        <section
+          aria-label={`${image.label} image`}
+          className={`lightbox-canvas lightbox-canvas-${size}`}
+          tabIndex={0}
+        >
+          <div className="lightbox-image-stage">
+            <img alt={image.alt} src={image.src} />
+          </div>
+        </section>
       </div>
     </dialog>
+  );
+}
+
+function ScreenshotList({
+  groups,
+  onSelect,
+  selectedFile,
+}: {
+  groups: { files: VisualDiffFile[]; label: string }[];
+  onSelect(file: string): void;
+  selectedFile?: string;
+}) {
+  return groups.map(
+    (group) =>
+      group.files.length > 0 && (
+        <section className="screenshot-group" key={group.label}>
+          <h2>
+            <span>{group.label}</span>
+            <small>{group.files.length}</small>
+          </h2>
+          {group.files.map((file) => (
+            <button
+              className={file.file === selectedFile ? "selected" : ""}
+              key={file.file}
+              onClick={() => onSelect(file.file)}
+              type="button"
+            >
+              <span>{displayName(file.file)}</span>
+              <small data-status={file.status}>{file.status}</small>
+            </button>
+          ))}
+        </section>
+      ),
   );
 }
 
@@ -571,6 +689,7 @@ function ReportViewer({
       report.files[0]?.file,
   );
   const [previewImage, setPreviewImage] = useState<PreviewImage | null>(null);
+  const mobilePicker = useRef<HTMLDetailsElement>(null);
   const selected = report.files.find((file) => file.file === selectedFile);
   const sourceLink =
     source.kind === "github"
@@ -586,6 +705,11 @@ function ReportViewer({
             ref: null,
           }
         : null;
+
+  function selectScreenshot(file: string) {
+    setSelectedFile(file);
+    mobilePicker.current?.removeAttribute("open");
+  }
 
   return (
     <main className="report-layout">
@@ -617,40 +741,43 @@ function ReportViewer({
             <b>{report.summary.unchanged}</b> unchanged
           </span>
         </fieldset>
-        <nav aria-label="Screenshots">
-          {groups.map(
-            (group) =>
-              group.files.length > 0 && (
-                <section className="screenshot-group" key={group.label}>
-                  <h2>
-                    <span>{group.label}</span>
-                    <small>{group.files.length}</small>
-                  </h2>
-                  {group.files.map((file) => (
-                    <button
-                      className={file.file === selectedFile ? "selected" : ""}
-                      key={file.file}
-                      onClick={() => setSelectedFile(file.file)}
-                      type="button"
-                    >
-                      <span>{displayName(file.file)}</span>
-                      <small data-status={file.status}>{file.status}</small>
-                    </button>
-                  ))}
-                </section>
-              ),
-          )}
+        <nav className="desktop-screenshot-nav" aria-label="Screenshots">
+          <ScreenshotList
+            groups={groups}
+            onSelect={selectScreenshot}
+            selectedFile={selectedFile}
+          />
         </nav>
+        {selected && (
+          <details className="mobile-screenshot-picker" ref={mobilePicker}>
+            <summary>
+              <span>{displayName(selected.file)}</span>
+              <small data-status={selected.status}>{selected.status}</small>
+              <b aria-hidden="true">⌄</b>
+            </summary>
+            <nav aria-label="Screenshots">
+              <ScreenshotList
+                groups={groups}
+                onSelect={selectScreenshot}
+                selectedFile={selectedFile}
+              />
+            </nav>
+          </details>
+        )}
       </aside>
       <section className="panel review-stage">
         {selected ? (
           <>
-            <header>
-              <div>
-                <p className="kicker">{statusLabel(selected.status)}</p>
-                <h1>{displayName(selected.file)}</h1>
+            <header className="review-header">
+              <div className="review-heading">
+                <div className="review-title-row">
+                  <h1>{displayName(selected.file)}</h1>
+                  <span className="status-badge" data-status={selected.status}>
+                    {selected.status}
+                  </span>
+                </div>
+                <code>{selected.file}</code>
               </div>
-              <code>{selected.file}</code>
             </header>
             <ImagePanel
               file={selected}
