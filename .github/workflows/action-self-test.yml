@@ -85,4 +85,4 @@ jobs:
       statuses: write
     steps:
       # This job never checks out or runs pull request code.
-      - uses: dcramer/frameshift/publish/workflow@43268de9ab851991f7240217636d475806c15ae2
+      - uses: dcramer/frameshift/publish/workflow@e964f36af42dfb2594f308ebbf1a9ea51e666c17

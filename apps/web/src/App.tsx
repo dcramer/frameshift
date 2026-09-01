@@ -235,7 +235,7 @@ jobs:
       - name: Run screenshot tests
         run: pnpm test:screenshots
       - name: Record screenshot test results
-        uses: dcramer/frameshift/ci@43268de9ab851991f7240217636d475806c15ae2
+        uses: dcramer/frameshift/ci@e964f36af42dfb2594f308ebbf1a9ea51e666c17
         with:
           screenshots: path/to/test-output/screenshots
 
@@ -250,7 +250,7 @@ jobs:
       statuses: write
     steps:
       # This job never checks out or runs pull request code.
-      - uses: dcramer/frameshift/publish/workflow@43268de9ab851991f7240217636d475806c15ae2`}</code>
+      - uses: dcramer/frameshift/publish/workflow@e964f36af42dfb2594f308ebbf1a9ea51e666c17`}</code>
           </pre>
         </section>
 

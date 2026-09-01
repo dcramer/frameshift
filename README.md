@@ -48,7 +48,7 @@ jobs:
       - name: Run screenshot tests
         run: pnpm test:screenshots
       - name: Record screenshot test results
-        uses: dcramer/frameshift/ci@43268de9ab851991f7240217636d475806c15ae2
+        uses: dcramer/frameshift/ci@e964f36af42dfb2594f308ebbf1a9ea51e666c17
         with:
           screenshots: path/to/test-output/screenshots
 
@@ -63,7 +63,7 @@ jobs:
       statuses: write
     steps:
       # This job never checks out or runs pull request code.
-      - uses: dcramer/frameshift/publish/workflow@43268de9ab851991f7240217636d475806c15ae2
+      - uses: dcramer/frameshift/publish/workflow@e964f36af42dfb2594f308ebbf1a9ea51e666c17
 ```
 
 The test job runs once. Frameshift does not take screenshots or rerun tests. On
@@ -106,8 +106,11 @@ report files directly from GitHub and cannot sign in to a private project.
 Reports live behind orphan `frameshift-report/*` tags. Normal shallow clones
 and `actions/checkout` do not download those report objects. A command that
 explicitly fetches every tag will download them, and GitHub stores them until
-their tags are removed. This is the storage tradeoff that keeps Frameshift
-static and free of repository tokens.
+their tags are removed. Each publish removes reports older than 30 days. Set
+`retention-days` on `dcramer/frameshift/publish/workflow` to change that age.
+This does not remove the default-branch screenshots used as baselines. Those
+use the separate `screenshot-retention-days` setting. This is the storage
+tradeoff that keeps Frameshift static and free of repository tokens.
 
 See [`baseline/README.md`](baseline/README.md) for retention and lower-level
 settings. Use full Git commit IDs for Frameshift and every third-party Action.
