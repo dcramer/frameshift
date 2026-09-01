@@ -5,6 +5,12 @@ import yaml from "highlight.js/lib/languages/yaml";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { loadReport } from "./load-report";
+import {
+  type ComparisonMode,
+  type ImageScale,
+  readReportView,
+  writeReportView,
+} from "./report-view";
 import { imageUrl, pageSource, type ImageSource } from "./scan-source";
 import {
   compareScreenshotNames,
@@ -25,9 +31,6 @@ interface PreviewImage {
   label: string;
   src: string;
 }
-
-type ComparisonMode = "blend" | "difference" | "side-by-side" | "split";
-type ImageScale = "actual" | "fit";
 
 const COMPARISON_MODES: { label: string; value: ComparisonMode }[] = [
   { label: "Highlights", value: "difference" },
@@ -376,26 +379,23 @@ function GuidePage() {
 
 function ImagePanel({
   file,
+  mode,
+  onModeChange,
   onPreview,
+  onScaleChange,
+  scale,
   source,
 }: {
   file: VisualDiffFile;
+  mode: ComparisonMode;
+  onModeChange(mode: ComparisonMode): void;
   onPreview(image: PreviewImage): void;
+  onScaleChange(scale: ImageScale): void;
+  scale: ImageScale;
   source: ImageSource;
 }) {
-  const [mode, setMode] = useState<ComparisonMode>(initialComparisonMode);
-  const [scale, setScale] = useState<ImageScale>("fit");
   const [split, setSplit] = useState(50);
   const [blend, setBlend] = useState(50);
-
-  function selectMode(nextMode: ComparisonMode) {
-    setMode(nextMode);
-    try {
-      window.localStorage.setItem(COMPARISON_MODE_STORAGE_KEY, nextMode);
-    } catch {
-      // The selected mode still works for this page when storage is blocked.
-    }
-  }
 
   function previewImage(label: string, path: string): PreviewImage {
     const alt = `${displayName(file.file)} ${label.toLowerCase()}`;
@@ -434,7 +434,7 @@ function ImagePanel({
               aria-label="Fit image"
               aria-pressed={scale === "fit"}
               data-label="Fit image"
-              onClick={() => setScale("fit")}
+              onClick={() => onScaleChange("fit")}
               title="Fit image"
               type="button"
             >
@@ -445,7 +445,7 @@ function ImagePanel({
               aria-label="Full-size image"
               aria-pressed={scale === "actual"}
               data-label="Full size"
-              onClick={() => setScale("actual")}
+              onClick={() => onScaleChange("actual")}
               title="Full size"
               type="button"
             >
@@ -460,7 +460,7 @@ function ImagePanel({
                 aria-pressed={mode === item.value}
                 data-label={item.label}
                 key={item.value}
-                onClick={() => selectMode(item.value)}
+                onClick={() => onModeChange(item.value)}
                 title={item.label}
                 type="button"
               >
@@ -746,11 +746,23 @@ function ReportViewer({
     [report],
   );
   const changes = groups[0].files;
-  const [selectedFile, setSelectedFile] = useState(
-    changes.find((file) => file.status === "changed")?.file ??
-      changes[0]?.file ??
-      report.files[0]?.file,
+  const initialView = useMemo(
+    () => readReportView(new URLSearchParams(window.location.search)),
+    [],
   );
+  const defaultSelectedFile =
+    changes.find((file) => file.status === "changed")?.file ??
+    changes[0]?.file ??
+    report.files[0]?.file;
+  const [selectedFile, setSelectedFile] = useState(
+    report.files.some((file) => file.file === initialView.file)
+      ? initialView.file
+      : defaultSelectedFile,
+  );
+  const [mode, setMode] = useState<ComparisonMode>(
+    initialView.mode ?? initialComparisonMode,
+  );
+  const [scale, setScale] = useState<ImageScale>(initialView.scale ?? "fit");
   const [previewImage, setPreviewImage] = useState<PreviewImage | null>(null);
   const mobilePicker = useRef<HTMLDetailsElement>(null);
   const selected = report.files.find((file) => file.file === selectedFile);
@@ -769,9 +781,32 @@ function ReportViewer({
           }
         : null;
 
+  useEffect(() => {
+    if (!selectedFile) return;
+    const search = writeReportView(window.location.search, {
+      file: selectedFile,
+      mode,
+      scale,
+    });
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${window.location.pathname}${search}${window.location.hash}`,
+    );
+  }, [mode, scale, selectedFile]);
+
   function selectScreenshot(file: string) {
     setSelectedFile(file);
     mobilePicker.current?.removeAttribute("open");
+  }
+
+  function selectMode(nextMode: ComparisonMode) {
+    setMode(nextMode);
+    try {
+      window.localStorage.setItem(COMPARISON_MODE_STORAGE_KEY, nextMode);
+    } catch {
+      // The selected mode still works for this page when storage is blocked.
+    }
   }
 
   return (
@@ -844,7 +879,11 @@ function ReportViewer({
             </header>
             <ImagePanel
               file={selected}
+              mode={mode}
+              onModeChange={selectMode}
               onPreview={setPreviewImage}
+              onScaleChange={setScale}
+              scale={scale}
               source={source}
             />
           </>
