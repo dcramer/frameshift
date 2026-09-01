@@ -7,7 +7,7 @@ inputs:
     required: true
   saved-name:
     description: Shared name for this set of screenshots
-    default: frameshift-screenshots-v1
+    default: frameshift-baseline-v1
     required: false
   screenshot-retention-days:
     description: Number of days GitHub keeps default-branch screenshots
