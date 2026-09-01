@@ -44,7 +44,7 @@ jobs:
       # Set up the application and its browser here.
       - name: Capture every baseline screenshot
         run: pnpm capture:screenshots -- --all --output path/to/baseline
-      - uses: dcramer/frameshift/baseline/upload@88dd29021aa9b1d86a091fc45d96b6b76bc35847
+      - uses: dcramer/frameshift/baseline/upload@63d124db19da7dbd292c3f29b2dde1880fbf5ff3
         with:
           path: path/to/baseline
 ```
@@ -72,13 +72,13 @@ jobs:
       # Set up the application and its browser here.
       - name: Capture candidate screenshots
         run: pnpm capture:screenshots -- --output "${{ runner.temp }}/frameshift/candidate"
-      - uses: dcramer/frameshift/baseline@88dd29021aa9b1d86a091fc45d96b6b76bc35847
+      - uses: dcramer/frameshift/baseline@63d124db19da7dbd292c3f29b2dde1880fbf5ff3
         id: baseline
         with:
           path: ${{ runner.temp }}/frameshift/baseline
       - name: Compare screenshots
         id: visual-diff
-        uses: dcramer/frameshift@88dd29021aa9b1d86a091fc45d96b6b76bc35847
+        uses: dcramer/frameshift@63d124db19da7dbd292c3f29b2dde1880fbf5ff3
         with:
           baseline: ${{ runner.temp }}/frameshift/baseline
           candidate: ${{ runner.temp }}/frameshift/candidate
@@ -147,7 +147,7 @@ jobs:
       github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
-      - uses: dcramer/frameshift/publish/workflow@88dd29021aa9b1d86a091fc45d96b6b76bc35847
+      - uses: dcramer/frameshift/publish/workflow@63d124db19da7dbd292c3f29b2dde1880fbf5ff3
 ```
 
 The publisher validates the Zod report contract, preserves the report with an

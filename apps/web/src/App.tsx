@@ -215,7 +215,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # Set up your app and browser here.
       - run: pnpm capture:screenshots -- --all --output path/to/baseline
-      - uses: dcramer/frameshift/baseline/upload@88dd29021aa9b1d86a091fc45d96b6b76bc35847
+      - uses: dcramer/frameshift/baseline/upload@63d124db19da7dbd292c3f29b2dde1880fbf5ff3
         with:
           path: path/to/baseline`}</code>
           </pre>
@@ -246,10 +246,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # Set up your app and browser here.
       - run: pnpm capture:screenshots -- --output \${{ runner.temp }}/frameshift/candidate
-      - uses: dcramer/frameshift/baseline@88dd29021aa9b1d86a091fc45d96b6b76bc35847
+      - uses: dcramer/frameshift/baseline@63d124db19da7dbd292c3f29b2dde1880fbf5ff3
         with:
           path: \${{ runner.temp }}/frameshift/baseline
-      - uses: dcramer/frameshift@88dd29021aa9b1d86a091fc45d96b6b76bc35847
+      - uses: dcramer/frameshift@63d124db19da7dbd292c3f29b2dde1880fbf5ff3
         with:
           baseline: \${{ runner.temp }}/frameshift/baseline
           candidate: \${{ runner.temp }}/frameshift/candidate
@@ -292,7 +292,7 @@ jobs:
       github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
-      - uses: dcramer/frameshift/publish/workflow@88dd29021aa9b1d86a091fc45d96b6b76bc35847`}</code>
+      - uses: dcramer/frameshift/publish/workflow@63d124db19da7dbd292c3f29b2dde1880fbf5ff3`}</code>
           </pre>
         </section>
 
