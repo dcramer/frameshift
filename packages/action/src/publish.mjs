@@ -5,9 +5,12 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { checkReportDirectory } from "@frameshift/report/directory";
+import { PNG } from "pngjs";
 
 export const COMMENT_MARKER = "<!-- frameshift-report -->";
 const THUMBNAIL_COLUMNS = 3;
+const THUMBNAIL_HEIGHT = 240;
+const THUMBNAIL_WIDTH = 360;
 const VISIBLE_THUMBNAILS = 6;
 const MAX_THUMBNAILS = 18;
 
@@ -82,13 +85,63 @@ function captionFromFile(file) {
     .join(" · ");
 }
 
+function thumbnailPath(file) {
+  const candidatePrefix = "images/candidate/";
+  if (!file.images.candidate.startsWith(candidatePrefix)) {
+    throw new Error(`Candidate image must be inside ${candidatePrefix}`);
+  }
+  return `thumbnails/${file.images.candidate.slice(candidatePrefix.length)}`;
+}
+
+export function createThumbnail(source) {
+  const sourceImage = PNG.sync.read(source);
+  const output = new PNG({
+    fill: true,
+    height: THUMBNAIL_HEIGHT,
+    width: THUMBNAIL_WIDTH,
+  });
+  output.data.fill(255);
+
+  const scale = sourceImage.width / THUMBNAIL_WIDTH;
+  for (let y = 0; y < THUMBNAIL_HEIGHT; y += 1) {
+    const sourceY = Math.floor(y * scale);
+    if (sourceY >= sourceImage.height) break;
+    for (let x = 0; x < THUMBNAIL_WIDTH; x += 1) {
+      const sourceX = Math.min(Math.floor(x * scale), sourceImage.width - 1);
+      const sourceOffset = (sourceY * sourceImage.width + sourceX) * 4;
+      const outputOffset = (y * THUMBNAIL_WIDTH + x) * 4;
+      sourceImage.data.copy(
+        output.data,
+        outputOffset,
+        sourceOffset,
+        sourceOffset + 4,
+      );
+    }
+  }
+
+  return PNG.sync.write(output);
+}
+
+function writeThumbnails(reportRoot, report) {
+  for (const file of report.files.filter((item) => item.status === "changed")) {
+    const destination = path.join(reportRoot, thumbnailPath(file));
+    fs.mkdirSync(path.dirname(destination), { recursive: true });
+    fs.writeFileSync(
+      destination,
+      createThumbnail(
+        fs.readFileSync(path.join(reportRoot, file.images.candidate)),
+      ),
+    );
+  }
+}
+
 function renderThumbnailTable(files, viewerUrl, imageRoot) {
   const cells = files.map((file) => {
     const caption = captionFromFile(file.file);
-    const imageUrl = `${imageRoot}/${encodePath(file.images.candidate)}`;
+    const imageUrl = `${imageRoot}/${encodePath(thumbnailPath(file))}`;
     return [
-      '<td align="center" width="33%">',
-      `<a href="${escapeHtml(viewerUrl)}"><img src="${escapeHtml(imageUrl)}" width="180" alt="${escapeHtml(caption)}"></a><br>`,
+      '<td align="center" valign="top" width="33%">',
+      `<a href="${escapeHtml(viewerUrl)}"><img src="${escapeHtml(imageUrl)}" width="180" height="120" alt="${escapeHtml(caption)}"></a><br>`,
       `<sub><strong>${escapeHtml(caption)}</strong><br>Changed</sub>`,
       "</td>",
     ].join("\n");
@@ -214,12 +267,13 @@ async function upsertComment(token, repository, pullRequest, body) {
   );
 }
 
-function publishReport(reportDirectory, repository, headSha, token) {
+function publishReport(reportDirectory, report, repository, headSha, token) {
   const tempDirectory = fs.mkdtempSync(
     path.join(os.tmpdir(), "frameshift-publish-"),
   );
   try {
     fs.cpSync(reportDirectory, tempDirectory, { recursive: true });
+    writeThumbnails(tempDirectory, report);
     git(["init", "-q"], { cwd: tempDirectory });
     git(["checkout", "--orphan", "frameshift-report"], {
       cwd: tempDirectory,
@@ -299,6 +353,7 @@ export async function main() {
     const changes = changeCount(report);
     const reportRef = publishReport(
       reportDirectory,
+      report,
       repository,
       headSha,
       token,

@@ -1,6 +1,7 @@
+import { PNG } from "pngjs";
 import { describe, expect, test } from "vitest";
 
-import { buildComment, buildViewerUrl } from "./publish.mjs";
+import { buildComment, buildViewerUrl, createThumbnail } from "./publish.mjs";
 
 function report(summary) {
   return { files: [], summary, version: 1 };
@@ -43,9 +44,11 @@ describe("Frameshift publisher", () => {
     expect(body).toContain("[Review the visual report in Frameshift]");
     expect(body).toContain("<table>");
     expect(body).toContain('width="180"');
+    expect(body).toContain('height="120"');
+    expect(body).toContain('valign="top"');
     expect(body).toContain("Home · Desktop");
     expect(body).toContain(
-      "https://raw.githubusercontent.com/owner/repo/abc/images/candidate/home__desktop.png",
+      "https://raw.githubusercontent.com/owner/repo/abc/thumbnails/home__desktop.png",
     );
     expect(body).not.toContain("images/baseline");
     expect(body).not.toContain("images/diff");
@@ -85,5 +88,27 @@ describe("Frameshift publisher", () => {
     expect(
       buildViewerUrl("https://frameshift.pub/", "owner/repo", "abc123"),
     ).toBe("https://frameshift.pub/?ref=abc123&repo=owner%2Frepo");
+  });
+
+  test("creates a fixed-size top crop", () => {
+    const source = new PNG({ height: 120, width: 72 });
+    for (let y = 0; y < source.height; y += 1) {
+      for (let x = 0; x < source.width; x += 1) {
+        const offset = (y * source.width + x) * 4;
+        source.data[offset] = y < 48 ? 255 : 0;
+        source.data[offset + 1] = 0;
+        source.data[offset + 2] = y < 48 ? 0 : 255;
+        source.data[offset + 3] = 255;
+      }
+    }
+
+    const thumbnail = PNG.sync.read(createThumbnail(PNG.sync.write(source)));
+    const lastPixel = (thumbnail.width * thumbnail.height - 1) * 4;
+
+    expect(thumbnail.width).toBe(360);
+    expect(thumbnail.height).toBe(240);
+    expect([...thumbnail.data.subarray(lastPixel, lastPixel + 4)]).toEqual([
+      255, 0, 0, 255,
+    ]);
   });
 });
