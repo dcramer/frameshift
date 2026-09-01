@@ -67,6 +67,9 @@ importers:
       "@frameshift/report":
         specifier: workspace:*
         version: link:../../packages/report
+      highlight.js:
+        specifier: ^11.12.0
+        version: 11.12.0
       react:
         specifier: "catalog:"
         version: 19.2.8
@@ -1399,6 +1402,13 @@ packages:
     engines: { node: ">=18.0.0" }
     hasBin: true
 
+  highlight.js@11.12.0:
+    resolution:
+      {
+        integrity: sha512-nbfWpyRMcMrPMmDwJB+dhX/eiaPKtc2RB+0QZskqJ3WjRA/FDS0e9hZrx8EC/lbEv8gXy98FcDbNa/dspAaJMg==,
+      }
+    engines: { node: ">=12.0.0" }
+
   jiti@2.7.0:
     resolution:
       {
@@ -2387,6 +2397,8 @@ snapshots:
     dependencies:
       adm-zip: 0.6.0
       tar: 7.5.22
+
+  highlight.js@11.12.0: {}
 
   jiti@2.7.0: {}
 

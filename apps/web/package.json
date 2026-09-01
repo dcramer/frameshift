@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@frameshift/report": "workspace:*",
+    "highlight.js": "^11.12.0",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

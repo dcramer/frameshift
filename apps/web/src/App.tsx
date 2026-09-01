@@ -1,4 +1,7 @@
 import { type VisualDiffFile, type VisualDiffReport } from "@frameshift/report";
+import hljs from "highlight.js/lib/core";
+import typescript from "highlight.js/lib/languages/typescript";
+import yaml from "highlight.js/lib/languages/yaml";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { loadReport } from "./load-report";
@@ -34,6 +37,15 @@ const PROJECT_URL = "https://github.com/dcramer/frameshift";
 const SAMPLE_PATH = "/sample/";
 const SETUP_PATH = "/setup/";
 const ACTION_REF = "68a8b5e8bbd439088ef9a044e693c5de9efe7ecd";
+const PLAYWRIGHT_EXAMPLE = `import { test } from "@playwright/test";
+
+test("account settings", async ({ page }) => {
+  await page.goto("/settings");
+  await page.screenshot({
+    path: "test-output/screenshots/settings.png",
+    fullPage: true,
+  });
+});`;
 const SETUP_WORKFLOW = `name: Screenshot checks
 
 on:
@@ -52,11 +64,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # Keep your existing setup steps here.
       - name: Run screenshot tests
-        run: pnpm test:screenshots
+        run: pnpm exec playwright test
       - name: Record screenshot results
         uses: dcramer/frameshift/ci@${ACTION_REF}
         with:
-          screenshots: path/to/test-output/screenshots
+          screenshots: test-output/screenshots
 
   frameshift:
     needs: screenshots
@@ -72,6 +84,29 @@ jobs:
     steps:
       # This job never checks out or runs pull request code.
       - uses: dcramer/frameshift/publish/workflow@${ACTION_REF}`;
+
+hljs.registerLanguage("typescript", typescript);
+hljs.registerLanguage("yaml", yaml);
+
+function CodeBlock({
+  code,
+  language,
+}: {
+  code: string;
+  language: "typescript" | "yaml";
+}) {
+  const highlighted = hljs.highlight(code, { language }).value;
+  return (
+    // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- Keyboard users need to scroll wide code blocks.
+    <pre tabIndex={0}>
+      {/* Highlight.js escapes the module-owned snippets before it adds spans. */}
+      <code
+        className={`hljs language-${language}`}
+        dangerouslySetInnerHTML={{ __html: highlighted }}
+      />
+    </pre>
+  );
+}
 
 function displayName(file: string): string {
   return file
@@ -232,36 +267,31 @@ function SetupPage() {
         <header className="setup-intro">
           <h1>Set up Frameshift</h1>
           <p>
-            Keep your screenshot tests. Frameshift uses the PNG files they make
-            and adds a review link to each pull request.
+            Point your existing screenshot tests at one folder. Frameshift uses
+            those PNG files to add a review link to each pull request.
           </p>
         </header>
 
         <section className="setup-section">
-          <h2>Before you start</h2>
-          <ul className="setup-checklist">
-            <li>Your project must be public on GitHub.</li>
-            <li>
-              Each test run must write one complete folder of PNG screenshots.
-            </li>
-            <li>
-              The workflow must run for pull requests and after every push to
-              your default branch.
-            </li>
-          </ul>
+          <p className="setup-step">Step 1</p>
+          <h2>Save screenshots to one folder</h2>
+          <p>
+            Keep the screenshot calls you already have. Frameshift only needs
+            stable file names and one complete folder after the tests finish.
+            Here is the whole idea in Playwright:
+          </p>
+          <CodeBlock code={PLAYWRIGHT_EXAMPLE} language="typescript" />
         </section>
 
         <section className="setup-section">
-          <h2>Add Frameshift to the workflow</h2>
+          <p className="setup-step">Step 2</p>
+          <h2>Add Frameshift after the tests</h2>
           <p>
-            Replace the test command and screenshots folder below. Keep your
-            existing setup steps in the same job. Frameshift uses the files that
-            job already made. It does not rerun the tests.
+            Replace the test command and folder below. The second job lets
+            Frameshift add the GitHub check and comment. It does not download or
+            run pull request code, and it does not rerun your tests.
           </p>
-          {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- The code block scrolls on narrow screens. */}
-          <pre tabIndex={0}>
-            <code>{SETUP_WORKFLOW}</code>
-          </pre>
+          <CodeBlock code={SETUP_WORKFLOW} language="yaml" />
         </section>
 
         <aside className="setup-warning">
@@ -274,23 +304,27 @@ function SetupPage() {
         </aside>
 
         <section className="setup-section setup-behavior">
-          <h2>What the workflow stores</h2>
+          <h2>Good to know</h2>
           <ul className="setup-checklist">
+            <li>Your project must be public on GitHub.</li>
             <li>
-              Default-branch screenshots stay in GitHub Actions for 30 days.
+              Run this workflow for pull requests and after every push to your
+              default branch.
             </li>
-            <li>GitHub keeps each pull request report for 30 days.</li>
-            <li>Old reports are removed when Frameshift saves a new one.</li>
+            <li>
+              GitHub keeps the screenshots and reports for 30 days. Frameshift
+              removes old reports when it saves a new one.
+            </li>
+            <li>
+              When every screenshot matches, Frameshift adds a passing check but
+              does not comment. Set <code>comment-on-no-changes: true</code> on
+              the last step to comment anyway.
+            </li>
+            <li>
+              Frameshift skips pull requests from forks because they cannot
+              safely read the saved screenshots or write results to the project.
+            </li>
           </ul>
-          <p>
-            When every screenshot matches, Frameshift adds a passing check but
-            does not comment. To comment anyway, add a <code>with</code> block
-            to the last step with <code>comment-on-no-changes: true</code>.
-          </p>
-          <p>
-            Frameshift skips pull requests from forks because they cannot safely
-            read the saved screenshots or write results to the project.
-          </p>
         </section>
 
         <footer className="setup-footer">
