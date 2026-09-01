@@ -137,7 +137,7 @@ contains a compact change summary, candidate thumbnails, and a link to the
 review UI:
 
 ```text
-https://frameshift.pub/?repo=owner/repository&ref=report-commit-sha
+https://frameshift.pub/report/?repo=owner/repository&ref=report-commit-sha
 ```
 
 The `Action self-test` workflow proves this flow in this repository. Report
@@ -175,13 +175,13 @@ review UI:
 pnpm dev:fixture
 ```
 
-This opens `/?fixture=mixed`. The same fixture is available in a normal dev
+This opens `/report/?fixture=mixed`. The same fixture is available in a normal dev
 server at that path.
 
 You can also open a report directly:
 
 ```text
-http://localhost:5173/?repo=owner/repository&ref=40-character-commit-sha
+http://localhost:5173/report/?repo=owner/repository&ref=40-character-commit-sha
 ```
 
 ### Generate and view a local report

@@ -8,6 +8,17 @@ export default defineConfig(({ command }) => {
     new URL("../../fixtures", import.meta.url),
   );
   return {
+    build: {
+      rollupOptions: {
+        input: {
+          main: fileURLToPath(new URL("./index.html", import.meta.url)),
+          report: fileURLToPath(
+            new URL("./report/index.html", import.meta.url),
+          ),
+          setup: fileURLToPath(new URL("./setup/index.html", import.meta.url)),
+        },
+      },
+    },
     plugins: [react()],
     publicDir:
       command === "serve"

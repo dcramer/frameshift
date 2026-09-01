@@ -71,14 +71,17 @@ function SourceForm() {
         </p>
       </div>
       <div className="source-actions">
-        <a className="source-card source-card-primary" href="/?fixture=mixed">
+        <a
+          className="source-card source-card-primary"
+          href="/report/?fixture=mixed"
+        >
           <span>
             <strong>Open the sample</strong>
             <em>Three changes. No scavenger hunt.</em>
           </span>
           <b aria-hidden="true">→</b>
         </a>
-        <a className="source-card" href="/setup">
+        <a className="source-card" href="/setup/">
           <span>
             <strong>Set up the GitHub Action</strong>
             <em>Bring your own screenshots.</em>
@@ -107,7 +110,7 @@ function SetupPage() {
           <BrandMark />
           <span>Frameshift</span>
         </a>
-        <a href="/?fixture=mixed">View the sample →</a>
+        <a href="/report/?fixture=mixed">View the sample →</a>
       </header>
 
       <section className="setup-hero">

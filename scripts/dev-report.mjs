@@ -21,7 +21,7 @@ console.log(`opening local report with ${changes} visual change(s)`);
 const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 const child = spawn(
   pnpm,
-  ["--filter", "@frameshift/web", "dev", "--open", "/?local=1"],
+  ["--filter", "@frameshift/web", "dev", "--open", "/report/?local=1"],
   {
     env: {
       ...process.env,

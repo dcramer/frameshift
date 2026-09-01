@@ -3,6 +3,5 @@
   "buildCommand": "pnpm build",
   "framework": "vite",
   "installCommand": "corepack pnpm install --frozen-lockfile",
-  "outputDirectory": "dist",
-  "rewrites": [{ "source": "/setup", "destination": "/index.html" }]
+  "outputDirectory": "dist"
 }
