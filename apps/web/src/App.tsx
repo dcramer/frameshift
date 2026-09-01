@@ -16,7 +16,8 @@ type LoadState =
   | { kind: "empty" }
   | { kind: "error" }
   | { kind: "loading" }
-  | { kind: "ready"; report: VisualDiffReport; source: ImageSource };
+  | { kind: "ready"; report: VisualDiffReport; source: ImageSource }
+  | { kind: "setup" };
 
 interface PreviewImage {
   alt: string;
@@ -77,10 +78,7 @@ function SourceForm() {
           </span>
           <b aria-hidden="true">→</b>
         </a>
-        <a
-          className="source-card"
-          href="https://github.com/dcramer/frameshift#use-the-github-action"
-        >
+        <a className="source-card" href="/setup">
           <span>
             <strong>Set up the GitHub Action</strong>
             <em>Bring your own screenshots.</em>
@@ -98,6 +96,122 @@ function SourceForm() {
         </a>
       </footer>
     </section>
+  );
+}
+
+function SetupPage() {
+  return (
+    <main className="setup-page">
+      <header className="setup-nav">
+        <a className="setup-brand" href="/">
+          <BrandMark />
+          <span>Frameshift</span>
+        </a>
+        <a href="/?fixture=mixed">View the sample →</a>
+      </header>
+
+      <section className="setup-hero">
+        <p className="kicker">Setup</p>
+        <h1>Add screenshot review to your pull requests.</h1>
+        <p>
+          Frameshift compares two folders of PNGs. Your workflow takes the
+          screenshots; Frameshift finds what moved and builds the report.
+        </p>
+      </section>
+
+      <div className="setup-layout">
+        <ol className="setup-steps">
+          <li>
+            <span className="step-number">1</span>
+            <div>
+              <h2>Capture before and after</h2>
+              <p>
+                Check out the pull request merge commit for the new version and
+                its first parent for the old one. Capture both on the same
+                runner so the browser, fonts, and system libraries match.
+              </p>
+              <p className="step-aside">
+                Matching relative paths identify the same screenshot.
+              </p>
+            </div>
+          </li>
+
+          <li>
+            <span className="step-number">2</span>
+            <div>
+              <h2>Compare the folders</h2>
+              <p>
+                Give the Action read-only permissions. It reads local files,
+                writes the report, and never needs a GitHub token.
+              </p>
+              <pre>
+                <code>{`permissions:
+  contents: read
+
+steps:
+  - name: Compare screenshots
+    id: visual-diff
+    uses: dcramer/frameshift@<full-commit-sha>
+    with:
+      baseline: \${{ runner.temp }}/frameshift/baseline
+      candidate: \${{ runner.temp }}/frameshift/candidate
+      output: \${{ runner.temp }}/frameshift/report
+
+  - uses: actions/upload-artifact@<full-commit-sha>
+    with:
+      name: frameshift-report
+      path: \${{ runner.temp }}/frameshift/report`}</code>
+              </pre>
+            </div>
+          </li>
+
+          <li>
+            <span className="step-number">3</span>
+            <div>
+              <h2>Publish from a trusted job</h2>
+              <p>
+                Download the report from a job on your default branch, then let
+                the publisher add the status, pull request comment, and review
+                link.
+              </p>
+              <pre>
+                <code>{`permissions:
+  contents: write
+  pull-requests: write
+  statuses: write
+
+steps:
+  - uses: actions/download-artifact@<full-commit-sha>
+    with:
+      name: frameshift-report
+      path: \${{ runner.temp }}/frameshift-report
+
+  - uses: dcramer/frameshift/publish@<full-commit-sha>
+    with:
+      report: \${{ runner.temp }}/frameshift-report
+      github-token: \${{ secrets.GITHUB_TOKEN }}
+      head-sha: \${{ github.event.workflow_run.head_sha }}
+      pull-request: \${{ github.event.workflow_run.pull_requests[0].number }}`}</code>
+              </pre>
+            </div>
+          </li>
+        </ol>
+
+        <aside className="setup-notes">
+          <h2>Worth knowing</h2>
+          <ul>
+            <li>Pin every Action to a full commit SHA.</li>
+            <li>Keep screenshot capture deterministic.</li>
+            <li>
+              Never give write access to a job that runs pull request code.
+            </li>
+          </ul>
+          <a href="https://github.com/dcramer/frameshift#use-the-github-action">
+            Read the full workflow on GitHub ↗
+          </a>
+        </aside>
+      </div>
+    </main>
   );
 }
 
@@ -315,6 +429,10 @@ export function App() {
     let active = true;
     async function load() {
       try {
+        if (window.location.pathname.replace(/\/+$/, "") === "/setup") {
+          setState({ kind: "setup" });
+          return;
+        }
         const source = parseScanSource(
           new URLSearchParams(window.location.search),
         );
@@ -342,10 +460,15 @@ export function App() {
   return (
     <div
       className={
-        state.kind === "ready" ? "app-shell report-shell" : "app-shell"
+        state.kind === "ready"
+          ? "app-shell report-shell"
+          : state.kind === "setup"
+            ? "app-shell setup-shell"
+            : "app-shell"
       }
     >
       {state.kind === "empty" && <SourceForm />}
+      {state.kind === "setup" && <SetupPage />}
       {state.kind === "loading" && (
         <section className="status-panel panel">
           <div className="loading-pulse" />
