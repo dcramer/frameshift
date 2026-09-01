@@ -30,26 +30,26 @@ export function parseScanSource(params: URLSearchParams): ScanSource | null {
   }
   if (local !== null) {
     if (local !== "1" || repo !== null || ref !== null || fixture !== null) {
-      throw new Error("Local report coordinates are invalid.");
+      throw new Error("The local report URL is invalid.");
     }
     return { kind: "local" };
   }
   if (fixture !== null) {
     if (repo !== null || ref !== null) {
-      throw new Error("Choose a fixture or a GitHub report, not both.");
+      throw new Error("Choose a sample report or a GitHub report, not both.");
     }
     if (!fixturePattern.test(fixture)) {
       throw new Error(
-        "Fixture must use lowercase letters, numbers, or dashes.",
+        "Sample names may use lowercase letters, numbers, and dashes only.",
       );
     }
     return { kind: "fixture", name: fixture };
   }
   if (!repo || !repositoryPattern.test(repo)) {
-    throw new Error("Repository must use the owner/name format.");
+    throw new Error("Enter the GitHub project as owner/name.");
   }
   if (!ref || !commitPattern.test(ref)) {
-    throw new Error("Report reference must be a full 40-character commit SHA.");
+    throw new Error("Use the full 40-character Git commit ID for the report.");
   }
   return { kind: "github", ref, repo };
 }
@@ -70,7 +70,7 @@ export function reportUrl(source: ScanSource): string {
 export function imageUrl(source: ImageSource, imagePath: string): string {
   if (source.kind === "browser") {
     const url = source.imageUrls.get(imagePath);
-    if (!url) throw new Error(`Local report image is missing: ${imagePath}`);
+    if (!url) throw new Error(`The report is missing this image: ${imagePath}`);
     return url;
   }
   return `${reportBaseUrl(source)}/${imagePath

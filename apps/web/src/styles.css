@@ -745,9 +745,16 @@ h1 {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  border-block: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
   background: var(--surface);
   padding: 7px 10px;
+}
+
+.viewer-adjustments {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 14px;
 }
 
 .scale-switch,
@@ -951,19 +958,16 @@ figcaption small {
   background: var(--accent-text);
 }
 
-.canvas-label,
-.canvas-hint {
-  position: absolute;
-  z-index: 4;
-  top: 12px;
+.comparison-caption,
+.comparison-key {
   display: flex;
-  min-height: 30px;
+  min-height: 34px;
   align-items: center;
-  gap: 7px;
-  border: 1px solid var(--line-strong);
-  background: var(--image-overlay);
-  color: var(--text);
-  padding: 0 9px;
+  gap: 8px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  padding: 0 12px;
   font:
     9px ui-monospace,
     SFMono-Regular,
@@ -972,36 +976,35 @@ figcaption small {
   text-transform: uppercase;
 }
 
-button.canvas-label {
+.comparison-key {
+  justify-content: space-between;
+}
+
+.comparison-key > span {
+  color: var(--faint);
+  text-align: center;
+}
+
+.comparison-key button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
   cursor: zoom-in;
+  padding: 0;
+  font: inherit;
+  text-transform: inherit;
 }
 
-button.canvas-label:hover {
-  border-color: var(--image-overlay-text);
-  color: var(--image-overlay-text);
+.comparison-key button:hover {
+  color: var(--text);
 }
 
-.canvas-label-before,
-.comparison-pane > .canvas-label {
-  left: 12px;
-}
-
-.canvas-label-after {
-  right: 12px;
-}
-
-.canvas-label > span {
+.comparison-key button > span {
   color: var(--faint);
   font-size: 11px;
-}
-
-.canvas-hint {
-  left: 50%;
-  z-index: 1;
-  border-color: transparent;
-  color: var(--faint);
-  pointer-events: none;
-  transform: translateX(-50%);
 }
 
 .comparison-canvas {
@@ -1114,30 +1117,28 @@ button.canvas-label:hover {
   border: 0;
 }
 
-.blend-control {
+.opacity-control {
   display: grid;
-  grid-template-columns: auto minmax(120px, 320px) 42px;
+  grid-template-columns: auto minmax(100px, 220px) 38px;
   align-items: center;
-  justify-content: center;
-  gap: 12px;
-  min-height: 48px;
-  border-top: 1px solid var(--line);
-  background: var(--surface);
+  gap: 9px;
+  min-width: 0;
   color: var(--muted);
-  padding: 8px 16px;
   font:
-    10px ui-monospace,
+    9px ui-monospace,
     SFMono-Regular,
     Menlo,
     monospace;
+  white-space: nowrap;
 }
 
-.blend-control input {
+.opacity-control input {
   width: 100%;
+  margin: 0;
   accent-color: var(--accent);
 }
 
-.blend-control output {
+.opacity-control output {
   color: var(--text);
   text-align: right;
 }
@@ -1598,6 +1599,29 @@ button.canvas-label:hover {
     padding: 7px 0;
   }
 
+  .comparison-toolbar:has(.opacity-control) {
+    flex-wrap: wrap;
+  }
+
+  .comparison-toolbar:has(.opacity-control) .viewer-adjustments {
+    display: contents;
+  }
+
+  .comparison-toolbar:has(.opacity-control) .scale-switch {
+    order: 1;
+  }
+
+  .comparison-toolbar:has(.opacity-control) .mode-switch {
+    order: 2;
+  }
+
+  .comparison-toolbar:has(.opacity-control) .opacity-control {
+    order: 3;
+    width: 100%;
+    grid-template-columns: auto minmax(0, 1fr) 38px;
+    padding: 0 8px 2px;
+  }
+
   .comparison-pair {
     grid-template-columns: 1fr;
   }
@@ -1606,18 +1630,10 @@ button.canvas-label:hover {
     grid-template-columns: max-content;
   }
 
-  .canvas-label,
-  .canvas-hint {
-    top: 8px;
-  }
-
-  .canvas-label-before,
-  .comparison-pane > .canvas-label {
-    left: 8px;
-  }
-
-  .canvas-label-after {
-    right: 8px;
+  .comparison-key > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .lightbox-frame > header {

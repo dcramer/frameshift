@@ -30,10 +30,10 @@ type ComparisonMode = "blend" | "difference" | "side-by-side" | "split";
 type ImageScale = "actual" | "fit";
 
 const COMPARISON_MODES: { label: string; value: ComparisonMode }[] = [
-  { label: "Difference", value: "difference" },
-  { label: "Split", value: "split" },
+  { label: "Highlights", value: "difference" },
+  { label: "Slider", value: "split" },
   { label: "Side by side", value: "side-by-side" },
-  { label: "Blend", value: "blend" },
+  { label: "Fade", value: "blend" },
 ];
 
 const COMPARISON_MODE_STORAGE_KEY = "frameshift:comparison-mode";
@@ -65,7 +65,7 @@ function initialComparisonMode(): ComparisonMode {
       return savedMode as ComparisonMode;
     }
   } catch {
-    // Storage can be unavailable in privacy-restricted browser contexts.
+    // Some browsers block saved settings.
   }
   return "difference";
 }
@@ -129,31 +129,31 @@ function SourceForm() {
         <span>Frameshift</span>
       </header>
       <div className="home-copy">
-        <p className="kicker">Visual regression testing for GitHub</p>
-        <h1>Review visual changes in one report.</h1>
+        <p className="kicker">Screenshot checks for GitHub</p>
+        <h1>Review every screenshot in one place.</h1>
         <p>
-          Frameshift compares baseline and candidate screenshots, then publishes
-          a static report for each pull request.
+          Frameshift compares screenshots from before and after a code change,
+          then posts a review link on the pull request.
         </p>
       </div>
       <div className="source-actions">
         <a className="source-card source-card-primary" href={SAMPLE_PATH}>
           <span>
             <strong>View the sample report</strong>
-            <em>See changed, added, and removed pages.</em>
+            <em>See changed, new, removed, and matching pages.</em>
           </span>
           <b aria-hidden="true">→</b>
         </a>
         <a className="source-card" href={SETUP_PATH}>
           <span>
             <strong>Set up Frameshift</strong>
-            <em>Add comparison and publishing to your workflow.</em>
+            <em>Add screenshot checks to GitHub Actions.</em>
           </span>
           <b aria-hidden="true">↗</b>
         </a>
       </div>
       <footer className="home-note">
-        <span>Static, open source, and no sign-in required.</span>
+        <span>Open source. No server or sign-in required.</span>
         <a aria-label="Frameshift on GitHub" href={PROJECT_URL}>
           <GitHubIcon />
         </a>
@@ -177,20 +177,20 @@ function SetupPage() {
         <header className="setup-intro">
           <h1>Set up Frameshift</h1>
           <p>
-            Capture matching baseline and candidate screenshots. Frameshift
-            compares them and generates a static report.
+            Capture screenshots before and after a change. Frameshift compares
+            them and builds a report you can open in any browser.
           </p>
         </header>
 
         <section className="setup-section">
-          <h2>Store the baseline</h2>
+          <h2>Save the current screenshots</h2>
           <p>
-            Capture all screenshots once for each commit on your configured
-            default branch. GitHub stores them by exact commit SHA.
+            After code lands on your default branch, capture every screenshot.
+            GitHub saves each set with the code that created it.
           </p>
           {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- The code block scrolls on narrow screens. */}
           <pre tabIndex={0}>
-            <code>{`name: Visual baseline
+            <code>{`name: Save screenshots
 
 on:
   push:
@@ -200,7 +200,7 @@ permissions:
   contents: read
 
 jobs:
-  baseline:
+  screenshots:
     if: >-
       github.event_name == 'workflow_dispatch' ||
       github.ref_name == github.event.repository.default_branch
@@ -208,22 +208,23 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # Set up your app and browser here.
-      - run: pnpm capture:screenshots -- --all --output path/to/baseline
+      - run: pnpm capture:screenshots -- --all --output path/to/current-screenshots
       - uses: dcramer/frameshift/baseline/upload@63d124db19da7dbd292c3f29b2dde1880fbf5ff3
         with:
-          path: path/to/baseline`}</code>
+          path: path/to/current-screenshots`}</code>
           </pre>
         </section>
 
         <section className="setup-section">
-          <h2>Compare the pull request</h2>
+          <h2>Check a pull request</h2>
           <p>
-            Capture only the candidate. Frameshift restores the exact base that
-            GitHub tested without fetching full Git history.
+            Capture screenshots from the pull request. Frameshift downloads the
+            saved screenshots for the exact code GitHub tested. It does not need
+            the full Git history.
           </p>
           {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- The code block scrolls on narrow screens. */}
           <pre tabIndex={0}>
-            <code>{`name: Visual diff
+            <code>{`name: Check screenshots
 
 on:
   pull_request:
@@ -233,20 +234,20 @@ permissions:
   contents: read
 
 jobs:
-  visual-diff:
+  screenshots:
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # Set up your app and browser here.
-      - run: pnpm capture:screenshots -- --output \${{ runner.temp }}/frameshift/candidate
+      - run: pnpm capture:screenshots -- --output \${{ runner.temp }}/frameshift/after
       - uses: dcramer/frameshift/baseline@63d124db19da7dbd292c3f29b2dde1880fbf5ff3
         with:
-          path: \${{ runner.temp }}/frameshift/baseline
+          path: \${{ runner.temp }}/frameshift/before
       - uses: dcramer/frameshift@63d124db19da7dbd292c3f29b2dde1880fbf5ff3
         with:
-          baseline: \${{ runner.temp }}/frameshift/baseline
-          candidate: \${{ runner.temp }}/frameshift/candidate
+          baseline: \${{ runner.temp }}/frameshift/before
+          candidate: \${{ runner.temp }}/frameshift/after
           output: \${{ runner.temp }}/frameshift/report
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -260,16 +261,16 @@ jobs:
         <section className="setup-section">
           <h2>Publish</h2>
           <p>
-            Run the publisher from a trusted workflow on your default branch. It
-            adds the status, pull request comment, and review link.
+            Run this job on your default branch after the screenshot check. It
+            posts a GitHub status, a pull request comment, and the review link.
           </p>
           {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- The code block scrolls on narrow screens. */}
           <pre tabIndex={0}>
-            <code>{`name: Publish visual diff
+            <code>{`name: Publish screenshot report
 
 on:
   workflow_run:
-    workflows: [Visual diff]
+    workflows: [Check screenshots]
     types: [completed]
 
 permissions:
@@ -291,10 +292,10 @@ jobs:
         </section>
 
         <aside className="setup-warning">
-          <strong>Limit write permissions to the publisher.</strong>
+          <strong>Only the publishing job needs write access.</strong>
           <p>
-            Pin Actions to full commit SHAs. Never give write access to a job
-            that runs pull request code.
+            Use a full Git commit ID for every Action version. Never give write
+            access to code from a pull request.
           </p>
         </aside>
 
@@ -364,28 +365,44 @@ function ImagePanel({
   if (file.status === "changed") {
     const before = previewImage("Before", file.images.baseline);
     const after = previewImage("After", file.images.candidate);
-    const difference = previewImage("Difference", file.images.diff);
+    const difference = previewImage("Highlights", file.images.diff);
 
     return (
       <section className="comparison-viewer" data-scale={scale}>
         <header className="comparison-toolbar">
-          <fieldset className="scale-switch" aria-label="Image scale">
-            <button
-              aria-pressed={scale === "fit"}
-              onClick={() => setScale("fit")}
-              type="button"
-            >
-              Fit
-            </button>
-            <button
-              aria-pressed={scale === "actual"}
-              onClick={() => setScale("actual")}
-              type="button"
-            >
-              1:1
-            </button>
-          </fieldset>
-          <fieldset className="mode-switch" aria-label="Comparison mode">
+          <div className="viewer-adjustments">
+            <fieldset className="scale-switch" aria-label="Image size">
+              <button
+                aria-pressed={scale === "fit"}
+                onClick={() => setScale("fit")}
+                type="button"
+              >
+                Fit
+              </button>
+              <button
+                aria-pressed={scale === "actual"}
+                onClick={() => setScale("actual")}
+                type="button"
+              >
+                Full size
+              </button>
+            </fieldset>
+            {mode === "blend" && (
+              <div className="opacity-control">
+                <label htmlFor={`blend-${file.file}`}>Show after image</label>
+                <input
+                  id={`blend-${file.file}`}
+                  max="100"
+                  min="0"
+                  onChange={(event) => setBlend(Number(event.target.value))}
+                  type="range"
+                  value={blend}
+                />
+                <output>{blend}%</output>
+              </div>
+            )}
+          </div>
+          <fieldset className="mode-switch" aria-label="View">
             {COMPARISON_MODES.map((item) => (
               <button
                 aria-label={item.label}
@@ -407,7 +424,7 @@ function ImagePanel({
           <div className="comparison-scroll" key={mode}>
             <div className="comparison-pair">
               <div className="comparison-pane">
-                <span className="canvas-label">
+                <span className="comparison-caption">
                   <i
                     aria-hidden="true"
                     className="legend-swatch legend-before"
@@ -424,7 +441,7 @@ function ImagePanel({
                 </button>
               </div>
               <div className="comparison-pane">
-                <span className="canvas-label">
+                <span className="comparison-caption">
                   <i
                     aria-hidden="true"
                     className="legend-swatch legend-after"
@@ -445,7 +462,7 @@ function ImagePanel({
         ) : mode === "difference" ? (
           <div className="comparison-scroll" key={mode}>
             <button
-              aria-label="Open difference image full screen"
+              aria-label="Open highlighted changes full screen"
               className="image-trigger difference-trigger"
               onClick={() => onPreview(difference)}
               type="button"
@@ -454,86 +471,56 @@ function ImagePanel({
             </button>
           </div>
         ) : (
-          <>
-            <div className="comparison-scroll" key={mode}>
-              <div className="comparison-canvas">
-                <img alt={before.alt} src={before.src} />
-                <div
-                  aria-hidden="true"
-                  className="comparison-overlay"
-                  style={
-                    mode === "split"
-                      ? { clipPath: `inset(0 0 0 ${split}%)` }
-                      : { opacity: blend / 100 }
-                  }
-                >
-                  <img alt="" src={after.src} />
-                </div>
-                <button
-                  className="canvas-label canvas-label-before"
-                  onClick={() => onPreview(before)}
-                  type="button"
-                >
-                  <i
-                    aria-hidden="true"
-                    className="legend-swatch legend-before"
-                  />
-                  Before
-                  <span aria-hidden="true">↗</span>
-                </button>
-                <button
-                  className="canvas-label canvas-label-after"
-                  onClick={() => onPreview(after)}
-                  type="button"
-                >
-                  <i
-                    aria-hidden="true"
-                    className="legend-swatch legend-after"
-                  />
-                  After
-                  <span aria-hidden="true">↗</span>
-                </button>
-                {mode === "split" && (
-                  <>
-                    <span aria-hidden="true" className="canvas-hint">
-                      Drag to reveal
-                    </span>
-                    <div
-                      aria-hidden="true"
-                      className="comparison-divider"
-                      style={{ left: `${split}%` }}
-                    >
-                      <span>↔</span>
-                    </div>
-                    <input
-                      aria-label="Position image comparison divider"
-                      aria-valuetext={`${split}% before, ${100 - split}% after`}
-                      className="comparison-range comparison-range-overlay"
-                      max="100"
-                      min="0"
-                      onChange={(event) => setSplit(Number(event.target.value))}
-                      type="range"
-                      value={split}
-                    />
-                  </>
-                )}
-              </div>
+          <div className="comparison-scroll" key={mode}>
+            <div className="comparison-key">
+              <button onClick={() => onPreview(before)} type="button">
+                <i aria-hidden="true" className="legend-swatch legend-before" />
+                Before
+                <span aria-hidden="true">↗</span>
+              </button>
+              {mode === "split" && <span>Drag the divider to compare</span>}
+              <button onClick={() => onPreview(after)} type="button">
+                <i aria-hidden="true" className="legend-swatch legend-after" />
+                After
+                <span aria-hidden="true">↗</span>
+              </button>
             </div>
-            {mode === "blend" && (
-              <div className="blend-control">
-                <label htmlFor={`blend-${file.file}`}>After opacity</label>
-                <input
-                  id={`blend-${file.file}`}
-                  max="100"
-                  min="0"
-                  onChange={(event) => setBlend(Number(event.target.value))}
-                  type="range"
-                  value={blend}
-                />
-                <output>{blend}%</output>
+            <div className="comparison-canvas">
+              <img alt={before.alt} src={before.src} />
+              <div
+                aria-hidden="true"
+                className="comparison-overlay"
+                style={
+                  mode === "split"
+                    ? { clipPath: `inset(0 0 0 ${split}%)` }
+                    : { opacity: blend / 100 }
+                }
+              >
+                <img alt="" src={after.src} />
               </div>
-            )}
-          </>
+              {mode === "split" && (
+                <>
+                  <div
+                    aria-hidden="true"
+                    className="comparison-divider"
+                    style={{ left: `${split}%` }}
+                  >
+                    <span>↔</span>
+                  </div>
+                  <input
+                    aria-label="Move the before-and-after slider"
+                    aria-valuetext={`${split}% before, ${100 - split}% after`}
+                    className="comparison-range comparison-range-overlay"
+                    max="100"
+                    min="0"
+                    onChange={(event) => setSplit(Number(event.target.value))}
+                    type="range"
+                    value={split}
+                  />
+                </>
+              )}
+            </div>
+          </div>
         )}
       </section>
     );
@@ -594,7 +581,7 @@ function ImageLightbox({
                 onClick={() => setSize("actual")}
                 type="button"
               >
-                1:1
+                Full size
               </button>
             </fieldset>
             <a href={image.src} rel="noreferrer" target="_blank">
@@ -610,11 +597,9 @@ function ImageLightbox({
             </button>
           </div>
         </header>
-        {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- Native-size images scroll inside this keyboard-accessible region. */}
         <section
           aria-label={`${image.label} image`}
           className={`lightbox-canvas lightbox-canvas-${size}`}
-          tabIndex={0}
         >
           <div className="lightbox-image-stage">
             <img alt={image.alt} src={image.src} />
@@ -787,7 +772,7 @@ function ReportViewer({
           </>
         ) : (
           <div className="no-changes">
-            <p className="kicker">Empty report</p>
+            <p className="kicker">Nothing to review</p>
             <h1>No screenshots.</h1>
             <p>This report does not contain any screenshots.</p>
           </div>
@@ -859,9 +844,9 @@ export function App() {
       )}
       {state.kind === "error" && (
         <section className="status-panel panel error-panel">
-          <p className="kicker">Report unavailable</p>
+          <p className="kicker">Report not found</p>
           <h1>Could not load this report.</h1>
-          <p>Verify the URL and confirm that the report files are available.</p>
+          <p>Check the URL and make sure the report files are available.</p>
           <a href="/">Return home</a>
         </section>
       )}
