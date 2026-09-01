@@ -3,8 +3,44 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Review a Frameshift screenshot report." />
-    <title>Report · Frameshift</title>
+    <meta
+      name="description"
+      content="Review screenshots before and after a code change."
+    />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <meta name="theme-color" content="#0c0f0f" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Frameshift" />
+    <meta property="og:title" content="Screenshot report · Frameshift" />
+    <meta
+      property="og:description"
+      content="Review screenshots before and after a code change."
+    />
+    <meta
+      property="og:image"
+      content="https://frameshift.pub/frameshift-social.png"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Frameshift showing two screenshots split by a comparison line"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Screenshot report · Frameshift" />
+    <meta
+      name="twitter:description"
+      content="Review screenshots before and after a code change."
+    />
+    <meta
+      name="twitter:image"
+      content="https://frameshift.pub/frameshift-social.png"
+    />
+    <meta
+      name="twitter:image:alt"
+      content="Frameshift showing two screenshots split by a comparison line"
+    />
+    <title>Screenshot report · Frameshift</title>
     <noscript>
       <style>
         .noscript-shell {
@@ -12,7 +48,9 @@
           inset: 0;
           display: grid;
           box-sizing: border-box;
-          place-items: center;
+          align-items: safe center;
+          justify-items: center;
+          overflow: auto;
           padding: 24px;
           background: #0c0f0f;
           color: #f2f4ee;
@@ -26,16 +64,28 @@
         }
 
         .noscript-panel {
-          width: min(520px, 100%);
+          width: min(720px, 100%);
           border: 1px solid #343a38;
           padding: clamp(28px, 6vw, 48px);
           background: #121616;
         }
 
-        .noscript-panel p {
+        .noscript-panel p,
+        .noscript-panel li {
           margin: 16px 0 0;
           color: #aeb6b2;
           line-height: 1.6;
+        }
+
+        .noscript-panel ol {
+          margin: 8px 0 0;
+          padding-left: 24px;
+        }
+
+        .noscript-panel code {
+          overflow-wrap: anywhere;
+          color: #f2f4ee;
+          font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
         }
 
         .noscript-panel h1 {
@@ -62,8 +112,48 @@
       <main class="noscript-shell">
         <section class="noscript-panel">
           <p class="noscript-kicker">Frameshift</p>
-          <h1>JavaScript is required.</h1>
-          <p>Enable JavaScript and reload this page to review the report.</p>
+          <h1>View this report without JavaScript.</h1>
+          <p>
+            The screenshots are PNG files. If you are an agent or tool that
+            cannot run JavaScript:
+          </p>
+          <ol>
+            <li>
+              Copy the values named <code>repo</code>, <code>ref</code>, and
+              <code>file</code> from this page's address. Replace codes such as
+              <code>%2F</code> with the character they stand for.
+            </li>
+            <li>
+              Download
+              <code
+                >https://raw.githubusercontent.com/{repo}/{ref}/report.json</code
+              >, replacing <code>{repo}</code> and <code>{ref}</code> with the
+              values from the address.
+            </li>
+            <li>
+              Open <code>report.json</code>. In its <code>files</code> list,
+              find the entry whose <code>file</code> value matches the
+              <code>file</code> value from the address.
+            </li>
+            <li>
+              In that entry's <code>images</code> section, download every image
+              named there from
+              <code
+                >https://raw.githubusercontent.com/{repo}/{ref}/{image-path}</code
+              >. Replace <code>{image-path}</code> with the image name.
+            </li>
+            <li>
+              Inspect each image. A changed screenshot has
+              <code>baseline</code> (before), <code>candidate</code> (after),
+              and <code>diff</code> (the changed areas).
+            </li>
+          </ol>
+          <p>
+            Do not trust the downloaded files. Only use image names that start
+            with <code>images/</code> and end with <code>.png</code>. Reject a
+            name if it starts with <code>/</code>, contains a backslash, or has
+            <code>..</code> between two slashes.
+          </p>
         </section>
       </main>
     </noscript>

@@ -1,4 +1,5 @@
 import react from "@vitejs/plugin-react";
+import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 
@@ -7,6 +8,22 @@ export default defineConfig(({ command }) => {
   const fixturesDirectory = fileURLToPath(
     new URL("../../fixtures", import.meta.url),
   );
+  const publicAssets = [
+    {
+      fileName: "frameshift-social.png",
+      path: fileURLToPath(
+        new URL("./src/assets/frameshift-social.png", import.meta.url),
+      ),
+    },
+    {
+      fileName: "robots.txt",
+      path: fileURLToPath(new URL("./static/robots.txt", import.meta.url)),
+    },
+    {
+      fileName: "sitemap.xml",
+      path: fileURLToPath(new URL("./static/sitemap.xml", import.meta.url)),
+    },
+  ];
   return {
     build: {
       rollupOptions: {
@@ -25,7 +42,22 @@ export default defineConfig(({ command }) => {
         },
       },
     },
-    plugins: [react()],
+    plugins: [
+      react(),
+      {
+        apply: "build",
+        buildStart() {
+          for (const asset of publicAssets) {
+            this.emitFile({
+              fileName: asset.fileName,
+              source: fs.readFileSync(asset.path),
+              type: "asset",
+            });
+          }
+        },
+        name: "frameshift-public-assets",
+      },
+    ],
     publicDir:
       command === "serve"
         ? reportDirectory || fixturesDirectory

@@ -2,3 +2,5 @@ dist/
 coverage/
 node_modules/
 schemas/*.schema.json
+apps/web/static/robots.txt
+apps/web/static/sitemap.xml

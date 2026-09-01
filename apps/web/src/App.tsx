@@ -237,17 +237,17 @@ function SourceForm() {
       </header>
       <div className="home-copy">
         <p className="kicker">Screenshot checks for GitHub</p>
-        <h1>Review every screenshot in one place.</h1>
+        <h1>Review screenshot changes in one place.</h1>
         <p>
-          Frameshift compares screenshots from before and after a code change,
-          then posts a review link on the pull request.
+          Frameshift compares screenshots before and after a code change, then
+          adds a review link to the pull request.
         </p>
       </div>
       <div className="source-actions">
         <a className="source-card source-card-primary" href={SAMPLE_PATH}>
           <span>
             <strong>View the sample report</strong>
-            <em>See changed, new, removed, and matching pages.</em>
+            <em>See changed, added, removed, and unchanged screenshots.</em>
           </span>
           <b aria-hidden="true">→</b>
         </a>
@@ -284,8 +284,8 @@ function GuidePage() {
         <header className="setup-intro">
           <h1>Set up Frameshift</h1>
           <p>
-            Point your existing screenshot tests at one folder. Frameshift uses
-            those PNG files to add a review link to each pull request.
+            Save screenshots from your existing tests in one folder. Frameshift
+            adds a review link to each pull request.
           </p>
         </header>
 
@@ -293,9 +293,9 @@ function GuidePage() {
           <p className="setup-step">Step 1</p>
           <h2>Save screenshots to one folder</h2>
           <p>
-            Keep the screenshot calls you already have. Frameshift only needs
-            stable file names and one complete folder after the tests finish.
-            Here is the whole idea in Playwright:
+            Keep your existing screenshot code. Frameshift needs stable file
+            names and one complete folder after the tests finish. Here is a
+            Playwright example:
           </p>
           <CodeBlock code={PLAYWRIGHT_EXAMPLE} language="typescript" />
           <p>
@@ -304,12 +304,9 @@ function GuidePage() {
             <code> account__mobile.png</code> appear together under Account.
           </p>
           <p>
-            Wait until the page is actually ready. A screenshot can happily
-            capture loading skeletons, half-finished data, or fallback fonts.
-            Wait for fonts and any visible loading states that change the
-            picture. Mark those states with
-            <code> aria-busy=&quot;true&quot;</code> so shared test helpers know
-            when the page is done.
+            Wait for fonts, data, and visible loading states before taking the
+            screenshot. If shared test helpers wait for
+            <code> aria-busy=&quot;true&quot;</code>, add it to loading regions.
           </p>
         </section>
 
@@ -317,21 +314,19 @@ function GuidePage() {
           <p className="setup-step">Step 2</p>
           <h2>Add Frameshift after the tests</h2>
           <p>
-            Replace the test command and folder below. The second job lets
-            Frameshift add the GitHub check and comment. It does not download or
-            run pull request code, and it does not rerun your tests.
+            Change the test command and screenshot folder below. The second job
+            posts the GitHub check and comment. It does not run pull request
+            code or rerun your tests.
           </p>
           <CodeBlock code={SETUP_WORKFLOW} language="yaml" />
         </section>
 
         <aside className="setup-warning">
-          <strong>The first report may call every screenshot new.</strong>
+          <strong>The first report may mark every screenshot as added.</strong>
           <p>
-            If Frameshift has no earlier screenshots for the exact code the pull
-            request started from, it shows the current set and marks each one as
-            added. After the workflow lands, the first run on the default branch
-            saves screenshots for later pull requests. Frameshift never grabs
-            some other commit&apos;s screenshots and hopes for the best.
+            This happens when Frameshift cannot find screenshots for the commit
+            where the pull request began. After the workflow runs on the default
+            branch, later pull requests have a saved set to compare.
           </p>
         </aside>
 
@@ -340,18 +335,18 @@ function GuidePage() {
           <ul className="setup-checklist">
             <li>Your project must be public on GitHub.</li>
             <li>
-              Run this workflow for pull requests and after every push to your
-              default branch.
+              Run the workflow for pull requests and every push to the default
+              branch.
             </li>
             <li>
-              Give Frameshift one complete screenshot folder. A missing file
-              counts as removed. Combine split test results before this step.
+              Upload one complete screenshot folder. Missing files count as
+              removed. Merge split test results first.
             </li>
             <li>Screenshots and published reports stay for 30 days.</li>
             <li>
-              When every screenshot matches, Frameshift adds a passing check but
-              does not comment. Set <code>comment-on-no-changes: true</code> on
-              the last step to comment anyway.
+              If every screenshot matches, Frameshift adds a passing check
+              without a comment. Set
+              <code> comment-on-no-changes: true</code> to add one.
             </li>
             <li>
               Frameshift skips pull requests from forks because they cannot
@@ -367,10 +362,10 @@ function GuidePage() {
 
           <h3 id="advanced-storage">Separate storage steps</h3>
           <p>
-            The main Action already saves and downloads screenshots. Use these
-            steps only when that work must happen in different jobs. Keep
-            <code> name</code> the same. Download stops if it cannot find the
-            exact commit GitHub tested.
+            The main Action already stores and downloads screenshots. Use these
+            steps only when those tasks run in different jobs. Use the same
+            <code> name</code> in both places. The download fails if it cannot
+            find screenshots for the exact commit GitHub tested.
           </p>
           <CodeBlock code={SEPARATE_STORAGE_EXAMPLE} language="yaml" />
         </section>
@@ -865,9 +860,8 @@ function ReportViewer({
           </>
         ) : (
           <div className="no-changes">
-            <p className="kicker">Nothing to review</p>
-            <h1>No screenshots.</h1>
-            <p>This report does not contain any screenshots.</p>
+            <p className="kicker">Empty report</p>
+            <h1>No screenshots to review.</h1>
           </div>
         )}
       </section>
@@ -940,7 +934,7 @@ export function App() {
       )}
       {state.kind === "error" && (
         <section className="status-panel panel error-panel">
-          <p className="kicker">Report not found</p>
+          <p className="kicker">Report error</p>
           <h1>Could not load this report.</h1>
           <p>{state.message}</p>
           <a href={window.location.href}>Try again</a>
