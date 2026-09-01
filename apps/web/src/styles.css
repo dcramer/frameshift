@@ -369,7 +369,7 @@ h1 {
 .setup-section h3 {
   margin: 28px 0 0;
   color: var(--text);
-  font-size: 15px;
+  font-size: 17px;
 }
 
 .setup-section .setup-step {
@@ -482,6 +482,10 @@ h1 {
 
 .setup-details .setup-checklist {
   margin-top: 14px;
+}
+
+.setup-details h3 {
+  font-size: 15px;
 }
 
 .setup-warning {

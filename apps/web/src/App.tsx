@@ -343,11 +343,12 @@ function GuidePage() {
           </ul>
         </section>
 
-        <section className="setup-section" id="options">
-          <h2>Options</h2>
+        <section className="setup-section" id="configuration">
+          <h2>Configuration</h2>
           <p>
             Keep the defaults unless your project needs one of these changes.
           </p>
+          <h3>Common options</h3>
           <ul className="setup-checklist">
             <li>
               Use more than one screenshot set: add a unique{" "}
@@ -426,10 +427,8 @@ function GuidePage() {
               </li>
             </ul>
           </details>
-        </section>
 
-        <section className="setup-section" id="advanced-storage">
-          <h2>Advanced storage</h2>
+          <h3 id="advanced-storage">Advanced storage</h3>
           <p>
             The <code>ci</code> Action already saves and finds screenshots. Use
             the lower-level Actions only when your workflow must separate those
