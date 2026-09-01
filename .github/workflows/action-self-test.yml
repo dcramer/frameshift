@@ -55,6 +55,8 @@ jobs:
         if: github.event_name == 'pull_request' && steps.frameshift.outputs['before-commit'] != ''
         env:
           ACTION_CHANGES: ${{ steps.frameshift.outputs.changes }}
+          EXPECTED_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
+          EXPECTED_PULL_REQUEST_TITLE: ${{ github.event.pull_request.title }}
         run: >-
           node packages/action/src/qa.mjs verify
           "$RUNNER_TEMP/frameshift-action"

@@ -107,7 +107,23 @@ async function main() {
     await prepareActionQa(root);
     console.log(`created Action test files at ${root}`);
   } else {
-    await verifyActionQa(root, process.env.ACTION_CHANGES, reportRoot);
+    const pullRequestNumber = process.env.EXPECTED_PULL_REQUEST_NUMBER;
+    const pullRequestTitle = process.env.EXPECTED_PULL_REQUEST_TITLE;
+    const metadata =
+      pullRequestNumber && pullRequestTitle
+        ? {
+            pullRequest: {
+              number: Number(pullRequestNumber),
+              title: pullRequestTitle,
+            },
+          }
+        : undefined;
+    await verifyActionQa(
+      root,
+      process.env.ACTION_CHANGES,
+      reportRoot,
+      metadata,
+    );
     console.log("checked Action test report");
   }
 }
