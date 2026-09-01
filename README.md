@@ -165,12 +165,12 @@ and pushes to `main`.
 One version covers the root comparison Action and the Actions in `baseline/`,
 `ci/`, and `publish/`. Merge the release commit to `main`, then run the
 `Release` workflow and choose a patch, minor, or major version bump. Choose
-major for the first release; it creates `v1.0.0`. Later releases increment the
+minor for the first release; it creates `v0.1.0`. Later releases increment the
 latest stable GitHub release.
 
 The workflow runs every project check before it publishes the exact version.
-It also moves the compatible major and minor tags. Releasing `v1.2.3` creates
-the immutable `v1.2.3` release and points `v1` and `v1.2` at the same commit.
+It also moves the compatible major and minor tags. Releasing `v0.1.0` creates
+the immutable `v0.1.0` release and points `v0` and `v0.1` at the same commit.
 Versions must move forward; use a new major version for breaking Action input
 or behavior changes.
 
