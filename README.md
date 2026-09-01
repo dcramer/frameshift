@@ -59,7 +59,7 @@ jobs:
       - name: Run screenshot tests
         run: pnpm exec playwright test
       - name: Record screenshot results
-        uses: dcramer/frameshift/ci@68a8b5e8bbd439088ef9a044e693c5de9efe7ecd
+        uses: dcramer/frameshift/ci@v0
         with:
           screenshots: test-output/screenshots
 
@@ -76,7 +76,7 @@ jobs:
       statuses: write
     steps:
       # This job never checks out or runs pull request code.
-      - uses: dcramer/frameshift/publish/workflow@68a8b5e8bbd439088ef9a044e693c5de9efe7ecd
+      - uses: dcramer/frameshift/publish/workflow@v0
 ```
 
 You can add this workflow through a pull request.

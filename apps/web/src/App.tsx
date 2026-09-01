@@ -44,7 +44,7 @@ const COMPARISON_MODE_STORAGE_KEY = "frameshift:comparison-mode";
 const PROJECT_URL = "https://github.com/dcramer/frameshift";
 const SAMPLE_PATH = "/sample/";
 const GUIDE_PATH = "/guide/";
-const ACTION_REF = "68a8b5e8bbd439088ef9a044e693c5de9efe7ecd";
+const ACTION_REF = "v0";
 const PLAYWRIGHT_EXAMPLE = `import { test } from "@playwright/test";
 
 test("account settings", async ({ page }) => {
