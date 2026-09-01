@@ -1,12 +1,12 @@
 name: Check screenshots with Frameshift
-description: Save default-branch screenshots or create a pull request report
+description: Save screenshots from the default branch or compare a pull request
 
 inputs:
   screenshots:
     description: Folder containing the PNG screenshots from your tests
     required: true
   saved-name:
-    description: Shared name for this set of screenshots
+    description: Name used to keep this screenshot set separate from others
     default: frameshift-baseline-v1
     required: false
   screenshot-retention-days:
@@ -18,24 +18,24 @@ inputs:
     default: "7"
     required: false
   github-token:
-    description: GitHub token that can read Actions files
+    description: GitHub token with permission to read saved screenshots
     required: false
 
 outputs:
   mode:
-    description: "What Frameshift did in this run: save, report, or skip"
+    description: "What Frameshift did: saved screenshots, made a report, or skipped the run"
     value: ${{ steps.context.outputs.mode }}
   changes:
     description: Number of changed, added, and removed screenshots
     value: ${{ steps.compare.outputs.changes }}
   before-commit:
-    description: Git commit used for the before screenshots
+    description: Full Git commit ID used for the before screenshots
     value: ${{ steps.before.outputs.sha }}
 
 runs:
   using: composite
   steps:
-    - name: Choose what to do
+    - name: Decide what to do
       id: context
       shell: bash
       run: node "$GITHUB_ACTION_PATH/context.mjs"
@@ -45,7 +45,7 @@ runs:
       env:
         FRAMESHIFT_SCREENSHOTS: ${{ inputs.screenshots }}
       run: node "$GITHUB_ACTION_PATH/validate.mjs"
-    - name: Name the saved screenshots
+    - name: Name the screenshots
       if: steps.context.outputs.mode == 'save'
       id: saved-screenshots
       shell: bash

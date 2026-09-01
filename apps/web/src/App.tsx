@@ -50,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      # Keep your existing app and browser setup here.
+      # Keep your existing setup steps here.
       - name: Run screenshot tests
         run: pnpm test:screenshots
       - name: Record screenshot results
@@ -232,8 +232,8 @@ function SetupPage() {
         <header className="setup-intro">
           <h1>Set up Frameshift</h1>
           <p>
-            Keep your screenshot tests. Frameshift records their PNG files and
-            posts one review link on each pull request.
+            Keep your screenshot tests. Frameshift uses the PNG files they make
+            and adds a review link to each pull request.
           </p>
         </header>
 
@@ -245,8 +245,8 @@ function SetupPage() {
               Each test run must write one complete folder of PNG screenshots.
             </li>
             <li>
-              The workflow must run on pull requests and every default-branch
-              commit that can become their base.
+              The workflow must run for pull requests and after every push to
+              your default branch.
             </li>
           </ul>
         </section>
@@ -254,9 +254,9 @@ function SetupPage() {
         <section className="setup-section">
           <h2>Add Frameshift to the workflow</h2>
           <p>
-            Replace the screenshot command and output folder below. Keep your
-            existing setup steps in the same job. Frameshift uses the PNG files
-            that job already wrote. It does not rerun the tests.
+            Replace the test command and screenshots folder below. Keep your
+            existing setup steps in the same job. Frameshift uses the files that
+            job already made. It does not rerun the tests.
           </p>
           {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- The code block scrolls on narrow screens. */}
           <pre tabIndex={0}>
@@ -267,9 +267,9 @@ function SetupPage() {
         <aside className="setup-warning">
           <strong>Merge this workflow before testing a pull request.</strong>
           <p>
-            Let it finish on the default branch once. That run saves the first
-            exact baseline. A pull request cannot use a missing or nearby
-            baseline.
+            Let it finish on the default branch once. That run saves the
+            screenshots for that exact commit. Frameshift stops if they are
+            missing. It never guesses which screenshots to use.
           </p>
         </aside>
 
@@ -279,14 +279,17 @@ function SetupPage() {
             <li>
               Default-branch screenshots stay in GitHub Actions for 30 days.
             </li>
-            <li>Published review reports stay behind Git refs for 30 days.</li>
-            <li>
-              Expired report refs are removed on the next successful publish.
-            </li>
+            <li>GitHub keeps each pull request report for 30 days.</li>
+            <li>Old reports are removed when Frameshift saves a new one.</li>
           </ul>
           <p>
-            Pull requests from forks are skipped because they cannot safely use
-            the write-scoped delivery job.
+            When every screenshot matches, Frameshift adds a passing check but
+            does not comment. To comment anyway, add a <code>with</code> block
+            to the last step with <code>comment-on-no-changes: true</code>.
+          </p>
+          <p>
+            Frameshift skips pull requests from forks because they cannot safely
+            read the saved screenshots or write results to the project.
           </p>
         </section>
 

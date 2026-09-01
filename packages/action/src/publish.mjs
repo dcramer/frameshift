@@ -22,6 +22,14 @@ function input(name, { required = false } = {}) {
   return value;
 }
 
+function booleanInput(name, defaultValue = false) {
+  const value = input(name);
+  if (!value) return defaultValue;
+  if (value.toLowerCase() === "true") return true;
+  if (value.toLowerCase() === "false") return false;
+  throw new Error(`The ${name} input must be true or false`);
+}
+
 function setOutput(name, value) {
   if (process.env.GITHUB_OUTPUT) {
     fs.appendFileSync(process.env.GITHUB_OUTPUT, `${name}=${value}\n`);
@@ -69,6 +77,10 @@ function validateRetentionDays(value) {
 
 function changeCount(report) {
   return report.summary.added + report.summary.changed + report.summary.removed;
+}
+
+export function shouldComment(report, commentOnNoChanges) {
+  return changeCount(report) > 0 || commentOnNoChanges;
 }
 
 function escapeHtml(value) {
@@ -306,11 +318,17 @@ async function updateStatus(token, repository, headSha, status) {
   });
 }
 
-async function upsertComment(token, repository, pullRequest, body) {
+export async function syncComment(
+  token,
+  repository,
+  pullRequest,
+  body,
+  { request = githubRequest } = {},
+) {
   let page = 1;
   let existing;
   while (!existing) {
-    const comments = await githubRequest(
+    const comments = await request(
       token,
       `repos/${repository}/issues/${pullRequest}/comments?per_page=100&page=${page}`,
     );
@@ -321,7 +339,18 @@ async function upsertComment(token, repository, pullRequest, body) {
     page += 1;
   }
 
-  await githubRequest(
+  if (!body) {
+    if (existing) {
+      await request(
+        token,
+        `repos/${repository}/issues/comments/${existing.id}`,
+        { method: "DELETE" },
+      );
+    }
+    return;
+  }
+
+  await request(
     token,
     existing
       ? `repos/${repository}/issues/comments/${existing.id}`
@@ -405,6 +434,7 @@ export async function main() {
   );
   const headSha = validateSha(input("head-sha", { required: true }));
   const pullRequest = validatePullRequest(input("pull-request"));
+  const commentOnNoChanges = booleanInput("comment-on-no-changes");
   const retentionDays = validateRetentionDays(input("retention-days") || "30");
   const viewerBaseUrl = input("viewer-url") || "https://frameshift.pub/";
   const runUrl = `${process.env.GITHUB_SERVER_URL ?? "https://github.com"}/${repository}/actions/runs/${process.env.GITHUB_RUN_ID}`;
@@ -429,11 +459,13 @@ export async function main() {
     const viewerUrl = buildViewerUrl(viewerBaseUrl, repository, reportRef);
     const imageRoot = `https://raw.githubusercontent.com/${repository}/${reportRef}`;
     if (pullRequest) {
-      await upsertComment(
+      await syncComment(
         token,
         repository,
         pullRequest,
-        buildComment(report, viewerUrl, imageRoot),
+        shouldComment(report, commentOnNoChanges)
+          ? buildComment(report, viewerUrl, imageRoot)
+          : undefined,
       );
     }
     await updateStatus(token, repository, headSha, {

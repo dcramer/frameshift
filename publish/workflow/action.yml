@@ -1,13 +1,17 @@
 name: Publish a Frameshift report
-description: Download and save a report from the current or a completed GitHub workflow
+description: Save and link a report made by this workflow or another completed run
 
 inputs:
   artifact-name:
-    description: Name used when the screenshot job saved the report
+    description: Name of the report saved by the screenshot job
     default: frameshift-report
     required: false
+  comment-on-no-changes:
+    description: Comment when every screenshot matches
+    default: "false"
+    required: false
   github-token:
-    description: GitHub token that can read Actions and write the report, status, and comment
+    description: GitHub token with permission to read the report, save it, set a status, and comment
     required: false
   head-sha:
     description: Git commit; defaults to the pull request commit
@@ -16,14 +20,14 @@ inputs:
     description: Pull request; defaults to the current pull request
     required: false
   repository:
-    description: GitHub project as owner/name
+    description: GitHub project in owner/name form
     required: false
   retention-days:
     description: Number of days to keep published reports
     default: "30"
     required: false
   run-id:
-    description: Workflow run that saved the report; defaults to the current run
+    description: GitHub Actions run that saved the report; defaults to the current run
     required: false
   viewer-url:
     description: Web address for Frameshift
@@ -38,7 +42,7 @@ outputs:
     description: Number of screenshots that changed, were added, or were removed
     value: ${{ steps.publish.outputs.changes }}
   report_ref:
-    description: Git commit containing the saved report
+    description: Full Git commit ID containing the saved report
     value: ${{ steps.publish.outputs.report_ref }}
   viewer_url:
     description: Link to the report
@@ -65,6 +69,7 @@ runs:
       id: publish
       shell: bash
       env:
+        INPUT_COMMENT-ON-NO-CHANGES: ${{ inputs.comment-on-no-changes }}
         INPUT_GITHUB-TOKEN: ${{ inputs.github-token || github.token }}
         INPUT_HEAD-SHA: ${{ inputs.head-sha || steps.context.outputs.head-sha }}
         INPUT_PULL-REQUEST: ${{ inputs.pull-request || steps.context.outputs.pull-request }}

@@ -1,18 +1,20 @@
 # Frameshift
 
-Frameshift turns screenshot test output into a focused GitHub pull request
-review. It compares PNG files, adds a small thumbnail grid to the pull request,
-and links to a full before-and-after report.
+Frameshift compares screenshots before and after a code change. It adds a small
+preview to the pull request and links to a full report.
 
 [View the sample report](https://frameshift.pub/sample/) ·
 [Set up Frameshift](https://frameshift.pub/setup/)
 
 Frameshift uses the screenshot tests you already run. It does not rerun them.
-The viewer is a static website, and reports remain in the project that created
-them. There is no Frameshift server, account, or database.
+Each report stays in the GitHub project that made it. There is no Frameshift
+server, account, or database.
 
-Frameshift currently supports public GitHub projects and same-project pull
-requests. Fork pull requests are skipped.
+Frameshift supports public GitHub projects. The pull request branch must belong
+to the same project. Frameshift skips pull requests from forks.
+
+Frameshift comments only when a screenshot changed, was added, or was removed.
+It still adds a passing check when every screenshot matches.
 
 ## Development
 
@@ -30,7 +32,7 @@ Run every project check:
 pnpm check
 ```
 
-The check covers formatting, lint, types, tests, generated files, dependencies,
+This checks formatting, code quality, types, tests, generated files, packages,
 and production builds.
 
 ## Local reports
@@ -56,9 +58,9 @@ serves the report.
 
 ## Report format
 
-[`packages/report`](packages/report) owns the versioned Zod schema. The
-generated [JSON Schema](schemas/report-v2.schema.json) supports report producers
-written in other languages.
+[`packages/report`](packages/report) owns the versioned Zod schema. Tools written
+in other languages can use the generated
+[JSON Schema](schemas/report-v2.schema.json).
 
 A changed screenshot includes before, after, and highlighted-change images.
 New and matching screenshots use the after image. Removed screenshots use the
@@ -93,10 +95,10 @@ and retention options.
 
 - `apps/web`: static report viewer and setup guide.
 - `packages/action`: PNG comparison and report publishing.
-- `packages/report`: report schema and validation.
+- `packages/report`: report format and checks.
 - `ci`: one-step Action for normal CI workflows.
-- `baseline`: lower-level baseline storage Actions.
-- `publish`: write-scoped report delivery Actions.
+- `baseline`: save and find screenshots from earlier runs.
+- `publish`: save reports and update GitHub.
 - `fixtures`: generated reports for tests and local UI work.
 
 ## License

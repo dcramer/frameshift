@@ -2,10 +2,13 @@ import { PNG } from "pngjs";
 import { describe, expect, test } from "vitest";
 
 import {
+  COMMENT_MARKER,
   buildComment,
   buildViewerUrl,
   createThumbnail,
   pruneExpiredReports,
+  shouldComment,
+  syncComment,
 } from "./publish.mjs";
 
 function report(summary) {
@@ -89,6 +92,50 @@ describe("Frameshift report publishing", () => {
     );
 
     expect(body).toContain("**No screenshot changes**");
+  });
+
+  test("only comments on matching screenshots when enabled", () => {
+    const matching = report({
+      added: 0,
+      changed: 0,
+      removed: 0,
+      unchanged: 3,
+    });
+    const changed = report({
+      added: 0,
+      changed: 1,
+      removed: 0,
+      unchanged: 2,
+    });
+
+    expect(shouldComment(matching, false)).toBe(false);
+    expect(shouldComment(matching, true)).toBe(true);
+    expect(shouldComment(changed, false)).toBe(true);
+  });
+
+  test("removes an old comment when a rerun has no changes", async () => {
+    const requests = [];
+    const request = async (_token, endpoint, options = {}) => {
+      requests.push({ endpoint, options });
+      if (endpoint.includes("comments?")) {
+        return [{ body: `${COMMENT_MARKER}\nOld report`, id: 42 }];
+      }
+      if (options.method === "DELETE") return undefined;
+      throw new Error(`Unexpected request: ${endpoint}`);
+    };
+
+    await syncComment("token", "owner/repo", 7, undefined, { request });
+
+    expect(requests).toEqual([
+      {
+        endpoint: "repos/owner/repo/issues/7/comments?per_page=100&page=1",
+        options: {},
+      },
+      {
+        endpoint: "repos/owner/repo/issues/comments/42",
+        options: { method: "DELETE" },
+      },
+    ]);
   });
 
   test("builds the viewer URL from a full Git commit ID", () => {

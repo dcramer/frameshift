@@ -1,21 +1,25 @@
 name: Publish Frameshift report
-description: Save a screenshot report and add its link to GitHub
+description: Save a screenshot report and link it from GitHub
 
 inputs:
+  comment-on-no-changes:
+    description: Comment when every screenshot matches
+    default: "false"
+    required: false
   report:
     description: Report folder
     required: true
   github-token:
-    description: GitHub token that can write contents, statuses, and pull request comments
+    description: GitHub token with permission to save the report, set a status, and comment
     required: true
   head-sha:
-    description: Git commit that gets the Frameshift status
+    description: Full Git commit ID that gets the Frameshift status
     required: true
   pull-request:
-    description: Pull request that gets the report comment
+    description: Pull request number that gets the report comment
     required: false
   repository:
-    description: GitHub project as owner/name
+    description: GitHub project in owner/name form
     required: false
   retention-days:
     description: Number of days to keep published reports
@@ -30,7 +34,7 @@ outputs:
   changes:
     description: Number of screenshots that changed, were added, or were removed
   report_ref:
-    description: Git commit containing the saved report
+    description: Full Git commit ID containing the saved report
   viewer_url:
     description: Link to the report
 
