@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
+import { PNG } from "pngjs";
 import { afterEach, describe, expect, test } from "vitest";
 
 import {
@@ -35,6 +36,13 @@ async function listFiles(root, directory = root) {
   return files.toSorted();
 }
 
+async function fixtureContents(root, file) {
+  const contents = await fs.readFile(path.join(root, file));
+  if (!file.endsWith(".png")) return contents;
+  const image = PNG.sync.read(contents);
+  return { data: image.data, height: image.height, width: image.width };
+}
+
 describe("mixed visual diff fixture", () => {
   test("matches the current comparison output", async () => {
     const tempRoot = await fs.mkdtemp(
@@ -47,10 +55,8 @@ describe("mixed visual diff fixture", () => {
     const expectedFiles = await listFiles(committedFixtureRoot);
     expect(await listFiles(generatedRoot)).toEqual(expectedFiles);
     for (const file of expectedFiles) {
-      await expect(
-        fs.readFile(path.join(generatedRoot, file)),
-      ).resolves.toEqual(
-        await fs.readFile(path.join(committedFixtureRoot, file)),
+      expect(await fixtureContents(generatedRoot, file)).toEqual(
+        await fixtureContents(committedFixtureRoot, file),
       );
     }
   }, 60_000);

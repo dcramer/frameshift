@@ -56,18 +56,25 @@ jobs:
             "" \
             "The generated report is retained for seven days and published by the next job." \
             >> "$GITHUB_STEP_SUMMARY"
-      - name: Retain generated report
+      - name: Test baseline artifact upload
         uses: ./baseline/upload
+        with:
+          name: frameshift-action-baseline
+          path: ${{ runner.temp }}/frameshift-action/report
+          retention-days: 7
+      - name: Retain generated report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: frameshift-action-report
           path: ${{ runner.temp }}/frameshift-action/report
+          if-no-files-found: error
           retention-days: 7
       - name: Restore report for the tested PR base
         if: github.event_name == 'pull_request'
         id: baseline
         uses: ./baseline
         with:
-          name: frameshift-action-report
+          name: frameshift-action-baseline
           path: ${{ runner.temp }}/frameshift-base-report
       - name: Verify automatic base selection
         if: github.event_name == 'pull_request'
