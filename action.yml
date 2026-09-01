@@ -11,6 +11,12 @@ inputs:
   output:
     description: Folder where Frameshift writes the report
     required: true
+  pull-request-number:
+    description: Pull request number to include in the report
+    required: false
+  pull-request-title:
+    description: Pull request title to include in the report
+    required: false
 
 outputs:
   changes:

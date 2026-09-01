@@ -12,57 +12,94 @@ const safePngPathPattern = /^(?!\/)(?!.*\\)(?!.*(?:^|\/)\.\.(?:\/|$)).+\.png$/;
 
 const pngPathSchema = z
   .string()
-  .regex(safePngPathPattern, "Expected a safe relative PNG path");
-const baselineImagePathSchema = pngPathSchema.startsWith("images/baseline/");
-const candidateImagePathSchema = pngPathSchema.startsWith("images/candidate/");
-const diffImagePathSchema = pngPathSchema.startsWith("images/diff/");
-const dimensionSchema = z.int().positive();
+  .regex(safePngPathPattern, "Expected a safe relative PNG path")
+  .meta({ description: "A PNG path relative to report.json." });
+const baselineImagePathSchema = pngPathSchema
+  .startsWith("images/baseline/")
+  .meta({ description: "The screenshot before the change." });
+const candidateImagePathSchema = pngPathSchema
+  .startsWith("images/candidate/")
+  .meta({ description: "The screenshot after the change." });
+const diffImagePathSchema = pngPathSchema
+  .startsWith("images/diff/")
+  .meta({ description: "The image that highlights the changes." });
+const dimensionSchema = z
+  .int()
+  .positive()
+  .meta({ description: "The image size in pixels." });
 
 const fileShape = {
-  file: pngPathSchema,
-  height: dimensionSchema.optional(),
-  width: dimensionSchema.optional(),
+  file: pngPathSchema.meta({
+    description: "The screenshot path in the compared folders.",
+  }),
+  height: dimensionSchema
+    .meta({ description: "The image height in pixels." })
+    .optional(),
+  width: dimensionSchema
+    .meta({ description: "The image width in pixels." })
+    .optional(),
 };
+
+function imageSetSchema<T extends z.ZodRawShape>(shape: T) {
+  return z
+    .object(shape)
+    .strict()
+    .meta({ description: "The images available for this screenshot." });
+}
 
 const addedFileSchema = z
   .object({
     ...fileShape,
-    image: candidateImagePathSchema,
-    images: z.object({ candidate: candidateImagePathSchema }).strict(),
-    status: z.literal("added"),
+    image: candidateImagePathSchema.meta({
+      description: "The main image for this screenshot.",
+    }),
+    images: imageSetSchema({ candidate: candidateImagePathSchema }),
+    status: z
+      .literal("added")
+      .meta({ description: "The screenshot exists only after the change." }),
   })
   .strict();
 
 const changedFileSchema = z
   .object({
     ...fileShape,
-    image: diffImagePathSchema,
-    images: z
-      .object({
-        baseline: baselineImagePathSchema,
-        candidate: candidateImagePathSchema,
-        diff: diffImagePathSchema,
-      })
-      .strict(),
-    status: z.literal("changed"),
+    image: diffImagePathSchema.meta({
+      description: "The main image for this screenshot.",
+    }),
+    images: imageSetSchema({
+      baseline: baselineImagePathSchema,
+      candidate: candidateImagePathSchema,
+      diff: diffImagePathSchema,
+    }),
+    status: z.literal("changed").meta({
+      description: "The screenshot differs before and after the change.",
+    }),
   })
   .strict();
 
 const removedFileSchema = z
   .object({
     ...fileShape,
-    image: baselineImagePathSchema,
-    images: z.object({ baseline: baselineImagePathSchema }).strict(),
-    status: z.literal("removed"),
+    image: baselineImagePathSchema.meta({
+      description: "The main image for this screenshot.",
+    }),
+    images: imageSetSchema({ baseline: baselineImagePathSchema }),
+    status: z
+      .literal("removed")
+      .meta({ description: "The screenshot exists only before the change." }),
   })
   .strict();
 
 const unchangedFileSchema = z
   .object({
     ...fileShape,
-    image: candidateImagePathSchema,
-    images: z.object({ candidate: candidateImagePathSchema }).strict(),
-    status: z.literal("unchanged"),
+    image: candidateImagePathSchema.meta({
+      description: "The main image for this screenshot.",
+    }),
+    images: imageSetSchema({ candidate: candidateImagePathSchema }),
+    status: z
+      .literal("unchanged")
+      .meta({ description: "The screenshot is the same before and after." }),
   })
   .strict();
 
@@ -75,23 +112,60 @@ export const visualDiffFileSchema = z.discriminatedUnion("status", [
 
 const visualDiffSummarySchema = z
   .object({
-    added: z.int().nonnegative(),
-    changed: z.int().nonnegative(),
-    removed: z.int().nonnegative(),
-    unchanged: z.int().nonnegative(),
+    added: z
+      .int()
+      .nonnegative()
+      .meta({ description: "Number of added screenshots." }),
+    changed: z
+      .int()
+      .nonnegative()
+      .meta({ description: "Number of changed screenshots." }),
+    removed: z
+      .int()
+      .nonnegative()
+      .meta({ description: "Number of removed screenshots." }),
+    unchanged: z
+      .int()
+      .nonnegative()
+      .meta({ description: "Number of unchanged screenshots." }),
   })
-  .strict();
+  .strict()
+  .meta({ description: "Screenshot counts by status." });
+
+const pullRequestMetadataSchema = z
+  .object({
+    number: z
+      .int()
+      .positive()
+      .optional()
+      .meta({ description: "The pull request number." }),
+    title: z.string().min(1).meta({ description: "The pull request title." }),
+  })
+  .strict()
+  .meta({ description: "Details about the pull request." });
+
+const reportMetadataSchema = z
+  .object({
+    pullRequest: pullRequestMetadataSchema.optional(),
+  })
+  .strict()
+  .meta({ description: "Details about the change that created this report." });
 
 const visualDiffReportV2StructureSchema = z
   .object({
-    files: z.array(visualDiffFileSchema),
+    files: z
+      .array(visualDiffFileSchema)
+      .meta({ description: "Screenshots in this report." }),
+    metadata: reportMetadataSchema.optional(),
     summary: visualDiffSummarySchema,
-    version: z.literal(VISUAL_DIFF_REPORT_VERSION),
+    version: z
+      .literal(VISUAL_DIFF_REPORT_VERSION)
+      .meta({ description: "The Frameshift report format version." }),
   })
   .strict()
   .meta({
     description: "A Frameshift screenshot report.",
-    title: "Frameshift screenshot report v2",
+    title: "Frameshift screenshot report, version 2",
   });
 
 function addInvariantIssues(

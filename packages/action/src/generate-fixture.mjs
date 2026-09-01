@@ -57,7 +57,17 @@ export async function generateMixedFixture(output = committedFixtureRoot) {
       writePng(baseline, "account__desktop.png", unchanged),
       writePng(candidate, "account__desktop.png", unchanged),
     ]);
-    return await compareDirectories({ baseline, candidate, output });
+    return await compareDirectories({
+      baseline,
+      candidate,
+      metadata: {
+        pullRequest: {
+          number: 42,
+          title: "Make group trips easier to plan",
+        },
+      },
+      output,
+    });
   } finally {
     await fs.rm(tempRoot, { force: true, recursive: true });
   }

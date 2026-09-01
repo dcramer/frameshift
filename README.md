@@ -137,6 +137,10 @@ New and matching screenshots use the after image. Removed screenshots use the
 before image. Every path is relative to `report.json` and is checked before the
 viewer creates an image URL.
 
+Reports created for a pull request also include its title and number under
+`metadata.pullRequest`. The `metadata` object is optional, so reports created
+from local folders remain valid.
+
 The [`fixtures/mixed`](fixtures/mixed) report covers every status. Rebuild and
 check it with:
 

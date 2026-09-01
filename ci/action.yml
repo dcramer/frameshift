@@ -90,6 +90,8 @@ runs:
         INPUT_BASELINE: ${{ runner.temp }}/frameshift/before
         INPUT_CANDIDATE: ${{ inputs.screenshots }}
         INPUT_OUTPUT: ${{ runner.temp }}/frameshift/report
+        INPUT_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
+        INPUT_PULL_REQUEST_TITLE: ${{ github.event.pull_request.title }}
       run: node "$GITHUB_ACTION_PATH/../dist/index.mjs"
     - name: Save screenshot report
       if: steps.context.outputs.mode == 'report'

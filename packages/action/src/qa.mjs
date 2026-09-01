@@ -67,6 +67,7 @@ export async function verifyActionQa(
   root,
   changes = process.env.ACTION_CHANGES,
   reportRoot = path.join(root, "report"),
+  metadata,
 ) {
   if (changes !== undefined && changes !== "3") {
     throw new Error(`Expected 3 changes, received ${changes}`);
@@ -77,6 +78,7 @@ export async function verifyActionQa(
   );
   assert.deepEqual(report, {
     files: expectedFiles,
+    ...(metadata ? { metadata } : {}),
     summary: expectedSummary,
     version: 2,
   });

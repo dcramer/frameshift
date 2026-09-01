@@ -102,6 +102,26 @@ describe("compareDirectories", () => {
     ).resolves.toBeDefined();
   });
 
+  it("includes optional report metadata", async () => {
+    const paths = await makeDirectories();
+    const metadata = {
+      pullRequest: {
+        number: 42,
+        title: "Make group trips easier to plan",
+      },
+    };
+
+    const report = await compareDirectories({ ...paths, metadata });
+
+    expect(report.metadata).toEqual(metadata);
+    await expect(
+      fs
+        .readFile(path.join(paths.output, "report.json"), "utf8")
+        .then(JSON.parse),
+    ).resolves.toMatchObject({ metadata });
+    expect(() => parseVisualDiffReport(report)).not.toThrow();
+  });
+
   it("writes a diff for changed pixels", async () => {
     const paths = await makeDirectories();
     await Promise.all([

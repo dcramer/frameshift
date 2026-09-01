@@ -51,6 +51,36 @@ describe("parseVisualDiffReport", () => {
     });
   });
 
+  test("parses optional pull request metadata", () => {
+    expect(
+      parseVisualDiffReport({
+        ...report([]),
+        metadata: {
+          pullRequest: {
+            number: 42,
+            title: "Make group trips easier to plan",
+          },
+        },
+      }),
+    ).toMatchObject({
+      metadata: {
+        pullRequest: {
+          number: 42,
+          title: "Make group trips easier to plan",
+        },
+      },
+    });
+  });
+
+  test("requires a pull request title", () => {
+    expect(() =>
+      parseVisualDiffReport({
+        ...report([]),
+        metadata: { pullRequest: { number: 42 } },
+      }),
+    ).toThrow(ZodError);
+  });
+
   test("returns structured Zod issues", () => {
     const result = safeParseVisualDiffReport({ version: 1 });
     const error = result.success ? undefined : result.error;
@@ -111,11 +141,33 @@ describe("parseVisualDiffReport", () => {
   });
 
   test("exports a strict JSON Schema for external producers", () => {
-    expect(visualDiffReportV2JsonSchema()).toMatchObject({
+    const schema = visualDiffReportV2JsonSchema();
+    expect(schema).toMatchObject({
       $id: expect.stringContaining("report-v2.schema.json"),
       additionalProperties: false,
-      properties: { version: { const: 2, type: "number" } },
+      properties: {
+        metadata: {
+          additionalProperties: false,
+          description: expect.stringContaining("change"),
+          properties: {
+            pullRequest: {
+              additionalProperties: false,
+              properties: {
+                title: {
+                  description: "The pull request title.",
+                  minLength: 1,
+                  type: "string",
+                },
+              },
+              required: ["title"],
+            },
+          },
+          type: "object",
+        },
+        version: { const: 2, type: "number" },
+      },
       required: ["files", "summary", "version"],
     });
+    expect(JSON.stringify(schema)).not.toContain("visual diff");
   });
 });

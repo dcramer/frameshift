@@ -132,7 +132,12 @@ async function comparePair(baselinePath, candidatePath, output, relative) {
   };
 }
 
-export async function compareDirectories({ baseline, candidate, output }) {
+export async function compareDirectories({
+  baseline,
+  candidate,
+  metadata,
+  output,
+}) {
   for (const input of [baseline, candidate]) {
     const relative = path.relative(input, output);
     const reverse = path.relative(output, input);
@@ -200,7 +205,12 @@ export async function compareDirectories({ baseline, candidate, output }) {
 
   const summary = { added: 0, changed: 0, removed: 0, unchanged: 0 };
   for (const file of files) summary[file.status] += 1;
-  const report = { files, summary, version: REPORT_VERSION };
+  const report = {
+    files,
+    ...(metadata ? { metadata } : {}),
+    summary,
+    version: REPORT_VERSION,
+  };
   await fs.writeFile(
     path.join(output, "report.json"),
     `${JSON.stringify(report, null, 2)}\n`,

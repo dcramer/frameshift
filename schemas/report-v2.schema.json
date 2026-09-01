@@ -12,17 +12,20 @@
             "properties": {
               "file": {
                 "type": "string",
-                "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$"
+                "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$",
+                "description": "The screenshot path in the compared folders."
               },
               "height": {
                 "type": "integer",
                 "exclusiveMinimum": 0,
-                "maximum": 9007199254740991
+                "maximum": 9007199254740991,
+                "description": "The image height in pixels."
               },
               "width": {
                 "type": "integer",
                 "exclusiveMinimum": 0,
-                "maximum": 9007199254740991
+                "maximum": 9007199254740991,
+                "description": "The image width in pixels."
               },
               "image": {
                 "type": "string",
@@ -33,7 +36,8 @@
                   {
                     "pattern": "^images\\/candidate\\/.*"
                   }
-                ]
+                ],
+                "description": "The main image for this screenshot."
               },
               "images": {
                 "type": "object",
@@ -47,17 +51,20 @@
                       {
                         "pattern": "^images\\/candidate\\/.*"
                       }
-                    ]
+                    ],
+                    "description": "The screenshot after the change."
                   }
                 },
                 "required": [
                   "candidate"
                 ],
-                "additionalProperties": false
+                "additionalProperties": false,
+                "description": "The images available for this screenshot."
               },
               "status": {
                 "type": "string",
-                "const": "added"
+                "const": "added",
+                "description": "The screenshot exists only after the change."
               }
             },
             "required": [
@@ -73,17 +80,20 @@
             "properties": {
               "file": {
                 "type": "string",
-                "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$"
+                "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$",
+                "description": "The screenshot path in the compared folders."
               },
               "height": {
                 "type": "integer",
                 "exclusiveMinimum": 0,
-                "maximum": 9007199254740991
+                "maximum": 9007199254740991,
+                "description": "The image height in pixels."
               },
               "width": {
                 "type": "integer",
                 "exclusiveMinimum": 0,
-                "maximum": 9007199254740991
+                "maximum": 9007199254740991,
+                "description": "The image width in pixels."
               },
               "image": {
                 "type": "string",
@@ -94,7 +104,8 @@
                   {
                     "pattern": "^images\\/diff\\/.*"
                   }
-                ]
+                ],
+                "description": "The main image for this screenshot."
               },
               "images": {
                 "type": "object",
@@ -108,7 +119,8 @@
                       {
                         "pattern": "^images\\/baseline\\/.*"
                       }
-                    ]
+                    ],
+                    "description": "The screenshot before the change."
                   },
                   "candidate": {
                     "type": "string",
@@ -119,7 +131,8 @@
                       {
                         "pattern": "^images\\/candidate\\/.*"
                       }
-                    ]
+                    ],
+                    "description": "The screenshot after the change."
                   },
                   "diff": {
                     "type": "string",
@@ -130,7 +143,8 @@
                       {
                         "pattern": "^images\\/diff\\/.*"
                       }
-                    ]
+                    ],
+                    "description": "The image that highlights the changes."
                   }
                 },
                 "required": [
@@ -138,11 +152,13 @@
                   "candidate",
                   "diff"
                 ],
-                "additionalProperties": false
+                "additionalProperties": false,
+                "description": "The images available for this screenshot."
               },
               "status": {
                 "type": "string",
-                "const": "changed"
+                "const": "changed",
+                "description": "The screenshot differs before and after the change."
               }
             },
             "required": [
@@ -158,17 +174,20 @@
             "properties": {
               "file": {
                 "type": "string",
-                "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$"
+                "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$",
+                "description": "The screenshot path in the compared folders."
               },
               "height": {
                 "type": "integer",
                 "exclusiveMinimum": 0,
-                "maximum": 9007199254740991
+                "maximum": 9007199254740991,
+                "description": "The image height in pixels."
               },
               "width": {
                 "type": "integer",
                 "exclusiveMinimum": 0,
-                "maximum": 9007199254740991
+                "maximum": 9007199254740991,
+                "description": "The image width in pixels."
               },
               "image": {
                 "type": "string",
@@ -179,7 +198,8 @@
                   {
                     "pattern": "^images\\/baseline\\/.*"
                   }
-                ]
+                ],
+                "description": "The main image for this screenshot."
               },
               "images": {
                 "type": "object",
@@ -193,17 +213,20 @@
                       {
                         "pattern": "^images\\/baseline\\/.*"
                       }
-                    ]
+                    ],
+                    "description": "The screenshot before the change."
                   }
                 },
                 "required": [
                   "baseline"
                 ],
-                "additionalProperties": false
+                "additionalProperties": false,
+                "description": "The images available for this screenshot."
               },
               "status": {
                 "type": "string",
-                "const": "removed"
+                "const": "removed",
+                "description": "The screenshot exists only before the change."
               }
             },
             "required": [
@@ -219,17 +242,20 @@
             "properties": {
               "file": {
                 "type": "string",
-                "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$"
+                "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$",
+                "description": "The screenshot path in the compared folders."
               },
               "height": {
                 "type": "integer",
                 "exclusiveMinimum": 0,
-                "maximum": 9007199254740991
+                "maximum": 9007199254740991,
+                "description": "The image height in pixels."
               },
               "width": {
                 "type": "integer",
                 "exclusiveMinimum": 0,
-                "maximum": 9007199254740991
+                "maximum": 9007199254740991,
+                "description": "The image width in pixels."
               },
               "image": {
                 "type": "string",
@@ -240,7 +266,8 @@
                   {
                     "pattern": "^images\\/candidate\\/.*"
                   }
-                ]
+                ],
+                "description": "The main image for this screenshot."
               },
               "images": {
                 "type": "object",
@@ -254,17 +281,20 @@
                       {
                         "pattern": "^images\\/candidate\\/.*"
                       }
-                    ]
+                    ],
+                    "description": "The screenshot after the change."
                   }
                 },
                 "required": [
                   "candidate"
                 ],
-                "additionalProperties": false
+                "additionalProperties": false,
+                "description": "The images available for this screenshot."
               },
               "status": {
                 "type": "string",
-                "const": "unchanged"
+                "const": "unchanged",
+                "description": "The screenshot is the same before and after."
               }
             },
             "required": [
@@ -276,7 +306,36 @@
             "additionalProperties": false
           }
         ]
-      }
+      },
+      "description": "Screenshots in this report."
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "pullRequest": {
+          "type": "object",
+          "properties": {
+            "number": {
+              "description": "The pull request number.",
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "title": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The pull request title."
+            }
+          },
+          "required": [
+            "title"
+          ],
+          "additionalProperties": false,
+          "description": "Details about the pull request."
+        }
+      },
+      "additionalProperties": false,
+      "description": "Details about the change that created this report."
     },
     "summary": {
       "type": "object",
@@ -284,22 +343,26 @@
         "added": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 9007199254740991
+          "maximum": 9007199254740991,
+          "description": "Number of added screenshots."
         },
         "changed": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 9007199254740991
+          "maximum": 9007199254740991,
+          "description": "Number of changed screenshots."
         },
         "removed": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 9007199254740991
+          "maximum": 9007199254740991,
+          "description": "Number of removed screenshots."
         },
         "unchanged": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 9007199254740991
+          "maximum": 9007199254740991,
+          "description": "Number of unchanged screenshots."
         }
       },
       "required": [
@@ -308,11 +371,13 @@
         "removed",
         "unchanged"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "Screenshot counts by status."
     },
     "version": {
       "type": "number",
-      "const": 2
+      "const": 2,
+      "description": "The Frameshift report format version."
     }
   },
   "required": [
@@ -322,5 +387,5 @@
   ],
   "additionalProperties": false,
   "description": "A Frameshift screenshot report.",
-  "title": "Frameshift screenshot report v2"
+  "title": "Frameshift screenshot report, version 2"
 }

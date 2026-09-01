@@ -49,6 +49,12 @@
       "width": 720
     }
   ],
+  "metadata": {
+    "pullRequest": {
+      "number": 42,
+      "title": "Make group trips easier to plan"
+    }
+  },
   "summary": {
     "added": 1,
     "changed": 2,

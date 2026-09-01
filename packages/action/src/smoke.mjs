@@ -15,6 +15,12 @@ const expectedSummary = {
   removed: 1,
   unchanged: 0,
 };
+const expectedMetadata = {
+  pullRequest: {
+    number: 42,
+    title: "Make group trips easier to plan",
+  },
+};
 
 export async function runActionSmoke() {
   const tempRoot = await fs.mkdtemp(
@@ -35,6 +41,10 @@ export async function runActionSmoke() {
           INPUT_BASELINE: paths.baseline,
           INPUT_CANDIDATE: paths.candidate,
           INPUT_OUTPUT: paths.output,
+          INPUT_PULL_REQUEST_NUMBER: String(
+            expectedMetadata.pullRequest.number,
+          ),
+          INPUT_PULL_REQUEST_TITLE: expectedMetadata.pullRequest.title,
         },
         stdio: "pipe",
       },
@@ -43,7 +53,7 @@ export async function runActionSmoke() {
     if (output !== "changes=3\n") {
       throw new Error(`Unexpected GitHub output: ${JSON.stringify(output)}`);
     }
-    await verifyActionQa(fixtureRoot, "3");
+    await verifyActionQa(fixtureRoot, "3", paths.output, expectedMetadata);
     return { changes: 3, summary: expectedSummary };
   } finally {
     await fs.rm(tempRoot, { force: true, recursive: true });
