@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -12,6 +13,33 @@ const expectedSummary = {
   removed: 1,
   unchanged: 0,
 };
+
+const expectedFiles = [
+  {
+    file: "added.png",
+    image: "images/candidate/added.png",
+    images: { candidate: "images/candidate/added.png" },
+    status: "added",
+  },
+  {
+    file: "changed.png",
+    height: 2,
+    image: "images/diff/changed.png",
+    images: {
+      baseline: "images/baseline/changed.png",
+      candidate: "images/candidate/changed.png",
+      diff: "images/diff/changed.png",
+    },
+    status: "changed",
+    width: 2,
+  },
+  {
+    file: "removed.png",
+    image: "images/baseline/removed.png",
+    images: { baseline: "images/baseline/removed.png" },
+    status: "removed",
+  },
+];
 
 async function writePng(file, color) {
   const image = new PNG({ height: 2, width: 2 });
@@ -47,11 +75,11 @@ export async function verifyActionQa(
   const report = parseVisualDiffReport(
     JSON.parse(await fs.readFile(path.join(reportRoot, "report.json"), "utf8")),
   );
-  if (JSON.stringify(report.summary) !== JSON.stringify(expectedSummary)) {
-    throw new Error(
-      `Unexpected report summary: ${JSON.stringify(report.summary)}`,
-    );
-  }
+  assert.deepEqual(report, {
+    files: expectedFiles,
+    summary: expectedSummary,
+    version: 1,
+  });
 
   const images = report.files.flatMap((file) =>
     Object.values(file.images ?? {}),

@@ -124,6 +124,8 @@ Run the bundled action against changed, added, and removed PNG fixtures:
 pnpm action:smoke
 ```
 
-Repository CI also invokes the checked-out action through `uses: ./`. This
-tests GitHub's Action input and output wiring in addition to the local bundle
-test.
+The `Action self-test` workflow invokes the checked-out action through
+`uses: ./` on every pull request and push to `main`. It uses deterministic PNG
+inputs and verifies the change count, complete report, schema, and referenced
+images. It also retains the generated report for seven days. Run the workflow
+manually from GitHub when you need to test the current `main` branch again.
