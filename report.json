@@ -1,0 +1,27 @@
+{
+  "files": [
+    {
+      "file": "changed.png",
+      "image": "images/candidate/changed.png",
+      "images": {
+        "candidate": "images/candidate/changed.png"
+      },
+      "status": "unchanged"
+    },
+    {
+      "file": "removed.png",
+      "image": "images/candidate/removed.png",
+      "images": {
+        "candidate": "images/candidate/removed.png"
+      },
+      "status": "unchanged"
+    }
+  ],
+  "summary": {
+    "added": 0,
+    "changed": 0,
+    "removed": 0,
+    "unchanged": 2
+  },
+  "version": 2
+}
