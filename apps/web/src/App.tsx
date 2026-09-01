@@ -33,6 +33,45 @@ const COMPARISON_MODE_STORAGE_KEY = "frameshift:comparison-mode";
 const PROJECT_URL = "https://github.com/dcramer/frameshift";
 const SAMPLE_PATH = "/sample/";
 const SETUP_PATH = "/setup/";
+const ACTION_REF = "e964f36af42dfb2594f308ebbf1a9ea51e666c17";
+const SETUP_WORKFLOW = `name: Screenshot checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # Keep your existing app and browser setup here.
+      - name: Run screenshot tests
+        run: pnpm test:screenshots
+      - name: Record screenshot results
+        uses: dcramer/frameshift/ci@${ACTION_REF}
+        with:
+          screenshots: path/to/test-output/screenshots
+
+  frameshift:
+    needs: screenshots
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+      pull-requests: write
+      statuses: write
+    steps:
+      # This job never checks out or runs pull request code.
+      - uses: dcramer/frameshift/publish/workflow@${ACTION_REF}`;
 
 function displayName(file: string): string {
   return file
@@ -193,72 +232,67 @@ function SetupPage() {
         <header className="setup-intro">
           <h1>Set up Frameshift</h1>
           <p>
-            Keep your current screenshot tests. Add one step after they write
-            PNG files, then add one small delivery job to the same workflow.
+            Keep your screenshot tests. Frameshift records their PNG files and
+            posts one review link on each pull request.
           </p>
         </header>
 
         <section className="setup-section">
-          <h2>Add it to your CI workflow</h2>
+          <h2>Before you start</h2>
+          <ul className="setup-checklist">
+            <li>Your project must be public on GitHub.</li>
+            <li>
+              Each test run must write one complete folder of PNG screenshots.
+            </li>
+            <li>
+              The workflow must run on pull requests and every default-branch
+              commit that can become their base.
+            </li>
+          </ul>
+        </section>
+
+        <section className="setup-section">
+          <h2>Add Frameshift to the workflow</h2>
           <p>
-            Replace the setup command, screenshot command, and folder below. If
-            your test job has another ID, update <code>needs</code> too.
-            Frameshift never reruns the tests.
+            Replace the screenshot command and output folder below. Keep your
+            existing setup steps in the same job. Frameshift uses the PNG files
+            that job already wrote. It does not rerun the tests.
           </p>
           {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- The code block scrolls on narrow screens. */}
           <pre tabIndex={0}>
-            <code>{`name: CI
-
-on:
-  push:
-  pull_request:
-  workflow_dispatch:
-
-permissions:
-  actions: read
-  contents: read
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      # Set up your app and browser here.
-      - name: Run screenshot tests
-        run: pnpm test:screenshots
-      - name: Record screenshot test results
-        uses: dcramer/frameshift/ci@e964f36af42dfb2594f308ebbf1a9ea51e666c17
-        with:
-          screenshots: path/to/test-output/screenshots
-
-  frameshift:
-    needs: test
-    if: github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: write
-      pull-requests: write
-      statuses: write
-    steps:
-      # This job never checks out or runs pull request code.
-      - uses: dcramer/frameshift/publish/workflow@e964f36af42dfb2594f308ebbf1a9ea51e666c17`}</code>
+            <code>{SETUP_WORKFLOW}</code>
           </pre>
         </section>
 
         <aside className="setup-warning">
-          <strong>One test run. One workflow.</strong>
+          <strong>Merge this workflow before testing a pull request.</strong>
           <p>
-            The test job saves screenshots or a report in GitHub Actions. The
-            small delivery job adds the pull request link with separate write
-            access. Run this workflow on the default branch once to save the
-            first screenshot set.
+            Let it finish on the default branch once. That run saves the first
+            exact baseline. A pull request cannot use a missing or nearby
+            baseline.
           </p>
         </aside>
 
+        <section className="setup-section setup-behavior">
+          <h2>What the workflow stores</h2>
+          <ul className="setup-checklist">
+            <li>
+              Default-branch screenshots stay in GitHub Actions for 30 days.
+            </li>
+            <li>Published review reports stay behind Git refs for 30 days.</li>
+            <li>
+              Expired report refs are removed on the next successful publish.
+            </li>
+          </ul>
+          <p>
+            Pull requests from forks are skipped because they cannot safely use
+            the write-scoped delivery job.
+          </p>
+        </section>
+
         <footer className="setup-footer">
-          <a href={`${PROJECT_URL}#add-frameshift-to-ci`}>
-            View the complete workflow on GitHub →
+          <a href={`${PROJECT_URL}/blob/main/baseline/README.md`}>
+            Advanced storage options →
           </a>
         </footer>
       </article>

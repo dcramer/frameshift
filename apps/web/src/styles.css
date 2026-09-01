@@ -368,6 +368,22 @@ h1 {
   line-height: 1.65;
 }
 
+.setup-checklist {
+  display: grid;
+  max-width: 680px;
+  gap: 12px;
+  margin: 20px 0 0;
+  padding: 0;
+  color: var(--muted);
+  line-height: 1.55;
+  list-style: none;
+}
+
+.setup-checklist li {
+  border-left: 2px solid var(--line-strong);
+  padding-left: 16px;
+}
+
 .setup-section pre {
   max-width: 100%;
   margin: 24px 0 0;
@@ -402,6 +418,11 @@ h1 {
 .setup-warning p {
   margin: 4px 0 0;
   color: var(--muted);
+}
+
+.setup-behavior {
+  margin-top: 56px;
+  padding-bottom: 0;
 }
 
 .setup-footer {
