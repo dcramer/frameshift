@@ -41,6 +41,15 @@ jobs:
         env:
           ACTION_CHANGES: ${{ steps.frameshift.outputs.changes }}
         run: node packages/action/src/qa.mjs verify "$RUNNER_TEMP/frameshift-action"
+      - name: Summarize demonstration
+        env:
+          ACTION_CHANGES: ${{ steps.frameshift.outputs.changes }}
+        run: |
+          echo "## Frameshift Action self-test" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "The checked-in Action found **$ACTION_CHANGES expected visual changes**." >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "The generated report is available in the workflow artifacts for seven days." >> "$GITHUB_STEP_SUMMARY"
       - name: Retain generated report
         if: ${{ !cancelled() }}
         continue-on-error: true

@@ -127,5 +127,6 @@ pnpm action:smoke
 The `Action self-test` workflow invokes the checked-out action through
 `uses: ./` on every pull request and push to `main`. It uses deterministic PNG
 inputs and verifies the change count, complete report, schema, and referenced
-images. It also retains the generated report for seven days. Run the workflow
-manually from GitHub when you need to test the current `main` branch again.
+images. The check summary shows the result and retains the generated report
+for seven days. Run the workflow manually from GitHub when you need to test the
+current `main` branch again.
