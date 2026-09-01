@@ -5,7 +5,7 @@ import path from "node:path";
 import { compare, getDimensions } from "@vizzly-testing/honeydiff";
 import { PNG } from "pngjs";
 
-const REPORT_VERSION = 1;
+const REPORT_VERSION = 2;
 const COMPARISON_OPTIONS = {
   alignHeightChanges: true,
   antialiasing: true,
@@ -99,7 +99,18 @@ async function comparePair(baselinePath, candidatePath, output, relative) {
 
   if (!analysis.different) {
     await fs.rm(diffImage, { force: true });
-    return { file: relative, status: "unchanged" };
+    const candidateImage = await copyReportImage(
+      candidatePath,
+      output,
+      "candidate",
+      relative,
+    );
+    return {
+      file: relative,
+      image: candidateImage,
+      images: { candidate: candidateImage },
+      status: "unchanged",
+    };
   }
 
   const { height, width } = analysis.images.canvas;

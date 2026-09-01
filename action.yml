@@ -9,7 +9,7 @@ inputs:
     description: Directory with candidate PNG files
     required: true
   output:
-    description: Directory for the report and changed images
+    description: Directory for the report and its referenced images
     required: true
 
 outputs:

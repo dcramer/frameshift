@@ -47,7 +47,6 @@ function selectedPath(file: BrowserReportFile): string {
 function reportImagePaths(report: VisualDiffReport): string[] {
   const paths = new Set<string>();
   for (const file of report.files) {
-    if (file.status === "unchanged") continue;
     for (const path of Object.values(file.images)) paths.add(path);
   }
   return [...paths];
@@ -94,7 +93,7 @@ export async function readBrowserReport(
   try {
     report = parseVisualDiffReport(value);
   } catch {
-    throw new Error("report.json does not match Frameshift report version 1.");
+    throw new Error("report.json does not match Frameshift report version 2.");
   }
 
   const root = reportPath.slice(0, -"report.json".length);

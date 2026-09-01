@@ -226,13 +226,13 @@ it serves anything. `.frameshift` is ignored by Git.
 ## Report contract
 
 `packages/report` owns the versioned Zod parser. TypeScript types are inferred
-from that schema. The generated [JSON Schema](schemas/report-v1.schema.json)
+from that schema. The generated [JSON Schema](schemas/report-v2.schema.json)
 supports producers in other languages. Run `pnpm schema:build` after an
 intentional schema change; CI rejects a stale generated schema.
 
-Report version 1 gives changed images baseline, candidate, and diff files.
-Added and removed images have only the available side. Unchanged images have no
-published review image.
+Report version 2 gives changed images baseline, candidate, and diff files.
+Added and unchanged images use the candidate capture. Removed images use the
+baseline capture. This keeps every screenshot available in the review report.
 
 All report paths are relative to `report.json`. The viewer validates them
 before it creates image URLs.

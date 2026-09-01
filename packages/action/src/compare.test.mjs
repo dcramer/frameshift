@@ -74,7 +74,7 @@ describe("compareDirectories", () => {
     ).rejects.toThrow("Output directory must be separate");
   });
 
-  it("does not write an image for matching pixels", async () => {
+  it("writes the candidate image for matching pixels", async () => {
     const paths = await makeDirectories();
     await Promise.all([
       writePng(path.join(paths.baseline, "home.png")),
@@ -89,10 +89,17 @@ describe("compareDirectories", () => {
       removed: 0,
       unchanged: 1,
     });
-    expect(report.files).toEqual([{ file: "home.png", status: "unchanged" }]);
+    expect(report.files).toEqual([
+      {
+        file: "home.png",
+        image: "images/candidate/home.png",
+        images: { candidate: "images/candidate/home.png" },
+        status: "unchanged",
+      },
+    ]);
     await expect(
-      fs.stat(path.join(paths.output, "images/home.png")),
-    ).rejects.toThrow("ENOENT");
+      fs.stat(path.join(paths.output, "images/candidate/home.png")),
+    ).resolves.toBeDefined();
   });
 
   it("writes a diff for changed pixels", async () => {
@@ -109,7 +116,7 @@ describe("compareDirectories", () => {
       await fs.readFile(path.join(paths.output, "images/diff/home.png")),
     );
 
-    expect(report.version).toBe(1);
+    expect(report.version).toBe(2);
     expect(() => parseVisualDiffReport(report)).not.toThrow();
     expect(report.summary.changed).toBe(1);
     expect(report.files[0]).toMatchObject({

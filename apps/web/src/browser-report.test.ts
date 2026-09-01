@@ -4,9 +4,16 @@ import { readBrowserReport, type BrowserReportFile } from "./browser-report";
 import { imageUrl } from "./scan-source";
 
 const unchangedReport = {
-  files: [{ file: "home.png", status: "unchanged" }],
+  files: [
+    {
+      file: "home.png",
+      image: "images/candidate/home.png",
+      images: { candidate: "images/candidate/home.png" },
+      status: "unchanged",
+    },
+  ],
   summary: { added: 0, changed: 0, removed: 0, unchanged: 1 },
-  version: 1,
+  version: 2,
 };
 
 const changedReport = {
@@ -23,7 +30,7 @@ const changedReport = {
     },
   ],
   summary: { added: 0, changed: 1, removed: 0, unchanged: 0 },
-  version: 1,
+  version: 2,
 };
 
 function selectedFile(path: string, contents = ""): BrowserReportFile {
@@ -59,12 +66,22 @@ describe("browser report", () => {
     expect(revoke).toHaveBeenCalledTimes(3);
   });
 
-  test("accepts a JSON-only report with no review images", async () => {
-    const result = await readBrowserReport([
-      selectedFile("scan/report.json", JSON.stringify(unchangedReport)),
-    ]);
+  test("opens an unchanged screenshot", async () => {
+    const result = await readBrowserReport(
+      [
+        selectedFile("scan/report.json", JSON.stringify(unchangedReport)),
+        selectedFile("scan/images/candidate/home.png"),
+      ],
+      {
+        create: (file) => `blob:${file.name}`,
+        revoke: () => undefined,
+      },
+    );
 
     expect(result.report.summary.unchanged).toBe(1);
+    expect(imageUrl(result.source, "images/candidate/home.png")).toBe(
+      "blob:home.png",
+    );
     expect(result.source).toMatchObject({ kind: "browser" });
     result.dispose();
   });

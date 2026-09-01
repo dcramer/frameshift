@@ -36,7 +36,7 @@ async function makeReport(files = []) {
   }
   await fs.writeFile(
     path.join(root, "report.json"),
-    `${JSON.stringify({ files, summary, version: 1 })}\n`,
+    `${JSON.stringify({ files, summary, version: 2 })}\n`,
   );
   return root;
 }
@@ -47,7 +47,7 @@ describe("checkReportDirectory", () => {
 
     await expect(checkReportDirectory(root)).resolves.toMatchObject({
       summary: { added: 0, changed: 0, removed: 0, unchanged: 0 },
-      version: 1,
+      version: 2,
     });
   });
 
@@ -67,6 +67,21 @@ describe("checkReportDirectory", () => {
         image: "images/candidate/home.png",
         images: { candidate: "images/candidate/home.png" },
         status: "added",
+      },
+    ]);
+
+    await expect(checkReportDirectory(root)).rejects.toThrow(
+      "missing images/candidate/home.png",
+    );
+  });
+
+  test("requires candidate images for unchanged screenshots", async () => {
+    const root = await makeReport([
+      {
+        file: "home.png",
+        image: "images/candidate/home.png",
+        images: { candidate: "images/candidate/home.png" },
+        status: "unchanged",
       },
     ]);
 

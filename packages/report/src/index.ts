@@ -1,6 +1,6 @@
 import * as z from "zod";
 
-export const VISUAL_DIFF_REPORT_VERSION = 1 as const;
+export const VISUAL_DIFF_REPORT_VERSION = 2 as const;
 export const VISUAL_DIFF_STATUSES = [
   "added",
   "changed",
@@ -60,6 +60,8 @@ const removedFileSchema = z
 const unchangedFileSchema = z
   .object({
     ...fileShape,
+    image: candidateImagePathSchema,
+    images: z.object({ candidate: candidateImagePathSchema }).strict(),
     status: z.literal("unchanged"),
   })
   .strict();
@@ -80,7 +82,7 @@ const visualDiffSummarySchema = z
   })
   .strict();
 
-const visualDiffReportV1StructureSchema = z
+const visualDiffReportV2StructureSchema = z
   .object({
     files: z.array(visualDiffFileSchema),
     summary: visualDiffSummarySchema,
@@ -89,24 +91,22 @@ const visualDiffReportV1StructureSchema = z
   .strict()
   .meta({
     description: "A Frameshift visual-diff report.",
-    title: "Visual diff report v1",
+    title: "Visual diff report v2",
   });
 
 function addInvariantIssues(
-  report: z.infer<typeof visualDiffReportV1StructureSchema>,
+  report: z.infer<typeof visualDiffReportV2StructureSchema>,
   context: z.RefinementCtx,
 ) {
   const summary = { added: 0, changed: 0, removed: 0, unchanged: 0 };
   for (const [index, file] of report.files.entries()) {
     summary[file.status] += 1;
-    if (file.status === "unchanged") continue;
-
     const primaryImage =
       file.status === "changed"
         ? file.images.diff
-        : file.status === "added"
-          ? file.images.candidate
-          : file.images.baseline;
+        : file.status === "removed"
+          ? file.images.baseline
+          : file.images.candidate;
     if (file.image !== primaryImage) {
       context.addIssue({
         code: "custom",
@@ -127,10 +127,8 @@ function addInvariantIssues(
   }
 }
 
-// Each published version stays immutable. Add a version-discriminated union at
-// this boundary when version 2 exists; do not weaken the version 1 schema.
 export const visualDiffReportSchema =
-  visualDiffReportV1StructureSchema.superRefine(addInvariantIssues);
+  visualDiffReportV2StructureSchema.superRefine(addInvariantIssues);
 
 export type VisualDiffStatus = (typeof VISUAL_DIFF_STATUSES)[number];
 export type VisualDiffFile = z.infer<typeof visualDiffFileSchema>;
@@ -144,10 +142,10 @@ export function safeParseVisualDiffReport(value: unknown) {
   return visualDiffReportSchema.safeParse(value);
 }
 
-export function visualDiffReportV1JsonSchema() {
+export function visualDiffReportV2JsonSchema() {
   return {
-    $id: "https://raw.githubusercontent.com/dcramer/frameshift/main/schemas/report-v1.schema.json",
-    ...z.toJSONSchema(visualDiffReportV1StructureSchema, {
+    $id: "https://raw.githubusercontent.com/dcramer/frameshift/main/schemas/report-v2.schema.json",
+    ...z.toJSONSchema(visualDiffReportV2StructureSchema, {
       target: "draft-2020-12",
     }),
   };

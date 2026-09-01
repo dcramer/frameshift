@@ -2,6 +2,10 @@
   "files": [
     {
       "file": "account__desktop.png",
+      "image": "images/candidate/account__desktop.png",
+      "images": {
+        "candidate": "images/candidate/account__desktop.png"
+      },
       "status": "unchanged"
     },
     {
@@ -39,5 +43,5 @@
     "removed": 1,
     "unchanged": 1
   },
-  "version": 1
+  "version": 2
 }

@@ -26,6 +26,15 @@ interface PreviewImage {
   src: string;
 }
 
+type ComparisonMode = "blend" | "difference" | "side-by-side" | "split";
+
+const COMPARISON_MODES: { label: string; value: ComparisonMode }[] = [
+  { label: "Difference", value: "difference" },
+  { label: "Split", value: "split" },
+  { label: "Side by side", value: "side-by-side" },
+  { label: "Blend", value: "blend" },
+];
+
 const PROJECT_URL = "https://github.com/dcramer/frameshift";
 const SAMPLE_PATH = "/sample/";
 const SETUP_PATH = "/setup/";
@@ -39,6 +48,42 @@ function displayName(file: string): string {
 
 function BrandMark() {
   return <span className="brand-mark" aria-hidden="true" />;
+}
+
+function ComparisonModeIcon({ mode }: { mode: ComparisonMode }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className="mode-icon"
+      fill="none"
+      focusable="false"
+      viewBox="0 0 24 18"
+    >
+      {mode === "difference" ? (
+        <>
+          <rect height="16" width="22" x="1" y="1" />
+          <path d="M5 4h4v4H5zM15 4h4v4h-4zM5 11h4v3H5z" fill="currentColor" />
+          <path d="M15 11h4v3h-4z" />
+        </>
+      ) : mode === "split" ? (
+        <>
+          <rect height="16" width="22" x="1" y="1" />
+          <path d="M12 1v16M9 6 6 9l3 3M15 6l3 3-3 3" />
+        </>
+      ) : mode === "side-by-side" ? (
+        <>
+          <rect height="16" width="9" x="1" y="1" />
+          <rect height="16" width="9" x="14" y="1" />
+        </>
+      ) : (
+        <>
+          <rect height="12" width="15" x="1" y="1" />
+          <rect height="12" width="15" x="8" y="5" />
+          <path d="M8 5h8v8H8z" fill="currentColor" opacity="0.35" />
+        </>
+      )}
+    </svg>
+  );
 }
 
 function GitHubIcon() {
@@ -255,14 +300,22 @@ function ImagePanel({
   onPreview(image: PreviewImage): void;
   source: ImageSource;
 }) {
-  function previewFigure(label: string, path: string, className?: string) {
+  const [mode, setMode] = useState<ComparisonMode>("difference");
+  const [split, setSplit] = useState(50);
+  const [blend, setBlend] = useState(50);
+
+  function previewImage(label: string, path: string): PreviewImage {
     const alt = `${displayName(file.file)} ${label.toLowerCase()}`;
-    const preview = {
+    return {
       alt,
       file: file.file,
       label,
       src: imageUrl(source, path),
     };
+  }
+
+  function previewFigure(label: string, path: string, className?: string) {
+    const preview = previewImage(label, path);
     return (
       <figure className={className}>
         <figcaption>
@@ -275,28 +328,128 @@ function ImagePanel({
           onClick={() => onPreview(preview)}
           type="button"
         >
-          <img alt={alt} src={preview.src} />
+          <img alt={preview.alt} src={preview.src} />
         </button>
       </figure>
     );
   }
 
   if (file.status === "changed") {
+    const before = previewImage("Before", file.images.baseline);
+    const after = previewImage("After", file.images.candidate);
+
     return (
-      <div className="comparison-grid">
-        {previewFigure("Before", file.images.baseline)}
-        {previewFigure("After", file.images.candidate)}
-        {previewFigure("Difference", file.images.diff, "diff-figure")}
-      </div>
+      <section className="comparison-viewer">
+        <header className="comparison-toolbar">
+          <strong>
+            {COMPARISON_MODES.find((item) => item.value === mode)?.label}
+          </strong>
+          <fieldset className="mode-switch" aria-label="Comparison mode">
+            {COMPARISON_MODES.map((item) => (
+              <button
+                aria-label={item.label}
+                aria-pressed={mode === item.value}
+                data-label={item.label}
+                key={item.value}
+                onClick={() => setMode(item.value)}
+                title={item.label}
+                type="button"
+              >
+                <ComparisonModeIcon mode={item.value} />
+              </button>
+            ))}
+          </fieldset>
+        </header>
+
+        {mode === "side-by-side" ? (
+          <div className="comparison-grid comparison-grid-pair">
+            {previewFigure("Before", file.images.baseline)}
+            {previewFigure("After", file.images.candidate)}
+          </div>
+        ) : mode === "difference" ? (
+          previewFigure("Difference", file.images.diff, "difference-figure")
+        ) : (
+          <figure className="interactive-comparison">
+            <figcaption>
+              <button onClick={() => onPreview(before)} type="button">
+                <i aria-hidden="true" className="legend-swatch legend-before" />
+                Before
+                <small>Open</small>
+              </button>
+              <span>
+                {mode === "split"
+                  ? "Drag to reveal"
+                  : `${blend}% after opacity`}
+              </span>
+              <button onClick={() => onPreview(after)} type="button">
+                <i aria-hidden="true" className="legend-swatch legend-after" />
+                After
+                <small>Open</small>
+              </button>
+            </figcaption>
+            <div className="comparison-canvas">
+              <img alt={before.alt} src={before.src} />
+              <div
+                aria-hidden="true"
+                className="comparison-overlay"
+                style={
+                  mode === "split"
+                    ? { clipPath: `inset(0 0 0 ${split}%)` }
+                    : { opacity: blend / 100 }
+                }
+              >
+                <img alt="" src={after.src} />
+              </div>
+              {mode === "split" && (
+                <>
+                  <div
+                    aria-hidden="true"
+                    className="comparison-divider"
+                    style={{ left: `${split}%` }}
+                  >
+                    <span>↔</span>
+                  </div>
+                  <input
+                    aria-label="Position image comparison divider"
+                    aria-valuetext={`${split}% before, ${100 - split}% after`}
+                    className="comparison-range comparison-range-overlay"
+                    max="100"
+                    min="0"
+                    onChange={(event) => setSplit(Number(event.target.value))}
+                    type="range"
+                    value={split}
+                  />
+                </>
+              )}
+            </div>
+            {mode === "blend" && (
+              <div className="blend-control">
+                <label htmlFor={`blend-${file.file}`}>After opacity</label>
+                <input
+                  id={`blend-${file.file}`}
+                  max="100"
+                  min="0"
+                  onChange={(event) => setBlend(Number(event.target.value))}
+                  type="range"
+                  value={blend}
+                />
+                <output>{blend}%</output>
+              </div>
+            )}
+          </figure>
+        )}
+      </section>
     );
   }
 
-  if (file.status === "unchanged") return null;
-
   const image =
-    file.status === "added" ? file.images.candidate : file.images.baseline;
+    file.status === "removed" ? file.images.baseline : file.images.candidate;
   return previewFigure(
-    file.status === "added" ? "Added" : "Removed",
+    file.status === "added"
+      ? "Added"
+      : file.status === "removed"
+        ? "Removed"
+        : "Current",
     image,
     "single-figure",
   );
@@ -354,15 +507,27 @@ function ReportViewer({
   report: VisualDiffReport;
   source: ImageSource;
 }) {
-  const changes = useMemo(
-    () => report.files.filter((file) => file.status !== "unchanged"),
+  const groups = useMemo(
+    () => [
+      {
+        files: report.files.filter((file) => file.status !== "unchanged"),
+        label: "Changes",
+      },
+      {
+        files: report.files.filter((file) => file.status === "unchanged"),
+        label: "Unchanged",
+      },
+    ],
     [report],
   );
+  const changes = groups[0].files;
   const [selectedFile, setSelectedFile] = useState(
-    changes.find((file) => file.status === "changed")?.file ?? changes[0]?.file,
+    changes.find((file) => file.status === "changed")?.file ??
+      changes[0]?.file ??
+      report.files[0]?.file,
   );
   const [previewImage, setPreviewImage] = useState<PreviewImage | null>(null);
-  const selected = changes.find((file) => file.file === selectedFile);
+  const selected = report.files.find((file) => file.file === selectedFile);
   const sourceLink =
     source.kind === "github"
       ? {
@@ -404,19 +569,33 @@ function ReportViewer({
           <span>
             <b>{report.summary.removed}</b> removed
           </span>
+          <span>
+            <b>{report.summary.unchanged}</b> unchanged
+          </span>
         </fieldset>
-        <nav aria-label="Changed screenshots">
-          {changes.map((file) => (
-            <button
-              className={file.file === selectedFile ? "selected" : ""}
-              key={file.file}
-              onClick={() => setSelectedFile(file.file)}
-              type="button"
-            >
-              <span>{displayName(file.file)}</span>
-              <small data-status={file.status}>{file.status}</small>
-            </button>
-          ))}
+        <nav aria-label="Screenshots">
+          {groups.map(
+            (group) =>
+              group.files.length > 0 && (
+                <section className="screenshot-group" key={group.label}>
+                  <h2>
+                    <span>{group.label}</span>
+                    <small>{group.files.length}</small>
+                  </h2>
+                  {group.files.map((file) => (
+                    <button
+                      className={file.file === selectedFile ? "selected" : ""}
+                      key={file.file}
+                      onClick={() => setSelectedFile(file.file)}
+                      type="button"
+                    >
+                      <span>{displayName(file.file)}</span>
+                      <small data-status={file.status}>{file.status}</small>
+                    </button>
+                  ))}
+                </section>
+              ),
+          )}
         </nav>
       </aside>
       <section className="panel review-stage">
@@ -437,11 +616,9 @@ function ReportViewer({
           </>
         ) : (
           <div className="no-changes">
-            <p className="kicker">No visual changes</p>
-            <h1>All screenshots match.</h1>
-            <p>
-              The report contains no changed, added, or removed screenshots.
-            </p>
+            <p className="kicker">Empty report</p>
+            <h1>No screenshots.</h1>
+            <p>This report does not contain any screenshots.</p>
           </div>
         )}
       </section>

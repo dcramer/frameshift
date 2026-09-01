@@ -32,7 +32,7 @@ export async function checkReportDirectory(
     JSON.parse(await fs.readFile(path.join(root, "report.json"), "utf8")),
   );
   const referencedImages = report.files.flatMap((file) =>
-    file.status === "unchanged" ? [] : Object.values(file.images),
+    Object.values(file.images),
   );
   const expectedFiles = new Set(["report.json", ...referencedImages]);
   const actualFiles = new Set(await listFiles(root));

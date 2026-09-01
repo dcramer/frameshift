@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/dcramer/frameshift/main/schemas/report-v1.schema.json",
+  "$id": "https://raw.githubusercontent.com/dcramer/frameshift/main/schemas/report-v2.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
@@ -231,6 +231,37 @@
                 "exclusiveMinimum": 0,
                 "maximum": 9007199254740991
               },
+              "image": {
+                "type": "string",
+                "allOf": [
+                  {
+                    "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$"
+                  },
+                  {
+                    "pattern": "^images\\/candidate\\/.*"
+                  }
+                ]
+              },
+              "images": {
+                "type": "object",
+                "properties": {
+                  "candidate": {
+                    "type": "string",
+                    "allOf": [
+                      {
+                        "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$"
+                      },
+                      {
+                        "pattern": "^images\\/candidate\\/.*"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "candidate"
+                ],
+                "additionalProperties": false
+              },
               "status": {
                 "type": "string",
                 "const": "unchanged"
@@ -238,6 +269,8 @@
             },
             "required": [
               "file",
+              "image",
+              "images",
               "status"
             ],
             "additionalProperties": false
@@ -279,7 +312,7 @@
     },
     "version": {
       "type": "number",
-      "const": 1
+      "const": 2
     }
   },
   "required": [
@@ -289,5 +322,5 @@
   ],
   "additionalProperties": false,
   "description": "A Frameshift visual-diff report.",
-  "title": "Visual diff report v1"
+  "title": "Visual diff report v2"
 }

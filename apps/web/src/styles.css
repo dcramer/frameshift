@@ -480,8 +480,11 @@ h1 {
 }
 
 .report-layout > .report-index {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
   min-height: 100dvh;
-  overflow: hidden;
+  overflow-y: auto;
   border-right: 1px solid var(--line);
 }
 
@@ -537,7 +540,7 @@ h1 {
 
 .summary-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   min-width: 0;
   margin: 0;
   padding: 0;
@@ -571,6 +574,32 @@ h1 {
 .report-index nav {
   display: grid;
   padding: 8px 0;
+}
+
+.screenshot-group + .screenshot-group {
+  margin-top: 8px;
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+
+.screenshot-group > h2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+  color: var(--faint);
+  padding: 10px 21px 6px 24px;
+  font:
+    10px ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.screenshot-group > h2 small {
+  font: inherit;
 }
 
 .report-index nav button {
@@ -656,10 +685,119 @@ h1 {
   white-space: nowrap;
 }
 
+.comparison-viewer {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--canvas);
+}
+
+.comparison-toolbar {
+  display: flex;
+  min-height: 54px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+  padding: 10px 12px 10px 16px;
+}
+
+.comparison-toolbar > strong {
+  color: var(--text);
+  font-size: 12px;
+  letter-spacing: -0.01em;
+}
+
+.mode-switch {
+  display: flex;
+  flex: none;
+  min-inline-size: 0;
+  margin: 0;
+  border: 1px solid var(--line-strong);
+  padding: 0;
+}
+
+.mode-switch button {
+  position: relative;
+  display: grid;
+  width: 42px;
+  height: 34px;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+}
+
+.mode-switch button + button {
+  border-left: 1px solid var(--line-strong);
+}
+
+.mode-switch button:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.mode-switch button[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.mode-switch button::after {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 9px);
+  left: 50%;
+  border: 1px solid var(--line-strong);
+  background: var(--image-overlay);
+  color: var(--image-overlay-text);
+  content: attr(data-label);
+  opacity: 0;
+  padding: 6px 8px;
+  font:
+    9px ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  pointer-events: none;
+  text-transform: uppercase;
+  transform: translate(-50%, -3px);
+  transition:
+    opacity 100ms ease,
+    transform 100ms ease;
+  white-space: nowrap;
+}
+
+.mode-switch button:hover::after,
+.mode-switch button:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.mode-icon {
+  width: 22px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+  stroke-width: 1.35;
+  vector-effect: non-scaling-stroke;
+}
+
 .comparison-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+}
+
+.comparison-grid-pair {
+  gap: 1px;
+  background: var(--line);
+}
+
+.comparison-viewer figure {
+  border: 0;
 }
 
 figure {
@@ -689,6 +827,181 @@ figcaption {
 figcaption small {
   color: var(--faint);
   font-size: 9px;
+}
+
+.interactive-comparison figcaption {
+  position: relative;
+  z-index: 3;
+  min-height: 42px;
+  padding: 0;
+}
+
+.interactive-comparison figcaption > span {
+  color: var(--faint);
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+.interactive-comparison figcaption button {
+  display: flex;
+  min-height: 41px;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: zoom-in;
+  padding: 0 12px;
+  font:
+    11px ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+}
+
+.interactive-comparison figcaption button:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.interactive-comparison figcaption button small {
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.interactive-comparison figcaption button:hover small,
+.interactive-comparison figcaption button:focus-visible small {
+  opacity: 1;
+}
+
+.legend-swatch {
+  display: block;
+  width: 7px;
+  height: 7px;
+  background: var(--muted);
+}
+
+.legend-before {
+  background: var(--changed);
+}
+
+.legend-after {
+  background: var(--accent-text);
+}
+
+.comparison-canvas {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(45deg, var(--surface) 25%, transparent 25%) 0 0 / 16px 16px,
+    linear-gradient(45deg, transparent 75%, var(--surface) 75%) 0 0 / 16px 16px,
+    linear-gradient(45deg, transparent 75%, var(--surface) 75%) 8px -8px / 16px
+      16px,
+    linear-gradient(45deg, var(--surface) 25%, var(--canvas) 25%) 8px 8px / 16px
+      16px;
+}
+
+.comparison-canvas img {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+}
+
+.comparison-overlay {
+  position: absolute;
+  inset: 0;
+}
+
+.comparison-overlay img {
+  width: 100%;
+  height: 100%;
+}
+
+.comparison-divider {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 0 1px #0b0d0e99;
+  pointer-events: none;
+  transform: translateX(-1px);
+}
+
+.comparison-divider span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: 38px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid var(--accent);
+  background: var(--image-overlay);
+  color: var(--image-overlay-text);
+  font-size: 15px;
+  transform: translate(-50%, -50%);
+}
+
+.comparison-canvas:has(.comparison-range:focus-visible) {
+  outline: 2px solid var(--accent-text);
+  outline-offset: -3px;
+}
+
+.comparison-range-overlay {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  appearance: none;
+  background: transparent;
+  cursor: ew-resize;
+  opacity: 0;
+}
+
+.comparison-range-overlay::-webkit-slider-thumb {
+  width: 36px;
+  height: 100%;
+  appearance: none;
+}
+
+.comparison-range-overlay::-moz-range-thumb {
+  width: 36px;
+  height: 100%;
+  border: 0;
+}
+
+.blend-control {
+  display: grid;
+  grid-template-columns: auto minmax(120px, 320px) 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 48px;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  padding: 8px 16px;
+  font:
+    10px ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+}
+
+.blend-control input {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.blend-control output {
+  color: var(--text);
+  text-align: right;
 }
 
 .image-trigger {
@@ -744,6 +1057,7 @@ figcaption small {
   opacity: 0.86;
 }
 
+.difference-figure,
 .diff-figure,
 .single-figure {
   grid-column: 1 / -1;
@@ -892,13 +1206,15 @@ figcaption small {
   }
 
   .report-layout > .report-index {
+    position: static;
+    height: auto;
     min-height: auto;
     border-right: 0;
     border-bottom: 1px solid var(--line);
   }
 
   .report-index nav {
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     padding: 8px;
   }
 
@@ -907,6 +1223,7 @@ figcaption small {
   }
 
   .diff-figure,
+  .difference-figure,
   .single-figure {
     grid-column: auto;
   }
@@ -999,6 +1316,22 @@ figcaption small {
 
   .review-stage code {
     display: none;
+  }
+
+  .comparison-toolbar {
+    padding: 14px;
+  }
+
+  .mode-switch {
+    width: auto;
+  }
+
+  .interactive-comparison figcaption > span {
+    display: none;
+  }
+
+  .interactive-comparison figcaption button:last-child {
+    margin-left: auto;
   }
 
   .lightbox-frame > header {

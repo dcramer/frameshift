@@ -4,7 +4,7 @@ import { describe, expect, test } from "vitest";
 import { buildComment, buildViewerUrl, createThumbnail } from "./publish.mjs";
 
 function report(summary) {
-  return { files: [], summary, version: 1 };
+  return { files: [], summary, version: 2 };
 }
 
 function changedFile(file) {
@@ -65,7 +65,7 @@ describe("Frameshift publisher", () => {
       {
         files,
         summary: { added: 0, changed: 8, removed: 0, unchanged: 0 },
-        version: 1,
+        version: 2,
       },
       "https://frameshift.pub/report/?repo=owner%2Frepo&ref=abc",
       "https://raw.githubusercontent.com/owner/repo/abc",

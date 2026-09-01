@@ -4,7 +4,7 @@ import { ZodError } from "zod";
 import {
   parseVisualDiffReport,
   safeParseVisualDiffReport,
-  visualDiffReportV1JsonSchema,
+  visualDiffReportV2JsonSchema,
 } from "./index.js";
 
 const changedFile = {
@@ -16,6 +16,13 @@ const changedFile = {
     diff: "images/diff/home__desktop.png",
   },
   status: "changed",
+} as const;
+
+const unchangedFile = {
+  file: "search.png",
+  image: "images/candidate/search.png",
+  images: { candidate: "images/candidate/search.png" },
+  status: "unchanged",
 } as const;
 
 function report(files: unknown[]) {
@@ -31,23 +38,21 @@ function report(files: unknown[]) {
       summary[file.status as keyof typeof summary] += 1;
     }
   }
-  return { files, summary, version: 1 };
+  return { files, summary, version: 2 };
 }
 
 describe("parseVisualDiffReport", () => {
-  test("parses a strict version 1 report", () => {
+  test("parses a strict version 2 report", () => {
     expect(
-      parseVisualDiffReport(
-        report([changedFile, { file: "search.png", status: "unchanged" }]),
-      ),
+      parseVisualDiffReport(report([changedFile, unchangedFile])),
     ).toMatchObject({
       summary: { added: 0, changed: 1, removed: 0, unchanged: 1 },
-      version: 1,
+      version: 2,
     });
   });
 
   test("returns structured Zod issues", () => {
-    const result = safeParseVisualDiffReport({ version: 2 });
+    const result = safeParseVisualDiffReport({ version: 1 });
     const error = result.success ? undefined : result.error;
 
     expect(result.success).toBe(false);
@@ -106,10 +111,10 @@ describe("parseVisualDiffReport", () => {
   });
 
   test("exports a strict JSON Schema for external producers", () => {
-    expect(visualDiffReportV1JsonSchema()).toMatchObject({
-      $id: expect.stringContaining("report-v1.schema.json"),
+    expect(visualDiffReportV2JsonSchema()).toMatchObject({
+      $id: expect.stringContaining("report-v2.schema.json"),
       additionalProperties: false,
-      properties: { version: { const: 1, type: "number" } },
+      properties: { version: { const: 2, type: "number" } },
       required: ["files", "summary", "version"],
     });
   });

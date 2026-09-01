@@ -78,7 +78,7 @@ export async function verifyActionQa(
   assert.deepEqual(report, {
     files: expectedFiles,
     summary: expectedSummary,
-    version: 1,
+    version: 2,
   });
 
   const images = report.files.flatMap((file) =>
