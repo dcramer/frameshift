@@ -15,6 +15,9 @@ export default defineConfig(({ command }) => {
           report: fileURLToPath(
             new URL("./report/index.html", import.meta.url),
           ),
+          sample: fileURLToPath(
+            new URL("./sample/index.html", import.meta.url),
+          ),
           setup: fileURLToPath(new URL("./setup/index.html", import.meta.url)),
         },
       },

@@ -177,8 +177,8 @@ review UI:
 pnpm dev:fixture
 ```
 
-This opens `/report/?fixture=mixed`. The same fixture is available in a normal dev
-server at that path.
+This opens `/sample/`. The same fixture is available in a normal dev server at
+that path.
 
 You can also open a report directly:
 

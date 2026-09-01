@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc --noEmit && vite build",
     "dev": "vite",
-    "dev:fixture": "vite --open '/report/?fixture=mixed'",
+    "dev:fixture": "vite --open '/sample/'",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },

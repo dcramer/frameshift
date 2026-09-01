@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   imageUrl,
-  parseScanSource,
+  pageSource,
   reportUrl,
   type ImageSource,
 } from "./scan-source";
@@ -71,10 +71,7 @@ function SourceForm() {
         </p>
       </div>
       <div className="source-actions">
-        <a
-          className="source-card source-card-primary"
-          href="/report/?fixture=mixed"
-        >
+        <a className="source-card source-card-primary" href="/sample/">
           <span>
             <strong>Open the sample</strong>
             <em>Three changes. No scavenger hunt.</em>
@@ -110,7 +107,7 @@ function SetupPage() {
           <BrandMark />
           <span>Frameshift</span>
         </a>
-        <a href="/report/?fixture=mixed">View the sample →</a>
+        <a href="/sample/">View the sample →</a>
       </header>
 
       <article className="setup-document">
@@ -413,7 +410,8 @@ export function App() {
           setState({ kind: "setup" });
           return;
         }
-        const source = parseScanSource(
+        const source = pageSource(
+          window.location.pathname,
           new URLSearchParams(window.location.search),
         );
         if (!source) {

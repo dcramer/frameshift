@@ -5,10 +5,10 @@
       "status": "unchanged"
     },
     {
-      "file": "legacy-approvals__desktop.png",
-      "image": "images/baseline/legacy-approvals__desktop.png",
+      "file": "approvals-queue__desktop.png",
+      "image": "images/baseline/approvals-queue__desktop.png",
       "images": {
-        "baseline": "images/baseline/legacy-approvals__desktop.png"
+        "baseline": "images/baseline/approvals-queue__desktop.png"
       },
       "status": "removed"
     },

@@ -5,7 +5,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { compareDirectories } from "./compare.mjs";
-import { renderSamplePage } from "./sample-page.mjs";
+import {
+  renderApprovalsPage,
+  renderItineraryPage,
+  renderSamplePage,
+} from "./sample-page.mjs";
 
 const sourceRoot = path.dirname(fileURLToPath(import.meta.url));
 export const committedFixtureRoot = path.resolve(
@@ -35,17 +39,8 @@ export async function generateMixedFixture(output = committedFixtureRoot) {
         metric: "12 min",
         primaryAction: "Start free",
       }),
-      renderSamplePage({
-        announcementBar: true,
-        headline: ["Every traveler,", "one clear", "itinerary."],
-        metric: "4 trips",
-        primaryAction: "Open itinerary",
-      }),
-      renderSamplePage({
-        headline: ["Approvals that", "keep trips", "moving."],
-        metric: "2 days",
-        primaryAction: "Review policy",
-      }),
+      renderItineraryPage(),
+      renderApprovalsPage(),
       renderSamplePage({
         headline: ["Your team,", "ready for", "takeoff."],
         metric: "98%",
@@ -56,7 +51,7 @@ export async function generateMixedFixture(output = committedFixtureRoot) {
       writePng(baseline, "trip-planner__desktop.png", before),
       writePng(candidate, "trip-planner__desktop.png", after),
       writePng(candidate, "team-itinerary__desktop.png", added),
-      writePng(baseline, "legacy-approvals__desktop.png", removed),
+      writePng(baseline, "approvals-queue__desktop.png", removed),
       writePng(baseline, "account__desktop.png", unchanged),
       writePng(candidate, "account__desktop.png", unchanged),
     ]);

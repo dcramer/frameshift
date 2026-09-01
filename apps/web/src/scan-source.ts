@@ -10,6 +10,16 @@ export type ScanSource =
 export type ImageSource =
   ScanSource | { imageUrls: ReadonlyMap<string, string>; kind: "browser" };
 
+export function pageSource(
+  pathname: string,
+  params: URLSearchParams,
+): ScanSource | null {
+  if (pathname.replace(/\/+$/, "") === "/sample") {
+    return { kind: "fixture", name: "mixed" };
+  }
+  return parseScanSource(params);
+}
+
 export function parseScanSource(params: URLSearchParams): ScanSource | null {
   const repo = params.get("repo");
   const ref = params.get("ref");

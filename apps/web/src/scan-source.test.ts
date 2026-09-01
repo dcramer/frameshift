@@ -1,8 +1,20 @@
 import { describe, expect, test } from "vitest";
 
-import { imageUrl, parseScanSource, reportUrl } from "./scan-source";
+import {
+  imageUrl,
+  pageSource,
+  parseScanSource,
+  reportUrl,
+} from "./scan-source";
 
 describe("scan source", () => {
+  test("loads the mixed fixture from the sample route", () => {
+    expect(pageSource("/sample/", new URLSearchParams())).toEqual({
+      kind: "fixture",
+      name: "mixed",
+    });
+  });
+
   test("builds an immutable public report URL", () => {
     const source = parseScanSource(
       new URLSearchParams({
