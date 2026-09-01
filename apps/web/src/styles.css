@@ -1123,7 +1123,7 @@ figcaption small {
 
 .opacity-control {
   display: grid;
-  grid-template-columns: auto minmax(80px, 1fr) 34px;
+  grid-template-columns: minmax(80px, 1fr) 34px;
   align-items: center;
   gap: 8px;
   min-width: 0;
@@ -1622,7 +1622,7 @@ figcaption small {
   }
 
   .comparison-key .opacity-control {
-    grid-template-columns: auto minmax(48px, 1fr) 32px;
+    grid-template-columns: minmax(48px, 1fr) 32px;
     gap: 6px;
   }
 

@@ -498,9 +498,8 @@ function ImagePanel({
                 <span>Drag the divider to compare</span>
               ) : (
                 <div className="opacity-control">
-                  <label htmlFor={`blend-${file.file}`}>Show after image</label>
                   <input
-                    id={`blend-${file.file}`}
+                    aria-label="After image opacity"
                     max="100"
                     min="0"
                     onChange={(event) => setBlend(Number(event.target.value))}
