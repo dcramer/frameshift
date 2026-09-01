@@ -14,7 +14,7 @@ import {
 
 type LoadState =
   | { kind: "empty" }
-  | { kind: "error"; message: string }
+  | { kind: "error" }
   | { kind: "loading" }
   | { kind: "ready"; report: VisualDiffReport; source: ImageSource };
 
@@ -32,25 +32,37 @@ function displayName(file: string): string {
     .replace(/-/g, " ");
 }
 
+function BrandMark() {
+  return <span className="brand-mark" aria-hidden="true" />;
+}
+
+function statusLabel(status: VisualDiffFile["status"]): string {
+  if (status === "added") return "Added screenshot";
+  if (status === "removed") return "Removed screenshot";
+  if (status === "unchanged") return "Unchanged screenshot";
+  return "Changed screenshot";
+}
+
 function SourceForm() {
   return (
     <section className="empty-state panel">
-      <div className="radar" aria-hidden="true">
-        <span className="radar-contact contact-one" />
-        <span className="radar-contact contact-two" />
+      <header className="home-brand">
+        <BrandMark />
+        <span>Frameshift</span>
+      </header>
+      <div className="home-copy">
+        <p className="kicker">Screenshot review for GitHub</p>
+        <h1>Your screenshots changed. Let’s find out why.</h1>
+        <p>
+          Frameshift puts the old, the new, and the suspiciously pink bits in
+          one tidy report.
+        </p>
       </div>
-      <p className="eyebrow">Visual review</p>
-      <h1>Review a visual scan</h1>
-      <p>
-        Explore a complete sample, then add Frameshift to your GitHub Actions
-        workflow.
-      </p>
       <div className="source-actions">
         <a className="source-card source-card-primary" href="/?fixture=mixed">
           <span>
-            <small>Live demo</small>
-            <strong>View sample report</strong>
-            <em>Changed, added, and removed</em>
+            <strong>Open the sample</strong>
+            <em>Three changes. No scavenger hunt.</em>
           </span>
           <b aria-hidden="true">→</b>
         </a>
@@ -59,13 +71,15 @@ function SourceForm() {
           href="https://github.com/dcramer/frameshift#use-the-github-action"
         >
           <span>
-            <small>GitHub Action</small>
-            <strong>Setup instructions</strong>
-            <em>Add Frameshift to your workflow</em>
+            <strong>Set up the GitHub Action</strong>
+            <em>Bring your own screenshots.</em>
           </span>
           <b aria-hidden="true">↗</b>
         </a>
       </div>
+      <footer className="home-note">
+        Static, open source, and happy without a login.
+      </footer>
     </section>
   );
 }
@@ -91,7 +105,7 @@ function ImagePanel({
       <figure className={className}>
         <figcaption>
           <span>{label}</span>
-          <small aria-hidden="true">Expand</small>
+          <small aria-hidden="true">Open</small>
         </figcaption>
         <button
           aria-label={`Open ${label.toLowerCase()} image full screen`}
@@ -108,9 +122,9 @@ function ImagePanel({
   if (file.status === "changed") {
     return (
       <div className="comparison-grid">
-        {previewFigure("Baseline", file.images.baseline)}
-        {previewFigure("Candidate", file.images.candidate)}
-        {previewFigure("Pixel diff", file.images.diff, "diff-figure")}
+        {previewFigure("Before", file.images.baseline)}
+        {previewFigure("After", file.images.candidate)}
+        {previewFigure("Difference", file.images.diff, "diff-figure")}
       </div>
     );
   }
@@ -120,7 +134,7 @@ function ImagePanel({
   const image =
     file.status === "added" ? file.images.candidate : file.images.baseline;
   return previewFigure(
-    file.status === "added" ? "Candidate" : "Baseline",
+    file.status === "added" ? "Added" : "Removed",
     image,
     "single-figure",
   );
@@ -150,7 +164,7 @@ function ImageLightbox({
       <div className="lightbox-frame">
         <header>
           <div>
-            <p className="eyebrow">Fullscreen preview</p>
+            <p className="kicker">Image preview</p>
             <h2 id="image-lightbox-title">{image.label}</h2>
             <code>{image.file}</code>
           </div>
@@ -165,7 +179,7 @@ function ImageLightbox({
         <div className="lightbox-canvas">
           <img alt={image.alt} src={image.src} />
         </div>
-        <footer>Press Esc to return to the report</footer>
+        <footer>Esc closes this. Very advanced.</footer>
       </div>
     </dialog>
   );
@@ -199,16 +213,28 @@ function ReportViewer({
   return (
     <main className="report-layout">
       <aside className="panel report-index">
+        <a className="report-brand" href="/">
+          <BrandMark />
+          <span>Frameshift</span>
+        </a>
         <div className="scan-summary">
-          <p className="eyebrow">Scan complete</p>
-          <strong>{changes.length}</strong>
-          <span>visual contacts</span>
-          <small className="report-origin">{sourceName}</small>
+          <p>Report</p>
+          <strong>
+            <span>{changes.length}</span>{" "}
+            {changes.length === 1 ? "change" : "changes"}
+          </strong>
+          <small>{sourceName}</small>
         </div>
         <fieldset className="summary-row" aria-label="Report summary">
-          <span>{report.summary.changed} changed</span>
-          <span>{report.summary.added} added</span>
-          <span>{report.summary.removed} removed</span>
+          <span>
+            <b>{report.summary.changed}</b> changed
+          </span>
+          <span>
+            <b>{report.summary.added}</b> added
+          </span>
+          <span>
+            <b>{report.summary.removed}</b> removed
+          </span>
         </fieldset>
         <nav aria-label="Changed screenshots">
           {changes.map((file) => (
@@ -229,7 +255,7 @@ function ReportViewer({
           <>
             <header>
               <div>
-                <p className="eyebrow">Visual contact</p>
+                <p className="kicker">{statusLabel(selected.status)}</p>
                 <h1>{displayName(selected.file)}</h1>
               </div>
               <code>{selected.file}</code>
@@ -242,8 +268,9 @@ function ReportViewer({
           </>
         ) : (
           <div className="no-changes">
-            <p className="eyebrow">Sector clear</p>
-            <h1>No visual changes detected</h1>
+            <p className="kicker">Nothing to review</p>
+            <h1>Not a pixel out of place.</h1>
+            <p>Suspicious, but we’ll allow it.</p>
           </div>
         )}
       </section>
@@ -276,13 +303,9 @@ export function App() {
           throw new Error(`GitHub returned ${response.status}.`);
         const report = parseVisualDiffReport(await response.json());
         if (active) setState({ kind: "ready", report, source });
-      } catch (error) {
+      } catch {
         if (active) {
-          setState({
-            kind: "error",
-            message:
-              error instanceof Error ? error.message : "Could not load report.",
-          });
+          setState({ kind: "error" });
         }
       }
     }
@@ -302,15 +325,18 @@ export function App() {
       {state.kind === "loading" && (
         <section className="status-panel panel">
           <div className="loading-pulse" />
-          <p>Scanning report coordinates…</p>
+          <p>Fetching the screenshots…</p>
         </section>
       )}
       {state.kind === "error" && (
         <section className="status-panel panel error-panel">
-          <p className="eyebrow">Scan interrupted</p>
-          <h1>Could not load this report</h1>
-          <p>{state.message}</p>
-          <a href="/">Enter new coordinates</a>
+          <p className="kicker">Well, that didn’t work</p>
+          <h1>This report wouldn’t open.</h1>
+          <p>
+            Check the link and try again. The report may be missing, incomplete,
+            or simply having a day.
+          </p>
+          <a href="/">Back to safety</a>
         </section>
       )}
       {state.kind === "ready" && (
