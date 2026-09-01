@@ -58,7 +58,7 @@ permissions:
   contents: read
 
 jobs:
-  screenshots:
+  e2e:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -71,7 +71,7 @@ jobs:
           screenshots: test-output/screenshots
 
   frameshift:
-    needs: screenshots
+    needs: e2e
     if: >-
       github.event_name == 'pull_request' &&
       github.event.pull_request.head.repo.full_name == github.repository
