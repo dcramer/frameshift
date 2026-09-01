@@ -17,6 +17,10 @@ inputs:
   repository:
     description: GitHub project as owner/name
     required: false
+  retention-days:
+    description: Number of days to keep published reports
+    default: "30"
+    required: false
   viewer-url:
     description: Web address for Frameshift
     default: https://frameshift.pub/

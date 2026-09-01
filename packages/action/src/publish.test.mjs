@@ -1,7 +1,12 @@
 import { PNG } from "pngjs";
 import { describe, expect, test } from "vitest";
 
-import { buildComment, buildViewerUrl, createThumbnail } from "./publish.mjs";
+import {
+  buildComment,
+  buildViewerUrl,
+  createThumbnail,
+  pruneExpiredReports,
+} from "./publish.mjs";
 
 function report(summary) {
   return { files: [], summary, version: 2 };
@@ -119,6 +124,52 @@ describe("Frameshift report publishing", () => {
     expect(thumbnail.height).toBe(240);
     expect([...thumbnail.data.subarray(lastPixel, lastPixel + 4)]).toEqual([
       255, 0, 0, 255,
+    ]);
+  });
+
+  test("removes expired report refs and preserves current reports", async () => {
+    const now = Date.UTC(2026, 8, 1);
+    const oldTimestamp = Math.floor((now - 31 * 24 * 60 * 60 * 1000) / 1000);
+    const currentTimestamp = Math.floor(
+      (now - 29 * 24 * 60 * 60 * 1000) / 1000,
+    );
+    const deleted = [];
+    const request = async (_token, endpoint, options = {}) => {
+      if (endpoint.endsWith("matching-refs/tags/frameshift-report/")) {
+        return [
+          {
+            object: { sha: "old", type: "commit" },
+            ref: `refs/tags/frameshift-report/at-${oldTimestamp}/old/report`,
+          },
+          {
+            object: { sha: "current", type: "commit" },
+            ref: `refs/tags/frameshift-report/at-${currentTimestamp}/current/report`,
+          },
+          {
+            object: { sha: "legacy", type: "commit" },
+            ref: "refs/tags/frameshift-report/legacy/report",
+          },
+        ];
+      }
+      if (endpoint.endsWith("git/commits/legacy")) {
+        return { committer: { date: "2026-07-01T00:00:00Z" } };
+      }
+      if (options.method === "DELETE") {
+        deleted.push(endpoint);
+        return undefined;
+      }
+      throw new Error(`Unexpected request: ${endpoint}`);
+    };
+
+    const removed = await pruneExpiredReports("token", "owner/repo", 30, {
+      now,
+      request,
+    });
+
+    expect(removed).toBe(2);
+    expect(deleted).toEqual([
+      `repos/owner/repo/git/refs/tags/frameshift-report/at-${oldTimestamp}/old/report`,
+      "repos/owner/repo/git/refs/tags/frameshift-report/legacy/report",
     ]);
   });
 });

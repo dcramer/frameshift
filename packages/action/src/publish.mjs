@@ -8,6 +8,8 @@ import { checkReportDirectory } from "@frameshift/report/directory";
 import { PNG } from "pngjs";
 
 export const COMMENT_MARKER = "<!-- frameshift-report -->";
+const REPORT_REF_PREFIX = "refs/tags/frameshift-report/";
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 const THUMBNAIL_COLUMNS = 3;
 const THUMBNAIL_HEIGHT = 240;
 const THUMBNAIL_WIDTH = 360;
@@ -55,6 +57,14 @@ function validatePullRequest(value) {
     throw new Error("pull-request must be a whole number greater than zero");
   }
   return Number(value);
+}
+
+function validateRetentionDays(value) {
+  const days = Number(value);
+  if (!/^[1-9][0-9]*$/.test(value) || !Number.isSafeInteger(days)) {
+    throw new Error("retention-days must be a whole number greater than zero");
+  }
+  return days;
 }
 
 function changeCount(report) {
@@ -233,6 +243,62 @@ async function githubRequest(token, endpoint, options = {}) {
   return response.json();
 }
 
+async function reportCreatedAt(token, repository, reference, request) {
+  const timestamp = reference.ref
+    .slice(REPORT_REF_PREFIX.length)
+    .match(/^at-([1-9][0-9]*)\//)?.[1];
+  if (timestamp) return Number(timestamp) * 1000;
+
+  let object = reference.object;
+  if (object.type === "tag") {
+    const tag = await request(
+      token,
+      `repos/${repository}/git/tags/${object.sha}`,
+    );
+    object = tag.object;
+  }
+  if (object.type !== "commit") return undefined;
+
+  const commit = await request(
+    token,
+    `repos/${repository}/git/commits/${object.sha}`,
+  );
+  return Date.parse(commit.committer.date);
+}
+
+export async function pruneExpiredReports(
+  token,
+  repository,
+  retentionDays,
+  { now = Date.now(), request = githubRequest } = {},
+) {
+  const references = await request(
+    token,
+    `repos/${repository}/git/matching-refs/tags/frameshift-report/`,
+  );
+  const cutoff = now - retentionDays * MILLISECONDS_PER_DAY;
+  let removed = 0;
+
+  for (const reference of references) {
+    if (!reference.ref.startsWith(REPORT_REF_PREFIX)) continue;
+    const createdAt = await reportCreatedAt(
+      token,
+      repository,
+      reference,
+      request,
+    );
+    if (!Number.isFinite(createdAt) || createdAt >= cutoff) continue;
+
+    const ref = encodePath(reference.ref.slice("refs/".length));
+    await request(token, `repos/${repository}/git/refs/${ref}`, {
+      method: "DELETE",
+    });
+    removed += 1;
+  }
+
+  return removed;
+}
+
 async function updateStatus(token, repository, headSha, status) {
   await githubRequest(token, `repos/${repository}/statuses/${headSha}`, {
     body: JSON.stringify(status),
@@ -299,7 +365,8 @@ function publishReport(reportDirectory, report, repository, headSha, token) {
     if (!/^[0-9]+$/.test(runId ?? "") || !/^[0-9]+$/.test(runAttempt ?? "")) {
       throw new Error("GITHUB_RUN_ID and GITHUB_RUN_ATTEMPT must be integers");
     }
-    const reportTag = `frameshift-report/${headSha}/${runId}-${runAttempt}`;
+    const publishedAt = Math.floor(Date.now() / 1000);
+    const reportTag = `frameshift-report/at-${publishedAt}/${headSha}/${runId}-${runAttempt}`;
     git(["tag", reportTag], { cwd: tempDirectory });
     git(
       [
@@ -338,6 +405,7 @@ export async function main() {
   );
   const headSha = validateSha(input("head-sha", { required: true }));
   const pullRequest = validatePullRequest(input("pull-request"));
+  const retentionDays = validateRetentionDays(input("retention-days") || "30");
   const viewerBaseUrl = input("viewer-url") || "https://frameshift.pub/";
   const runUrl = `${process.env.GITHUB_SERVER_URL ?? "https://github.com"}/${repository}/actions/runs/${process.env.GITHUB_RUN_ID}`;
 
@@ -378,6 +446,19 @@ export async function main() {
     setOutput("report_ref", reportRef);
     setOutput("viewer_url", viewerUrl);
     console.log(`saved ${changes} screenshot change(s) at ${viewerUrl}`);
+    try {
+      const removed = await pruneExpiredReports(
+        token,
+        repository,
+        retentionDays,
+      );
+      if (removed > 0) {
+        console.log(`removed ${removed} expired Frameshift report(s)`);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.warn(`::warning::Could not remove expired reports: ${message}`);
+    }
   } catch (error) {
     await updateStatus(token, repository, headSha, {
       context: "Frameshift",

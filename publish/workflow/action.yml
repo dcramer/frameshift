@@ -18,6 +18,10 @@ inputs:
   repository:
     description: GitHub project as owner/name
     required: false
+  retention-days:
+    description: Number of days to keep published reports
+    default: "30"
+    required: false
   run-id:
     description: Workflow run that saved the report; defaults to the current run
     required: false
@@ -66,6 +70,7 @@ runs:
         INPUT_PULL-REQUEST: ${{ inputs.pull-request || steps.context.outputs.pull-request }}
         INPUT_REPORT: ${{ runner.temp }}/frameshift-workflow-report
         INPUT_REPOSITORY: ${{ inputs.repository || github.repository }}
+        INPUT_RETENTION-DAYS: ${{ inputs.retention-days }}
         INPUT_VIEWER-URL: ${{ inputs.viewer-url }}
       run: node "$GITHUB_ACTION_PATH/../dist/index.mjs"
 
