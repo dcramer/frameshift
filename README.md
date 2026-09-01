@@ -48,6 +48,26 @@ or removed files include only the available image.
 The action reads and writes local files only. It does not call the GitHub API
 and does not need a token.
 
+## Publish a GitHub report
+
+Keep the Vercel app static. Run Frameshift inside GitHub Actions, publish its
+output as the root tree of a dedicated report branch, and create a commit
+status that links to the immutable publication commit:
+
+```text
+https://frameshift.pub/?repo=owner/repository&ref=report-commit-sha
+```
+
+The `Action self-test` workflow proves this flow in this repository. It uploads
+the verified report between jobs, commits it to `frameshift-reports`, and adds
+a `Frameshift` status to the source commit. The status links directly to the
+report on `frameshift.pub`.
+
+Only the publishing job receives `contents: write` and `statuses: write`.
+Frameshift's comparison Action remains token-free. Publishing is skipped for
+fork pull requests because GitHub correctly gives those workflows read-only
+tokens.
+
 ## Run locally
 
 ```sh
@@ -127,6 +147,7 @@ pnpm action:smoke
 The `Action self-test` workflow invokes the checked-out action through
 `uses: ./` on every pull request and push to `main`. It uses deterministic PNG
 inputs and verifies the change count, complete report, schema, and referenced
-images. The check summary shows the result and retains the generated report
-for seven days. Run the workflow manually from GitHub when you need to test the
-current `main` branch again.
+images. The workflow publishes the report at an immutable Git commit, links it
+from a native `Frameshift` status, and retains the workflow artifact for seven
+days. Run the workflow manually from GitHub when you need to test the current
+`main` branch again.

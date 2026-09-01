@@ -50,6 +50,8 @@ GitHub Action for creating visual-diff reports.
 - `packages/action` owns PNG comparison, report generation, and the GitHub
   Action entry point. It must not import the web app.
 - `action.yml` and `dist/` are the public GitHub Action boundary.
+- `frameshift-reports` stores one report bundle at the branch root. Each
+  publication creates a new commit so viewer URLs stay immutable.
 - The web app can import the report package.
 - Use immutable Git commit SHAs for report URLs. Do not load reports from a
   moving branch name.
@@ -65,6 +67,8 @@ GitHub Action for creating visual-diff reports.
 - Never place a GitHub token in client code.
 - The GitHub Action must not require repository or GitHub API permissions. Pin
   third-party workflow actions to full commit SHAs.
+- Keep report and status write permissions in the publishing job. Do not give
+  them to the comparison Action or jobs that run untrusted pull request code.
 - Keep generated action bundles reproducible and verify them in CI.
 
 ## Workflow
