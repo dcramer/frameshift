@@ -463,31 +463,6 @@ h1 {
   color: var(--code-string);
 }
 
-.setup-details {
-  margin-top: 28px;
-  border: 1px solid var(--line-strong);
-  padding: 16px 18px 20px;
-}
-
-.setup-details summary {
-  color: var(--text);
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.setup-details[open] summary {
-  margin-bottom: 8px;
-}
-
-.setup-details .setup-checklist {
-  margin-top: 14px;
-}
-
-.setup-details h3 {
-  font-size: 15px;
-}
-
 .setup-warning {
   border-left: 2px solid var(--accent-text);
   margin-top: 8px;

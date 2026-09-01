@@ -82,9 +82,9 @@ jobs:
 Merge the workflow and let it finish on the default branch once. That run saves
 the screenshots Frameshift will use before your first pull request.
 
-See the [configuration guide](https://frameshift.pub/guide/#configuration) to
-change retention, keep separate screenshot sets, comment on matching
-screenshots, or use the lower-level storage Actions.
+The [configuration guide](https://frameshift.pub/guide/#configuration) shows how
+to keep screenshots and reports longer, name more than one screenshot set, or
+save and download screenshots in separate jobs.
 
 ## Development
 

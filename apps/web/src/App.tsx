@@ -89,12 +89,28 @@ jobs:
     steps:
       # This job never checks out or runs pull request code.
       - uses: dcramer/frameshift/publish/workflow@${ACTION_REF}`;
-const ADVANCED_STORAGE_EXAMPLE = `- name: Save screenshots
+const CONFIGURATION_EXAMPLE = `# In the e2e job
+- uses: dcramer/frameshift/ci@${ACTION_REF}
+  with:
+    screenshots: test-output/screenshots
+    saved-name: chromium             # separate browser or suite
+    screenshot-retention-days: 60    # screenshots; default: 30
+    report-retention-days: 14        # report before publishing; default: 7
+
+# In the frameshift job
+- uses: dcramer/frameshift/publish/workflow@${ACTION_REF}
+  with:
+    comment-on-no-changes: true       # default: false
+    retention-days: 60               # published report; default: 30`;
+const SEPARATE_STORAGE_EXAMPLE = `# Default-branch job
+- name: Save screenshots
   uses: dcramer/frameshift/baseline/upload@${ACTION_REF}
   with:
     path: test-output/screenshots
     name: chromium
+    retention-days: 60
 
+# Pull request job
 - name: Download saved screenshots
   uses: dcramer/frameshift/baseline@${ACTION_REF}
   id: saved-screenshots
@@ -322,10 +338,7 @@ function GuidePage() {
               Give Frameshift one complete screenshot folder. A missing file
               counts as removed. Combine split test results before this step.
             </li>
-            <li>
-              GitHub keeps the screenshots and reports for 30 days. Frameshift
-              removes old reports when it saves a new one.
-            </li>
+            <li>Screenshots and published reports stay for 30 days.</li>
             <li>
               When every screenshot matches, Frameshift adds a passing check but
               does not comment. Set <code>comment-on-no-changes: true</code> on
@@ -340,119 +353,17 @@ function GuidePage() {
 
         <section className="setup-section" id="configuration">
           <h2>Configuration</h2>
-          <p>
-            Keep the defaults unless your project needs one of these changes.
-          </p>
-          <h3>Common options</h3>
-          <ul className="setup-checklist">
-            <li>
-              Use more than one screenshot set: add a unique{" "}
-              <code>saved-name</code>
-              to each screenshot recording step.
-            </li>
-            <li>
-              Keep saved screenshots longer: set
-              <code> screenshot-retention-days</code>. The default is 30 days.
-            </li>
-            <li>
-              Keep the temporary pull request report longer: set
-              <code> report-retention-days</code>. The default is 7 days.
-            </li>
-            <li>
-              Keep the published report longer: set <code>retention-days</code>
-              on the publishing step. The default is 30 days.
-            </li>
-            <li>
-              Comment when every screenshot matches: set
-              <code> comment-on-no-changes: true</code> on the publishing step.
-            </li>
-            <li>
-              Use another viewer: set <code>viewer-url</code> on the publishing
-              step.
-            </li>
-          </ul>
+          <p>Add only the lines you need.</p>
+          <CodeBlock code={CONFIGURATION_EXAMPLE} language="yaml" />
 
-          <details className="setup-details">
-            <summary>Every Action option</summary>
-            <h3>Screenshot step</h3>
-            <ul className="setup-checklist">
-              <li>
-                <code>screenshots</code>: the complete folder of PNG files.
-                Required.
-              </li>
-              <li>
-                <code>saved-name</code>: a stable name for this screenshot set.
-              </li>
-              <li>
-                <code>screenshot-retention-days</code>: days to keep screenshots
-                from the default branch.
-              </li>
-              <li>
-                <code>report-retention-days</code>: days to keep the temporary
-                pull request report.
-              </li>
-              <li>
-                <code>github-token</code>: a token that can read saved
-                screenshots. The workflow token is the default.
-              </li>
-            </ul>
-            <h3>Publishing step</h3>
-            <ul className="setup-checklist">
-              <li>
-                <code>comment-on-no-changes</code>: add a comment when all files
-                match.
-              </li>
-              <li>
-                <code>retention-days</code>: days to keep the published report.
-              </li>
-              <li>
-                <code>viewer-url</code>: the Frameshift viewer address.
-              </li>
-              <li>
-                <code>artifact-name</code>: the name of the temporary report.
-              </li>
-              <li>
-                <code>run-id</code>, <code>repository</code>,
-                <code> head-sha</code>, and <code>pull-request</code>: identify
-                a report made by another workflow run.
-              </li>
-              <li>
-                <code>github-token</code>: a token that can read and publish the
-                report. The workflow token is the default.
-              </li>
-            </ul>
-          </details>
-
-          <h3 id="advanced-storage">Advanced storage</h3>
+          <h3 id="advanced-storage">Separate storage steps</h3>
           <p>
-            The <code>ci</code> Action already saves and finds screenshots. Use
-            the lower-level Actions only when your workflow must separate those
-            operations.
+            The main Action already saves and downloads screenshots. Use these
+            steps only when that work must happen in different jobs. Keep
+            <code> name</code> the same. Download stops if it cannot find the
+            exact commit GitHub tested.
           </p>
-          <CodeBlock code={ADVANCED_STORAGE_EXAMPLE} language="yaml" />
-          <ul className="setup-checklist">
-            <li>
-              Use the same <code>name</code> in both steps.
-            </li>
-            <li>
-              Save uses the current commit unless you set <code>sha</code>. It
-              also accepts <code>retention-days</code>.
-            </li>
-            <li>
-              Download finds the exact default-branch commit tested by the pull
-              request. It never chooses screenshots from another commit.
-            </li>
-            <li>
-              Download also accepts <code>sha</code>, <code>repository</code>,
-              <code> github-token</code>, and <code>wait-seconds</code>. It
-              waits up to 180 seconds by default, then stops if the screenshots
-              are missing or expired.
-            </li>
-            <li>
-              The selected commit is available as
-              <code> steps.saved-screenshots.outputs.sha</code>.
-            </li>
-          </ul>
+          <CodeBlock code={SEPARATE_STORAGE_EXAMPLE} language="yaml" />
         </section>
 
         <footer className="setup-footer">
