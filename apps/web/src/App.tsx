@@ -48,6 +48,14 @@ function displayName(file: string): string {
     .replace(/-/g, " ");
 }
 
+function compareScreenshotNames(left: VisualDiffFile, right: VisualDiffFile) {
+  return displayName(left.file).localeCompare(
+    displayName(right.file),
+    undefined,
+    { numeric: true, sensitivity: "base" },
+  );
+}
+
 function initialComparisonMode(): ComparisonMode {
   if (typeof window === "undefined") return "difference";
   try {
@@ -542,11 +550,15 @@ function ReportViewer({
   const groups = useMemo(
     () => [
       {
-        files: report.files.filter((file) => file.status !== "unchanged"),
+        files: report.files
+          .filter((file) => file.status !== "unchanged")
+          .toSorted(compareScreenshotNames),
         label: "Changes",
       },
       {
-        files: report.files.filter((file) => file.status === "unchanged"),
+        files: report.files
+          .filter((file) => file.status === "unchanged")
+          .toSorted(compareScreenshotNames),
         label: "Unchanged",
       },
     ],
