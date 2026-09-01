@@ -26,7 +26,8 @@
     "report:check": "node packages/report/src/check-report.mjs",
     "schema:build": "pnpm --filter @frameshift/report schema:write",
     "schema:check": "pnpm --filter @frameshift/report schema:check",
-    "test": "pnpm -r test",
+    "test": "pnpm -r test && pnpm test:actions",
+    "test:actions": "node --test baseline/*.test.mjs ci/*.test.mjs publish/workflow/*.test.mjs",
     "typecheck": "pnpm -r typecheck"
   },
   "devDependencies": {

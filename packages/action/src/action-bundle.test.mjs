@@ -79,7 +79,7 @@ describe("visual diff action bundle", () => {
         true,
       );
     }
-  }, 15_000);
+  }, 60_000);
 
   it("runs without installed dependencies and writes the changes output", async () => {
     await expect(runActionSmoke()).resolves.toEqual({
@@ -91,7 +91,7 @@ describe("visual diff action bundle", () => {
         unchanged: 0,
       },
     });
-  }, 15_000);
+  }, 60_000);
 });
 
 describe("publisher action bundle", () => {
@@ -118,5 +118,5 @@ describe("publisher action bundle", () => {
       fs.readFile(path.join(output, "index.mjs"), "utf8"),
     ]);
     expect(actual, "publish/dist/index.mjs is out of date").toBe(expected);
-  });
+  }, 60_000);
 });

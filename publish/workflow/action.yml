@@ -1,5 +1,5 @@
 name: Publish Frameshift workflow report
-description: Download and publish a report from a completed GitHub workflow
+description: Download and publish a report from the current or completed GitHub workflow
 
 inputs:
   artifact-name:
@@ -10,16 +10,16 @@ inputs:
     description: GitHub token with actions, contents, statuses, and pull-request access
     required: false
   head-sha:
-    description: Source commit; defaults to the completed workflow head SHA
+    description: Source commit; defaults to the pull request head SHA
     required: false
   pull-request:
-    description: Pull request number; defaults to the completed workflow pull request
+    description: Pull request number; defaults to the current pull request
     required: false
   repository:
     description: GitHub repository in owner/name form
     required: false
   run-id:
-    description: Workflow run containing the report artifact
+    description: Workflow run containing the report artifact; defaults to the current run
     required: false
   viewer-url:
     description: Frameshift viewer base URL
@@ -27,6 +27,9 @@ inputs:
     required: false
 
 outputs:
+  published:
+    description: Whether this completed workflow produced a report
+    value: ${{ steps.context.outputs.publish }}
   changes:
     description: Number of changed, added, and removed images
     value: ${{ steps.publish.outputs.changes }}
@@ -40,21 +43,27 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Download completed workflow report
+    - name: Validate source workflow
+      id: context
+      shell: bash
+      run: node "$GITHUB_ACTION_PATH/context.mjs"
+    - name: Download workflow report
+      if: steps.context.outputs.publish == 'true'
       uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
         name: ${{ inputs.artifact-name }}
         path: ${{ runner.temp }}/frameshift-workflow-report
         repository: ${{ inputs.repository || github.repository }}
-        run-id: ${{ inputs.run-id || github.event.workflow_run.id }}
+        run-id: ${{ inputs.run-id || steps.context.outputs.run-id }}
         github-token: ${{ inputs.github-token || github.token }}
     - name: Publish immutable report
+      if: steps.context.outputs.publish == 'true'
       id: publish
       shell: bash
       env:
         INPUT_GITHUB-TOKEN: ${{ inputs.github-token || github.token }}
-        INPUT_HEAD-SHA: ${{ inputs.head-sha || github.event.workflow_run.head_sha }}
-        INPUT_PULL-REQUEST: ${{ inputs.pull-request || github.event.workflow_run.pull_requests[0].number }}
+        INPUT_HEAD-SHA: ${{ inputs.head-sha || steps.context.outputs.head-sha }}
+        INPUT_PULL-REQUEST: ${{ inputs.pull-request || steps.context.outputs.pull-request }}
         INPUT_REPORT: ${{ runner.temp }}/frameshift-workflow-report
         INPUT_REPOSITORY: ${{ inputs.repository || github.repository }}
         INPUT_VIEWER-URL: ${{ inputs.viewer-url }}

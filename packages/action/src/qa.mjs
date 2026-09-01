@@ -66,12 +66,12 @@ export async function prepareActionQa(root) {
 export async function verifyActionQa(
   root,
   changes = process.env.ACTION_CHANGES,
+  reportRoot = path.join(root, "report"),
 ) {
   if (changes !== undefined && changes !== "3") {
     throw new Error(`Expected 3 changes, received ${changes}`);
   }
 
-  const reportRoot = path.join(root, "report");
   const report = parseVisualDiffReport(
     JSON.parse(await fs.readFile(path.join(reportRoot, "report.json"), "utf8")),
   );
@@ -95,6 +95,9 @@ export async function verifyActionQa(
 async function main() {
   const command = process.argv[2];
   const root = process.argv[3] ? path.resolve(process.argv[3]) : undefined;
+  const reportRoot = process.argv[4]
+    ? path.resolve(process.argv[4])
+    : undefined;
   if (!root || !["prepare", "verify"].includes(command)) {
     throw new Error("Usage: qa.mjs <prepare|verify> <fixture-directory>");
   }
@@ -102,7 +105,7 @@ async function main() {
     await prepareActionQa(root);
     console.log(`prepared action smoke fixture at ${root}`);
   } else {
-    await verifyActionQa(root);
+    await verifyActionQa(root, process.env.ACTION_CHANGES, reportRoot);
     console.log("verified action smoke report");
   }
 }
