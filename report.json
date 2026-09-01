@@ -1,0 +1,45 @@
+{
+  "files": [
+    {
+      "file": "added.png",
+      "image": "images/candidate/added.png",
+      "images": {
+        "candidate": "images/candidate/added.png"
+      },
+      "status": "added"
+    },
+    {
+      "file": "changed.png",
+      "height": 2,
+      "image": "images/diff/changed.png",
+      "images": {
+        "baseline": "images/baseline/changed.png",
+        "candidate": "images/candidate/changed.png",
+        "diff": "images/diff/changed.png"
+      },
+      "status": "changed",
+      "width": 2
+    },
+    {
+      "file": "removed.png",
+      "image": "images/baseline/removed.png",
+      "images": {
+        "baseline": "images/baseline/removed.png"
+      },
+      "status": "removed"
+    }
+  ],
+  "metadata": {
+    "pullRequest": {
+      "number": 7,
+      "title": "fix(ci): handle a missing release tag"
+    }
+  },
+  "summary": {
+    "added": 1,
+    "changed": 1,
+    "removed": 1,
+    "unchanged": 0
+  },
+  "version": 2
+}
