@@ -1,20 +1,12 @@
-import {
-  parseVisualDiffReport,
-  type VisualDiffFile,
-  type VisualDiffReport,
-} from "@frameshift/report";
+import { type VisualDiffFile, type VisualDiffReport } from "@frameshift/report";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import {
-  imageUrl,
-  pageSource,
-  reportUrl,
-  type ImageSource,
-} from "./scan-source";
+import { loadReport } from "./load-report";
+import { imageUrl, pageSource, type ImageSource } from "./scan-source";
 
 type LoadState =
   | { kind: "empty" }
-  | { kind: "error" }
+  | { kind: "error"; message: string }
   | { kind: "loading" }
   | { kind: "ready"; report: VisualDiffReport; source: ImageSource }
   | { kind: "setup" };
@@ -772,14 +764,17 @@ export function App() {
           setState({ kind: "empty" });
           return;
         }
-        const response = await fetch(reportUrl(source));
-        if (!response.ok)
-          throw new Error(`Report request returned ${response.status}.`);
-        const report = parseVisualDiffReport(await response.json());
+        const report = await loadReport(source);
         if (active) setState({ kind: "ready", report, source });
-      } catch {
+      } catch (error) {
         if (active) {
-          setState({ kind: "error" });
+          setState({
+            kind: "error",
+            message:
+              error instanceof Error
+                ? error.message
+                : "The report could not be loaded.",
+          });
         }
       }
     }
@@ -811,8 +806,8 @@ export function App() {
         <section className="status-panel panel error-panel">
           <p className="kicker">Report not found</p>
           <h1>Could not load this report.</h1>
-          <p>Check the URL and make sure the report files are available.</p>
-          <a href="/">Return home</a>
+          <p>{state.message}</p>
+          <a href={window.location.href}>Try again</a>
         </section>
       )}
       {state.kind === "ready" && (
