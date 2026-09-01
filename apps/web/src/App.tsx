@@ -368,16 +368,6 @@ export function App() {
 
   return (
     <div className="app-shell">
-      <header className="site-header">
-        <a aria-label="Frameshift home" className="brand" href="/">
-          <span className="brand-mark" aria-hidden="true" />
-          <span>
-            <strong>Frameshift</strong>
-            <small>Visual reconnaissance</small>
-          </span>
-        </a>
-        <span className="system-status">Advancing civilization since 2026</span>
-      </header>
       {state.kind === "empty" && (
         <SourceForm onOpenReport={(files) => void openBrowserReport(files)} />
       )}

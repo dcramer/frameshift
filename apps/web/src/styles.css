@@ -45,69 +45,7 @@ a {
   width: min(1680px, 100%);
   min-height: 100vh;
   margin: 0 auto;
-  padding: 0 24px 32px;
-}
-
-.site-header {
-  height: 76px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid #1b3438;
-}
-
-.brand {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  color: inherit;
-  text-decoration: none;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-}
-
-.brand span:last-child {
-  display: grid;
-  gap: 2px;
-}
-
-.brand strong {
-  font-size: 14px;
-}
-
-.brand small {
-  color: #608486;
-  font-size: 9px;
-  letter-spacing: 0.18em;
-}
-
-.brand-mark {
-  width: 28px;
-  aspect-ratio: 1;
-  border: 1px solid #59ddd1;
-  border-radius: 50%;
-  background:
-    linear-gradient(
-      90deg,
-      transparent 47%,
-      #59ddd1 48%,
-      #59ddd1 52%,
-      transparent 53%
-    ),
-    linear-gradient(transparent 47%, #59ddd1 48%, #59ddd1 52%, transparent 53%);
-  box-shadow: 0 0 18px #2aa49b66;
-  transform: rotate(45deg);
-}
-
-.system-status {
-  color: #6f9291;
-  font:
-    10px ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    monospace;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  padding: 20px 24px 32px;
 }
 
 .panel {
@@ -394,7 +332,7 @@ input:focus {
   display: grid;
   grid-template-columns: 270px minmax(0, 1fr);
   gap: 16px;
-  margin-top: 20px;
+  margin-top: 0;
 }
 
 .report-index {
@@ -832,7 +770,6 @@ figcaption small {
 }
 
 @media (max-width: 560px) {
-  .system-status,
   .review-stage code {
     display: none;
   }
