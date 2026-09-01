@@ -110,16 +110,6 @@ a {
   text-transform: uppercase;
 }
 
-.system-status i {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  margin-right: 8px;
-  border-radius: 50%;
-  background: #68e39d;
-  box-shadow: 0 0 9px #68e39d;
-}
-
 .panel {
   border: 1px solid #1a3539;
   border-radius: 4px;

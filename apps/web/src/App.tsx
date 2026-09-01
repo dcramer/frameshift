@@ -233,9 +233,7 @@ export function App() {
             <small>Visual reconnaissance</small>
           </span>
         </a>
-        <span className="system-status">
-          <i /> Enabling sloptopia since 2026
-        </span>
+        <span className="system-status">Advancing civilization since 2026</span>
       </header>
       {state.kind === "empty" && <SourceForm />}
       {state.kind === "loading" && (
