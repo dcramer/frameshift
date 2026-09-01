@@ -86,6 +86,10 @@ report bundle. The browser validates `report.json`, checks every referenced
 image, and displays it without uploading any file. A report with no visual
 changes can use a folder that contains only `report.json`.
 
+Select **View sample report** to open the committed mixed-change fixture. The
+static production build includes this fixture, so the sample works on the live
+site without a server or external request.
+
 Start directly in the committed mixed-change fixture when working on the
 review UI:
 

@@ -52,10 +52,42 @@ function SourceForm({
       <p className="eyebrow">Awaiting coordinates</p>
       <h1>Review a visual scan</h1>
       <p>
-        Enter a public GitHub report location, or inspect a report folder
-        directly in this browser.
+        Inspect a Frameshift report without uploading it, or explore a complete
+        example first.
       </p>
-      <form onSubmit={submit}>
+      <div className="source-actions">
+        <label className="source-card source-card-primary">
+          <span>
+            <small>Your report</small>
+            <strong>Open a report folder</strong>
+            <em>Stays in this browser</em>
+          </span>
+          <b aria-hidden="true">↗</b>
+          <input
+            {...directoryPickerAttributes}
+            aria-label="Open local report folder"
+            multiple
+            onChange={(event) => {
+              const files = event.currentTarget.files;
+              if (files?.length) onOpenReport(Array.from(files));
+              event.currentTarget.value = "";
+            }}
+            type="file"
+          />
+        </label>
+        <a className="source-card" href="/?fixture=mixed">
+          <span>
+            <small>Guided preview</small>
+            <strong>View sample report</strong>
+            <em>Changed, added, and removed</em>
+          </span>
+          <b aria-hidden="true">→</b>
+        </a>
+      </div>
+      <div className="source-divider" aria-hidden="true">
+        <span>Load an immutable GitHub report</span>
+      </div>
+      <form className="github-source" onSubmit={submit}>
         <label>
           Repository
           <input
@@ -79,29 +111,6 @@ function SourceForm({
         </label>
         <button type="submit">Begin scan</button>
       </form>
-      <div className="source-divider" aria-hidden="true">
-        <span>or</span>
-      </div>
-      <div className="browser-source">
-        <label className="report-picker">
-          Open report folder
-          <input
-            {...directoryPickerAttributes}
-            aria-label="Open local report folder"
-            multiple
-            onChange={(event) => {
-              const files = event.currentTarget.files;
-              if (files?.length) onOpenReport(Array.from(files));
-              event.currentTarget.value = "";
-            }}
-            type="file"
-          />
-        </label>
-        <small>
-          Select the folder with report.json and its images. Nothing is
-          uploaded.
-        </small>
-      </div>
     </section>
   );
 }
@@ -166,8 +175,18 @@ function ReportViewer({
     () => report.files.filter((file) => file.status !== "unchanged"),
     [report],
   );
-  const [selectedFile, setSelectedFile] = useState(changes[0]?.file);
+  const [selectedFile, setSelectedFile] = useState(
+    changes.find((file) => file.status === "changed")?.file ?? changes[0]?.file,
+  );
   const selected = changes.find((file) => file.file === selectedFile);
+  const sourceName =
+    source.kind === "fixture"
+      ? "Sample report"
+      : source.kind === "browser"
+        ? "Local folder"
+        : source.kind === "github"
+          ? "GitHub report"
+          : "Local report";
 
   return (
     <main className="report-layout">
@@ -176,12 +195,13 @@ function ReportViewer({
           <p className="eyebrow">Scan complete</p>
           <strong>{changes.length}</strong>
           <span>visual contacts</span>
+          <small className="report-origin">{sourceName}</small>
         </div>
-        <div className="summary-row" aria-label="Report summary">
+        <fieldset className="summary-row" aria-label="Report summary">
           <span>{report.summary.changed} changed</span>
           <span>{report.summary.added} added</span>
           <span>{report.summary.removed} removed</span>
-        </div>
+        </fieldset>
         <nav aria-label="Changed screenshots">
           {changes.map((file) => (
             <button

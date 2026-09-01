@@ -204,7 +204,7 @@ h1 {
   }
 }
 
-form {
+.github-source {
   display: grid;
   grid-template-columns: 1fr 1.3fr auto;
   gap: 10px;
@@ -244,9 +244,8 @@ input:focus {
   box-shadow: 0 0 0 2px #59cfc61f;
 }
 
-form button,
-.status-panel a,
-.report-picker {
+.github-source button,
+.status-panel a {
   height: 42px;
   border: 1px solid #67ded3;
   border-radius: 2px;
@@ -263,11 +262,112 @@ form button,
   text-transform: uppercase;
 }
 
+.source-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 30px;
+  text-align: left;
+}
+
+.source-card {
+  position: relative;
+  display: flex;
+  min-height: 112px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  overflow: hidden;
+  border: 1px solid #29484b;
+  border-radius: 3px;
+  background: #081216;
+  color: #dce9e7;
+  cursor: pointer;
+  font: inherit;
+  letter-spacing: normal;
+  padding: 20px;
+  text-decoration: none;
+  text-transform: none;
+  transition:
+    border-color 120ms ease,
+    background 120ms ease,
+    transform 120ms ease;
+}
+
+.source-card:hover {
+  border-color: #59cfc6;
+  background: #0c1c20;
+  transform: translateY(-1px);
+}
+
+.source-card:focus-within,
+.source-card:focus-visible {
+  outline: 2px solid #59cfc6;
+  outline-offset: 3px;
+}
+
+.source-card-primary {
+  border-color: #4bbcb4;
+  background: linear-gradient(135deg, #164144, #0d292d);
+  box-shadow: inset 0 1px #75eee233;
+}
+
+.source-card > span {
+  display: grid;
+  gap: 5px;
+}
+
+.source-card small {
+  color: #6bded4;
+  font:
+    8px ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.source-card strong {
+  color: #effaf8;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 15px;
+  font-style: normal;
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+
+.source-card em {
+  color: #759394;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 11px;
+  font-style: normal;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.source-card b {
+  color: #63d9cf;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 18px;
+  font-weight: 400;
+}
+
+.source-card input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .source-divider {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 24px 0 18px;
+  margin: 26px 0 18px;
   color: #4f6f70;
   font:
     9px ui-monospace,
@@ -278,50 +378,16 @@ form button,
   text-transform: uppercase;
 }
 
+.source-divider span {
+  white-space: nowrap;
+}
+
 .source-divider::before,
 .source-divider::after {
   width: 100%;
   height: 1px;
   background: #193338;
   content: "";
-}
-
-.browser-source {
-  display: grid;
-  justify-items: center;
-  gap: 10px;
-}
-
-.browser-source small {
-  color: #5f7c7d;
-  font-size: 11px;
-  line-height: 1.5;
-}
-
-.report-picker {
-  position: relative;
-  display: inline-grid;
-  align-items: center;
-  cursor: pointer;
-}
-
-.report-picker:hover {
-  background: #205052;
-}
-
-.report-picker:focus-within {
-  outline: 2px solid #59cfc6;
-  outline-offset: 2px;
-}
-
-.report-picker input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  clip-path: inset(50%);
-  white-space: nowrap;
 }
 
 .report-layout {
@@ -353,15 +419,37 @@ form button,
 }
 
 .scan-summary span {
+  display: block;
   color: #799191;
   font-size: 12px;
+}
+
+.scan-summary .report-origin {
+  display: inline-block;
+  margin-top: 18px;
+  border: 1px solid #2a4c4f;
+  border-radius: 999px;
+  color: #6ca3a3;
+  padding: 5px 8px;
+  font:
+    8px ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .summary-row {
   display: flex;
   gap: 10px;
+  min-width: 0;
+  margin: 0;
   padding: 14px 20px;
+  border-top: 0;
+  border-right: 0;
   border-bottom: 1px solid #193338;
+  border-left: 0;
   color: #557779;
   font:
     9px ui-monospace,
@@ -543,8 +631,13 @@ figure img {
     grid-column: auto;
   }
 
-  form {
+  .source-actions,
+  .github-source {
     grid-template-columns: 1fr;
+  }
+
+  .source-card {
+    min-height: 94px;
   }
 
   .empty-state,
