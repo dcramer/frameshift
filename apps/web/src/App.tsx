@@ -234,7 +234,7 @@ export function App() {
           </span>
         </a>
         <span className="system-status">
-          <i /> System online
+          <i /> Enabling sloptopia since 2026
         </span>
       </header>
       {state.kind === "empty" && <SourceForm />}
