@@ -546,6 +546,10 @@ figure {
 }
 
 figcaption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   padding: 10px 12px;
   border-bottom: 1px solid #1c383b;
   color: #739293;
@@ -558,15 +562,195 @@ figcaption {
   text-transform: uppercase;
 }
 
-figure img {
+figcaption small {
+  color: #426667;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+}
+
+.image-trigger {
+  position: relative;
+  display: block;
+  width: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  cursor: zoom-in;
+  padding: 0;
+}
+
+.image-trigger::after {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  border: 1px solid #68dcd1;
+  border-radius: 2px;
+  background: #071114dd;
+  color: #bff8f2;
+  content: "View full screen";
+  opacity: 0;
+  padding: 7px 9px;
+  font:
+    8px ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transform: translateY(4px);
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+}
+
+.image-trigger:hover::after,
+.image-trigger:focus-visible::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.image-trigger:focus-visible {
+  box-shadow: inset 0 0 0 2px #63d9cf;
+}
+
+.image-trigger img {
   display: block;
   width: 100%;
   height: auto;
+  transition: opacity 120ms ease;
+}
+
+.image-trigger:hover img {
+  opacity: 0.88;
 }
 
 .diff-figure,
 .single-figure {
   grid-column: 1 / -1;
+}
+
+.image-lightbox {
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: #dce9e7;
+  padding: 24px;
+}
+
+.image-lightbox[open] {
+  display: grid;
+  place-items: center;
+}
+
+.image-lightbox::backdrop {
+  background: #010305f2;
+  backdrop-filter: blur(5px);
+}
+
+.lightbox-frame {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(1700px, 100%);
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid #285054;
+  border-radius: 4px;
+  background: #071013;
+  box-shadow: 0 24px 80px #000b;
+}
+
+.lightbox-frame > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid #1c383b;
+  padding: 16px 18px;
+}
+
+.lightbox-frame > header > div {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  gap: 3px 14px;
+  min-width: 0;
+}
+
+.lightbox-frame h2 {
+  margin: 0;
+  color: #edf7f4;
+  font-size: 18px;
+  font-weight: 550;
+}
+
+.lightbox-frame .eyebrow {
+  grid-column: 1 / -1;
+}
+
+.lightbox-frame code {
+  overflow: hidden;
+  color: #88a5a4;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lightbox-frame header button {
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border: 1px solid #31575a;
+  border-radius: 2px;
+  background: #102126;
+  color: #b4cfcc;
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.lightbox-frame header button:hover,
+.lightbox-frame header button:focus-visible {
+  border-color: #63d9cf;
+  color: #effaf8;
+}
+
+.lightbox-canvas {
+  display: grid;
+  min-height: 0;
+  overflow: auto;
+  place-items: center;
+  background:
+    linear-gradient(#0b171acc 1px, transparent 1px),
+    linear-gradient(90deg, #0b171acc 1px, transparent 1px), #030708;
+  background-size: 24px 24px;
+  padding: 18px;
+}
+
+.lightbox-canvas img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  box-shadow: 0 12px 50px #000b;
+}
+
+.lightbox-frame > footer {
+  border-top: 1px solid #1c383b;
+  color: #88a5a4;
+  padding: 9px 18px;
+  font:
+    8px ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  letter-spacing: 0.1em;
+  text-align: right;
+  text-transform: uppercase;
 }
 
 .single-figure {
@@ -656,11 +840,35 @@ figure img {
   .review-stage {
     padding: 16px;
   }
+
+  .image-lightbox {
+    padding: 8px;
+  }
+
+  .lightbox-frame > header {
+    padding: 12px;
+  }
+
+  .lightbox-frame > header > div {
+    display: block;
+  }
+
+  .lightbox-frame code {
+    display: block;
+    margin-top: 4px;
+  }
+
+  .lightbox-canvas {
+    padding: 8px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .radar::after,
-  .loading-pulse {
+  .loading-pulse,
+  .image-trigger::after,
+  .image-trigger img {
     animation: none;
+    transition: none;
   }
 }

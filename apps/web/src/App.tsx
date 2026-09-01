@@ -22,6 +22,13 @@ type LoadState =
 
 const directoryPickerAttributes = { webkitdirectory: "" };
 
+interface PreviewImage {
+  alt: string;
+  file: string;
+  label: string;
+  src: string;
+}
+
 function displayName(file: string): string {
   return file
     .replace(/\.png$/, "")
@@ -117,35 +124,45 @@ function SourceForm({
 
 function ImagePanel({
   file,
+  onPreview,
   source,
 }: {
   file: VisualDiffFile;
+  onPreview(image: PreviewImage): void;
   source: ImageSource;
 }) {
+  function previewFigure(label: string, path: string, className?: string) {
+    const alt = `${displayName(file.file)} ${label.toLowerCase()}`;
+    const preview = {
+      alt,
+      file: file.file,
+      label,
+      src: imageUrl(source, path),
+    };
+    return (
+      <figure className={className}>
+        <figcaption>
+          <span>{label}</span>
+          <small aria-hidden="true">Expand</small>
+        </figcaption>
+        <button
+          aria-label={`Open ${label.toLowerCase()} image full screen`}
+          className="image-trigger"
+          onClick={() => onPreview(preview)}
+          type="button"
+        >
+          <img alt={alt} src={preview.src} />
+        </button>
+      </figure>
+    );
+  }
+
   if (file.status === "changed") {
     return (
       <div className="comparison-grid">
-        <figure>
-          <figcaption>Baseline</figcaption>
-          <img
-            alt={`${displayName(file.file)} baseline`}
-            src={imageUrl(source, file.images.baseline)}
-          />
-        </figure>
-        <figure>
-          <figcaption>Candidate</figcaption>
-          <img
-            alt={`${displayName(file.file)} candidate`}
-            src={imageUrl(source, file.images.candidate)}
-          />
-        </figure>
-        <figure className="diff-figure">
-          <figcaption>Pixel diff</figcaption>
-          <img
-            alt={`${displayName(file.file)} pixel diff`}
-            src={imageUrl(source, file.images.diff)}
-          />
-        </figure>
+        {previewFigure("Baseline", file.images.baseline)}
+        {previewFigure("Candidate", file.images.candidate)}
+        {previewFigure("Pixel diff", file.images.diff, "diff-figure")}
       </div>
     );
   }
@@ -154,13 +171,55 @@ function ImagePanel({
 
   const image =
     file.status === "added" ? file.images.candidate : file.images.baseline;
+  return previewFigure(
+    file.status === "added" ? "Candidate" : "Baseline",
+    image,
+    "single-figure",
+  );
+}
+
+function ImageLightbox({
+  image,
+  onClose,
+}: {
+  image: PreviewImage;
+  onClose(): void;
+}) {
+  const dialog = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const element = dialog.current;
+    if (element && !element.open) element.showModal();
+  }, []);
+
   return (
-    <figure className="single-figure">
-      <figcaption>
-        {file.status === "added" ? "Candidate" : "Baseline"}
-      </figcaption>
-      <img alt={displayName(file.file)} src={imageUrl(source, image)} />
-    </figure>
+    <dialog
+      aria-labelledby="image-lightbox-title"
+      className="image-lightbox"
+      onClose={onClose}
+      ref={dialog}
+    >
+      <div className="lightbox-frame">
+        <header>
+          <div>
+            <p className="eyebrow">Fullscreen preview</p>
+            <h2 id="image-lightbox-title">{image.label}</h2>
+            <code>{image.file}</code>
+          </div>
+          <button
+            aria-label="Close full-screen image"
+            onClick={() => dialog.current?.close()}
+            type="button"
+          >
+            ×
+          </button>
+        </header>
+        <div className="lightbox-canvas">
+          <img alt={image.alt} src={image.src} />
+        </div>
+        <footer>Press Esc to return to the report</footer>
+      </div>
+    </dialog>
   );
 }
 
@@ -178,6 +237,7 @@ function ReportViewer({
   const [selectedFile, setSelectedFile] = useState(
     changes.find((file) => file.status === "changed")?.file ?? changes[0]?.file,
   );
+  const [previewImage, setPreviewImage] = useState<PreviewImage | null>(null);
   const selected = changes.find((file) => file.file === selectedFile);
   const sourceName =
     source.kind === "fixture"
@@ -226,7 +286,11 @@ function ReportViewer({
               </div>
               <code>{selected.file}</code>
             </header>
-            <ImagePanel file={selected} source={source} />
+            <ImagePanel
+              file={selected}
+              onPreview={setPreviewImage}
+              source={source}
+            />
           </>
         ) : (
           <div className="no-changes">
@@ -235,6 +299,12 @@ function ReportViewer({
           </div>
         )}
       </section>
+      {previewImage && (
+        <ImageLightbox
+          image={previewImage}
+          onClose={() => setPreviewImage(null)}
+        />
+      )}
     </main>
   );
 }
