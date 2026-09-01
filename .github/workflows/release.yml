@@ -1,0 +1,165 @@
+name: Release
+run-name: Release a ${{ inputs.bump }} version
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Semantic version part to increment
+        required: true
+        type: choice
+        default: patch
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    env:
+      DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+    steps:
+      - name: Validate the release request
+        env:
+          BUMP: ${{ inputs.bump }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          if [[ "$GITHUB_REF" != "refs/heads/$DEFAULT_BRANCH" ]]; then
+            echo "Run releases from the $DEFAULT_BRANCH branch." >&2
+            exit 1
+          fi
+
+          latest_tag="$({
+            gh api --paginate \
+              "repos/$GITHUB_REPOSITORY/releases?per_page=100" \
+              --jq '.[].tag_name'
+          } | sed -nE '/^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/p' \
+            | sort -V \
+            | tail -n 1)"
+
+          if [[ -z "$latest_tag" ]]; then
+            if [[ "$BUMP" != "major" ]]; then
+              echo "The first release must use a major bump to create v1.0.0." >&2
+              exit 1
+            fi
+            release_tag="v1.0.0"
+          else
+            latest_sha="$(gh api \
+              "repos/$GITHUB_REPOSITORY/commits/$latest_tag" \
+              --jq '.sha')"
+
+            if [[ "$latest_sha" == "$GITHUB_SHA" ]]; then
+              release_tag="$latest_tag"
+              echo "$GITHUB_SHA is already $release_tag; checking the release again."
+            else
+              version="${latest_tag#v}"
+              IFS=. read -r major minor patch <<< "$version"
+
+              case "$BUMP" in
+                major)
+                  major="$((major + 1))"
+                  minor=0
+                  patch=0
+                  ;;
+                minor)
+                  minor="$((minor + 1))"
+                  patch=0
+                  ;;
+                patch)
+                  patch="$((patch + 1))"
+                  ;;
+              esac
+
+              release_tag="v$major.$minor.$patch"
+            fi
+          fi
+
+          echo "RELEASE_TAG=$release_tag" >> "$GITHUB_ENV"
+          echo "Preparing $release_tag from $GITHUB_SHA."
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check the release tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          tag_sha="$({
+            gh api "repos/$GITHUB_REPOSITORY/commits/$RELEASE_TAG" --jq '.sha'
+          } 2>/dev/null || true)"
+          if [[ -n "$tag_sha" && "$tag_sha" != "$GITHUB_SHA" ]]; then
+            echo "$RELEASE_TAG already points to $tag_sha instead of $GITHUB_SHA." >&2
+            exit 1
+          fi
+      - name: Enable Corepack
+        run: corepack enable
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.20.0
+          cache: pnpm
+      - name: Install packages
+        run: pnpm install --frozen-lockfile
+      - name: Check the release
+        run: pnpm check
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          if ! gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_TAG" >/dev/null 2>&1; then
+            gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" \
+              -f ref="refs/tags/$RELEASE_TAG" \
+              -f sha="$GITHUB_SHA"
+          fi
+
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "$RELEASE_TAG is already published."
+          else
+            gh release create "$RELEASE_TAG" \
+              --generate-notes \
+              --title "$RELEASE_TAG" \
+              --verify-tag
+          fi
+      - name: Update compatible version tags
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          version="${RELEASE_TAG#v}"
+          major="${version%%.*}"
+          remainder="${version#*.}"
+          minor="${remainder%%.*}"
+
+          update_tag() {
+            local tag="$1"
+
+            if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$tag" >/dev/null 2>&1; then
+              gh api --method PATCH "repos/$GITHUB_REPOSITORY/git/refs/tags/$tag" \
+                -f sha="$GITHUB_SHA" \
+                -F force=true
+            else
+              gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" \
+                -f ref="refs/tags/$tag" \
+                -f sha="$GITHUB_SHA"
+            fi
+          }
+
+          update_tag "v$major"
+          update_tag "v$major.$minor"

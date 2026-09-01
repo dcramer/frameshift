@@ -162,6 +162,24 @@ pnpm action:smoke
 The `Action self-test` workflow also runs the checked-in Action on pull requests
 and pushes to `main`.
 
+## Release the Actions
+
+One version covers the root comparison Action and the Actions in `baseline/`,
+`ci/`, and `publish/`. Merge the release commit to `main`, then run the
+`Release` workflow and choose a patch, minor, or major version bump. Choose
+major for the first release; it creates `v1.0.0`. Later releases increment the
+latest stable GitHub release.
+
+The workflow runs every project check before it publishes the exact version.
+It also moves the compatible major and minor tags. Releasing `v1.2.3` creates
+the immutable `v1.2.3` release and points `v1` and `v1.2` at the same commit.
+Versions must move forward; use a new major version for breaking Action input
+or behavior changes.
+
+Keep release immutability enabled in the GitHub repository settings. Consumers
+who need a fixed supply-chain boundary should continue to use a full Git commit
+ID instead of a moving major or minor tag.
+
 ## Project layout
 
 - `apps/web`: static report viewer and setup guide.
