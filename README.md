@@ -26,13 +26,16 @@ store it in GitHub Actions artifacts:
 ```yaml
 on:
   push:
-    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   baseline:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@<full-commit-sha>
@@ -41,7 +44,7 @@ jobs:
         run: pnpm capture:screenshots -- --all --output path/to/baseline
       - uses: dcramer/frameshift/baseline/upload@<full-commit-sha>
         with:
-          name: web-screenshots
+          name: web-screenshots-v1
           sha: ${{ github.sha }}
           path: path/to/baseline
 ```
@@ -67,7 +70,7 @@ jobs:
         run: pnpm capture:screenshots -- --output "${{ runner.temp }}/frameshift/candidate"
       - uses: dcramer/frameshift/baseline@<full-commit-sha>
         with:
-          name: web-screenshots
+          name: web-screenshots-v1
           sha: ${{ github.event.pull_request.base.sha }}
           path: ${{ runner.temp }}/frameshift/baseline
           github-token: ${{ github.token }}
@@ -84,6 +87,11 @@ The restore Action checks the artifact name and source SHA. It waits briefly
 when the default-branch workflow is still uploading. It does not silently
 regenerate a missing baseline. See [`baseline/README.md`](baseline/README.md)
 for retention and partial-capture details.
+
+`name` is the baseline ID. Include a capture-contract version in it when
+browser or screenshot semantics can change, such as `web-screenshots-v1`.
+Restore uses this ID plus the full base SHA; it never follows a branch name or
+chooses a nearby artifact.
 
 Pin Frameshift and other third-party actions to full commit SHAs. The
 `changes` output counts changed, added, and removed images. A visual change does
