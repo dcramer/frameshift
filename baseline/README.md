@@ -5,7 +5,7 @@ after your tests in a workflow that runs on pull requests and your default
 branch:
 
 ```yaml
-- uses: dcramer/frameshift/ci@e964f36af42dfb2594f308ebbf1a9ea51e666c17
+- uses: dcramer/frameshift/ci@68a8b5e8bbd439088ef9a044e693c5de9efe7ecd
   with:
     screenshots: path/to/test-output/screenshots
 ```
@@ -19,7 +19,7 @@ Frameshift uses `frameshift-baseline-v1` to identify this set. Change
 new set:
 
 ```yaml
-- uses: dcramer/frameshift/ci@e964f36af42dfb2594f308ebbf1a9ea51e666c17
+- uses: dcramer/frameshift/ci@68a8b5e8bbd439088ef9a044e693c5de9efe7ecd
   with:
     screenshots: path/to/test-output/screenshots
     saved-name: screenshots-v2
@@ -36,11 +36,11 @@ Use the separate save and download Actions only when the combined CI Action
 cannot fit your workflow:
 
 ```yaml
-- uses: dcramer/frameshift/baseline/upload@e964f36af42dfb2594f308ebbf1a9ea51e666c17
+- uses: dcramer/frameshift/baseline/upload@68a8b5e8bbd439088ef9a044e693c5de9efe7ecd
   with:
     path: path/to/current-screenshots
 
-- uses: dcramer/frameshift/baseline@e964f36af42dfb2594f308ebbf1a9ea51e666c17
+- uses: dcramer/frameshift/baseline@68a8b5e8bbd439088ef9a044e693c5de9efe7ecd
   id: baseline
   with:
     path: path/to/before

@@ -33,7 +33,7 @@ const COMPARISON_MODE_STORAGE_KEY = "frameshift:comparison-mode";
 const PROJECT_URL = "https://github.com/dcramer/frameshift";
 const SAMPLE_PATH = "/sample/";
 const SETUP_PATH = "/setup/";
-const ACTION_REF = "e964f36af42dfb2594f308ebbf1a9ea51e666c17";
+const ACTION_REF = "68a8b5e8bbd439088ef9a044e693c5de9efe7ecd";
 const SETUP_WORKFLOW = `name: Screenshot checks
 
 on:
