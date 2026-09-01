@@ -38,7 +38,7 @@ async function listFiles(root, directory = root) {
 describe("mixed visual diff fixture", () => {
   test("matches the current comparison output", async () => {
     const tempRoot = await fs.mkdtemp(
-      path.join(os.tmpdir(), "scanner-sweep-fixture-test-"),
+      path.join(os.tmpdir(), "frameshift-fixture-test-"),
     );
     tempDirectories.push(tempRoot);
     const generatedRoot = path.join(tempRoot, "mixed");

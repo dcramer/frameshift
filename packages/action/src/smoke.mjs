@@ -18,7 +18,7 @@ const expectedSummary = {
 
 export async function runActionSmoke() {
   const tempRoot = await fs.mkdtemp(
-    path.join(os.tmpdir(), "scanner-sweep-smoke-"),
+    path.join(os.tmpdir(), "frameshift-smoke-"),
   );
   const fixtureRoot = path.join(tempRoot, "fixture");
   const githubOutput = path.join(tempRoot, "github-output.txt");

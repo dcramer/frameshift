@@ -88,7 +88,7 @@ const visualDiffReportV1StructureSchema = z
   })
   .strict()
   .meta({
-    description: "A Scanner Sweep visual-diff report.",
+    description: "A Frameshift visual-diff report.",
     title: "Visual diff report v1",
   });
 
@@ -146,7 +146,7 @@ export function safeParseVisualDiffReport(value: unknown) {
 
 export function visualDiffReportV1JsonSchema() {
   return {
-    $id: "https://raw.githubusercontent.com/dcramer/scanner-sweep/main/schemas/report-v1.schema.json",
+    $id: "https://raw.githubusercontent.com/dcramer/frameshift/main/schemas/report-v1.schema.json",
     ...z.toJSONSchema(visualDiffReportV1StructureSchema, {
       target: "draft-2020-12",
     }),

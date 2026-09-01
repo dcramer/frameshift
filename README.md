@@ -1,11 +1,11 @@
-# Scanner Sweep
+# Frameshift
 
-Scanner Sweep compares PNG screenshots and turns the resulting visual-diff
+Frameshift compares PNG screenshots and turns the resulting visual-diff
 reports into a focused review interface. Its reusable GitHub Action creates the
 report. Its static web app displays reports stored at immutable Git revisions.
 
 The first version is a static Vercel app. GitHub serves report JSON and image
-files. Scanner Sweep does not need a database, object storage, or server-side
+files. Frameshift does not need a database, object storage, or server-side
 runtime.
 
 ## Repository layout
@@ -28,7 +28,7 @@ steps:
   - uses: actions/checkout@<full-commit-sha>
   - name: Compare screenshots
     id: visual-diff
-    uses: dcramer/scanner-sweep@<full-commit-sha>
+    uses: dcramer/frameshift@<full-commit-sha>
     with:
       baseline: path/to/baseline
       candidate: path/to/candidate
@@ -37,7 +37,7 @@ steps:
     run: echo "${{ steps.visual-diff.outputs.changes }} visual changes"
 ```
 
-Pin Scanner Sweep and other third-party actions to full commit SHAs. The
+Pin Frameshift and other third-party actions to full commit SHAs. The
 `changes` output counts changed, added, and removed images. A visual change does
 not fail the action.
 

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Scanner Sweep is a static visual-diff viewer. It will also own a reusable
+Frameshift is a static visual-diff viewer. It will also own a reusable
 GitHub Action for creating visual-diff reports.
 
 ## Core Rules

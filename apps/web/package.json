@@ -1,5 +1,5 @@
 {
-  "name": "@scanner-sweep/web",
+  "name": "@frameshift/web",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@scanner-sweep/report": "workspace:*",
+    "@frameshift/report": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

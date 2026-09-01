@@ -67,7 +67,7 @@ importers:
 
   apps/web:
     dependencies:
-      "@scanner-sweep/report":
+      "@frameshift/report":
         specifier: workspace:*
         version: link:../../packages/report
       react:
@@ -105,7 +105,7 @@ importers:
         specifier: "catalog:"
         version: 7.0.0
     devDependencies:
-      "@scanner-sweep/report":
+      "@frameshift/report":
         specifier: workspace:*
         version: link:../report
       "@vercel/ncc":

@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { parseVisualDiffReport } from "@scanner-sweep/report";
+import { parseVisualDiffReport } from "@frameshift/report";
 import { PNG } from "pngjs";
 
 const expectedSummary = {

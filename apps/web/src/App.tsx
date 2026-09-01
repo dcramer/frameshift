@@ -2,7 +2,7 @@ import {
   parseVisualDiffReport,
   type VisualDiffFile,
   type VisualDiffReport,
-} from "@scanner-sweep/report";
+} from "@frameshift/report";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
 import {
@@ -226,10 +226,10 @@ export function App() {
   return (
     <div className="app-shell">
       <header className="site-header">
-        <a aria-label="Scanner Sweep home" className="brand" href="/">
+        <a aria-label="Frameshift home" className="brand" href="/">
           <span className="brand-mark" aria-hidden="true" />
           <span>
-            <strong>Scanner Sweep</strong>
+            <strong>Frameshift</strong>
             <small>Visual reconnaissance</small>
           </span>
         </a>

@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { parseVisualDiffReport } from "@scanner-sweep/report";
+import { parseVisualDiffReport } from "@frameshift/report";
 import { PNG } from "pngjs";
 import { afterEach, describe, expect, it } from "vitest";
 

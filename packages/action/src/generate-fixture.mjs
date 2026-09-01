@@ -68,7 +68,7 @@ async function writePng(root, relative, image) {
 
 export async function generateMixedFixture(output = committedFixtureRoot) {
   const tempRoot = await fs.mkdtemp(
-    path.join(os.tmpdir(), "scanner-sweep-fixture-"),
+    path.join(os.tmpdir(), "frameshift-fixture-"),
   );
   const baseline = path.join(tempRoot, "baseline");
   const candidate = path.join(tempRoot, "candidate");

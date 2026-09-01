@@ -1,4 +1,4 @@
-name: Scanner Sweep
+name: Frameshift
 description: Compare two directories of PNG screenshots and create a visual-diff report
 
 inputs:
