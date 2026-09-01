@@ -28,10 +28,10 @@ afterEach(async () => {
   );
 });
 
-describe("visual diff action bundle", () => {
+describe("built screenshot comparison Action", () => {
   it("matches the source and includes license notices", async () => {
     const output = await fs.mkdtemp(
-      path.join(os.tmpdir(), "visual-diff-action-"),
+      path.join(os.tmpdir(), "frameshift-action-"),
     );
     tempDirectories.push(output);
     execFileSync(
@@ -94,7 +94,7 @@ describe("visual diff action bundle", () => {
   }, 60_000);
 });
 
-describe("publisher action bundle", () => {
+describe("built report publishing Action", () => {
   it("matches the source", async () => {
     const output = await fs.mkdtemp(
       path.join(os.tmpdir(), "frameshift-publisher-action-"),

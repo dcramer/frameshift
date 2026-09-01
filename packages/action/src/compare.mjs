@@ -143,7 +143,7 @@ export async function compareDirectories({ baseline, candidate, output }) {
       (!reverse.startsWith("..") && !path.isAbsolute(reverse));
     if (overlaps) {
       throw new Error(
-        "Output directory must be separate from input directories",
+        "Choose an output folder outside the two screenshot folders",
       );
     }
   }

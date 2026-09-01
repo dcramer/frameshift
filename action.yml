@@ -1,20 +1,20 @@
 name: Frameshift
-description: Compare two directories of PNG screenshots and create a visual-diff report
+description: Compare two folders of PNG screenshots and create a review report
 
 inputs:
   baseline:
-    description: Directory with baseline PNG files
+    description: Folder with screenshots from before the change
     required: true
   candidate:
-    description: Directory with candidate PNG files
+    description: Folder with screenshots after the change
     required: true
   output:
-    description: Directory for the report and its referenced images
+    description: Folder where Frameshift writes the report
     required: true
 
 outputs:
   changes:
-    description: Number of changed, added, and removed images
+    description: Number of screenshots that changed, were added, or were removed
 
 runs:
   using: node24

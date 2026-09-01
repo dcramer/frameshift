@@ -23,7 +23,7 @@ test("publishes a report from the same pull-request workflow", () => {
       headSha,
       publish: true,
       pullRequest: "42",
-      reason: "same-workflow pull request",
+      reason: "pull request in this workflow",
       runId: "123",
     },
   );
@@ -74,7 +74,7 @@ test("publishes a successful same-repository pull request", () => {
       headSha,
       publish: true,
       pullRequest: "42",
-      reason: "successful same-repository pull request",
+      reason: "successful pull request from this project",
       runId: "123",
     },
   );

@@ -321,6 +321,6 @@
     "version"
   ],
   "additionalProperties": false,
-  "description": "A Frameshift visual-diff report.",
-  "title": "Visual diff report v2"
+  "description": "A Frameshift screenshot report.",
+  "title": "Frameshift screenshot report v2"
 }

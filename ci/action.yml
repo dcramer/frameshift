@@ -1,97 +1,97 @@
-name: Record Frameshift snapshots
-description: Store default-branch screenshots or create a pull-request visual report
+name: Check screenshots with Frameshift
+description: Save default-branch screenshots or create a pull request report
 
 inputs:
-  snapshots:
-    description: Directory containing the PNG screenshots written by the test suite
+  screenshots:
+    description: Folder containing the PNG screenshots from your tests
     required: true
-  baseline-name:
-    description: Stable ID for this screenshot suite
-    default: frameshift-baseline-v1
+  saved-name:
+    description: Shared name for this set of screenshots
+    default: frameshift-screenshots-v1
     required: false
-  baseline-retention-days:
-    description: Number of days GitHub retains baseline screenshots
+  screenshot-retention-days:
+    description: Number of days GitHub keeps default-branch screenshots
     default: "30"
     required: false
   report-retention-days:
-    description: Number of days GitHub retains pull-request reports
+    description: Number of days GitHub keeps pull request reports
     default: "7"
     required: false
   github-token:
-    description: GitHub token with Actions read access
+    description: GitHub token that can read Actions files
     required: false
 
 outputs:
   mode:
-    description: "Operation selected for this run: baseline, report, or skip"
+    description: "What Frameshift did in this run: save, report, or skip"
     value: ${{ steps.context.outputs.mode }}
   changes:
     description: Number of changed, added, and removed screenshots
     value: ${{ steps.compare.outputs.changes }}
-  baseline-sha:
-    description: Exact baseline commit used for a pull-request report
-    value: ${{ steps.baseline.outputs.sha }}
+  before-commit:
+    description: Git commit used for the before screenshots
+    value: ${{ steps.before.outputs.sha }}
 
 runs:
   using: composite
   steps:
-    - name: Classify workflow run
+    - name: Choose what to do
       id: context
       shell: bash
       run: node "$GITHUB_ACTION_PATH/context.mjs"
-    - name: Validate screenshots
+    - name: Check screenshots
       if: steps.context.outputs.mode != 'skip'
       shell: bash
       env:
-        FRAMESHIFT_SNAPSHOTS: ${{ inputs.snapshots }}
+        FRAMESHIFT_SCREENSHOTS: ${{ inputs.screenshots }}
       run: node "$GITHUB_ACTION_PATH/validate.mjs"
-    - name: Build immutable baseline name
-      if: steps.context.outputs.mode == 'baseline'
-      id: baseline-artifact
+    - name: Name the saved screenshots
+      if: steps.context.outputs.mode == 'save'
+      id: saved-screenshots
       shell: bash
       env:
-        BASELINE_NAME: ${{ inputs.baseline-name }}
+        BASELINE_NAME: ${{ inputs.saved-name }}
         BASELINE_SHA: ${{ github.sha }}
       run: node "$GITHUB_ACTION_PATH/../baseline/artifact.mjs"
-    - name: Store default-branch screenshots
-      if: steps.context.outputs.mode == 'baseline'
+    - name: Save default-branch screenshots
+      if: steps.context.outputs.mode == 'save'
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
-        name: ${{ steps.baseline-artifact.outputs.artifact }}
-        path: ${{ inputs.snapshots }}
+        name: ${{ steps.saved-screenshots.outputs.artifact }}
+        path: ${{ inputs.screenshots }}
         if-no-files-found: error
-        retention-days: ${{ inputs.baseline-retention-days }}
+        retention-days: ${{ inputs.screenshot-retention-days }}
         compression-level: 0
-    - name: Resolve exact pull-request baseline
+    - name: Find the before screenshots
       if: steps.context.outputs.mode == 'report'
-      id: baseline
+      id: before
       shell: bash
       env:
-        BASELINE_NAME: ${{ inputs.baseline-name }}
+        BASELINE_NAME: ${{ inputs.saved-name }}
         BASELINE_REPOSITORY: ${{ github.repository }}
         BASELINE_SHA: ""
         BASELINE_TOKEN: ${{ inputs.github-token || github.token }}
         BASELINE_WAIT_SECONDS: "180"
       run: node "$GITHUB_ACTION_PATH/../baseline/resolve.mjs"
-    - name: Restore exact pull-request baseline
+    - name: Download the before screenshots
       if: steps.context.outputs.mode == 'report'
       uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
-        name: ${{ steps.baseline.outputs.artifact }}
-        path: ${{ runner.temp }}/frameshift/baseline
-        repository: ${{ steps.baseline.outputs.repository }}
-        run-id: ${{ steps.baseline.outputs.run-id }}
+        name: ${{ steps.before.outputs.artifact }}
+        path: ${{ runner.temp }}/frameshift/before
+        repository: ${{ steps.before.outputs.repository }}
+        run-id: ${{ steps.before.outputs.run-id }}
         github-token: ${{ inputs.github-token || github.token }}
-    - name: Create visual report
+    - name: Create screenshot report
       if: steps.context.outputs.mode == 'report'
       id: compare
       shell: bash
       env:
-        INPUT_BASELINE: ${{ runner.temp }}/frameshift/baseline
-        INPUT_CANDIDATE: ${{ inputs.snapshots }}
+        INPUT_BASELINE: ${{ runner.temp }}/frameshift/before
+        INPUT_CANDIDATE: ${{ inputs.screenshots }}
         INPUT_OUTPUT: ${{ runner.temp }}/frameshift/report
       run: node "$GITHUB_ACTION_PATH/../dist/index.mjs"
-    - name: Store visual report
+    - name: Save screenshot report
       if: steps.context.outputs.mode == 'report'
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:

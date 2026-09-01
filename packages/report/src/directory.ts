@@ -13,7 +13,9 @@ async function listFiles(root: string, directory = root): Promise<string[]> {
     } else if (entry.isFile()) {
       files.push(relative);
     } else {
-      throw new Error(`Report bundle contains unsupported entry: ${relative}`);
+      throw new Error(
+        `The report folder contains a file Frameshift cannot use: ${relative}`,
+      );
     }
   }
   return files;
@@ -25,7 +27,7 @@ export async function checkReportDirectory(
   const root = path.resolve(reportRoot);
   const rootStat = await fs.lstat(root);
   if (!rootStat.isDirectory()) {
-    throw new Error(`Report path is not a directory: ${root}`);
+    throw new Error(`The report path is not a folder: ${root}`);
   }
 
   const report = parseVisualDiffReport(
@@ -50,7 +52,7 @@ export async function checkReportDirectory(
     ]
       .filter(Boolean)
       .join("; ");
-    throw new Error(`Invalid report bundle: ${details}`);
+    throw new Error(`The report folder is incomplete: ${details}`);
   }
 
   return report;

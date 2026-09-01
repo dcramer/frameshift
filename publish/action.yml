@@ -1,34 +1,34 @@
 name: Publish Frameshift report
-description: Publish a visual-diff report and link it from GitHub
+description: Save a screenshot report and add its link to GitHub
 
 inputs:
   report:
-    description: Directory containing report.json and its referenced images
+    description: Report folder
     required: true
   github-token:
-    description: GitHub token with contents, statuses, and pull-request write access
+    description: GitHub token that can write contents, statuses, and pull request comments
     required: true
   head-sha:
-    description: Source commit that receives the Frameshift status
+    description: Git commit that gets the Frameshift status
     required: true
   pull-request:
-    description: Pull request number that receives the compact report comment
+    description: Pull request that gets the report comment
     required: false
   repository:
-    description: GitHub repository in owner/name form
+    description: GitHub project as owner/name
     required: false
   viewer-url:
-    description: Frameshift viewer base URL
+    description: Web address for Frameshift
     default: https://frameshift.pub/
     required: false
 
 outputs:
   changes:
-    description: Number of changed, added, and removed images
+    description: Number of screenshots that changed, were added, or were removed
   report_ref:
-    description: Immutable Git commit containing the report
+    description: Git commit containing the saved report
   viewer_url:
-    description: Direct Frameshift review URL
+    description: Link to the report
 
 runs:
   using: node24

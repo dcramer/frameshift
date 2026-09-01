@@ -99,14 +99,14 @@ async function main() {
     ? path.resolve(process.argv[4])
     : undefined;
   if (!root || !["prepare", "verify"].includes(command)) {
-    throw new Error("Usage: qa.mjs <prepare|verify> <fixture-directory>");
+    throw new Error("Usage: qa.mjs <prepare|verify> <test-folder>");
   }
   if (command === "prepare") {
     await prepareActionQa(root);
-    console.log(`prepared action smoke fixture at ${root}`);
+    console.log(`created Action test files at ${root}`);
   } else {
     await verifyActionQa(root, process.env.ACTION_CHANGES, reportRoot);
-    console.log("verified action smoke report");
+    console.log("checked Action test report");
   }
 }
 

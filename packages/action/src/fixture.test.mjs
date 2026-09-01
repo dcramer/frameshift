@@ -41,11 +41,11 @@ async function fixtureContents(root, file) {
   if (!file.endsWith(".png")) return contents;
   const image = PNG.sync.read(contents);
   // SVG rasterization can differ by platform. Comparator tests own pixel math;
-  // this fixture test owns the report file contract and image dimensions.
+  // This test owns the sample report files and image sizes.
   return { height: image.height, width: image.width };
 }
 
-describe("mixed visual diff fixture", () => {
+describe("mixed screenshot report sample", () => {
   test("matches the current comparison output", async () => {
     const tempRoot = await fs.mkdtemp(
       path.join(os.tmpdir(), "frameshift-fixture-test-"),

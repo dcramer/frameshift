@@ -16,7 +16,7 @@ const reportDirectory =
 const report = await checkReportDirectory(reportDirectory);
 const changes =
   report.summary.added + report.summary.changed + report.summary.removed;
-console.log(`opening local report with ${changes} visual change(s)`);
+console.log(`opening local report with ${changes} screenshot change(s)`);
 
 const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 const child = spawn(

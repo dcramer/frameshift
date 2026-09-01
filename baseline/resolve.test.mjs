@@ -8,13 +8,13 @@ const SHA = "0123456789abcdef0123456789abcdef01234567";
 const HEAD_SHA = "89abcdef0123456789abcdef0123456789abcdef";
 const MERGE_SHA = "fedcba9876543210fedcba9876543210fedcba98";
 
-test("builds an immutable artifact name", () => {
+test("builds a saved screenshot name from the full Git commit ID", () => {
   assert.equal(artifactName("web-screenshots", SHA), `web-screenshots-${SHA}`);
-  assert.throws(() => artifactName("web screenshots", SHA), /name must/);
-  assert.throws(() => artifactName("web-screenshots", "main"), /full commit/);
+  assert.throws(() => artifactName("web screenshots", SHA), /name may contain/);
+  assert.throws(() => artifactName("web-screenshots", "main"), /full 40-character/);
 });
 
-test("selects the newest unexpired artifact for the exact source SHA", () => {
+test("selects the newest available upload for the exact Git commit", () => {
   const expectedName = artifactName("web-screenshots", SHA);
   const selected = selectArtifact(
     [
@@ -72,6 +72,6 @@ test("rejects a merge commit for a different pull request head", () => {
         githubSha: MERGE_SHA,
         parents: [SHA, "ffffffffffffffffffffffffffffffffffffffff"],
       }),
-    /does not merge the pull request head/,
+    /was not created from pull request commit/,
   );
 });

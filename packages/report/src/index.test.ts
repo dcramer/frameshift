@@ -98,7 +98,7 @@ describe("parseVisualDiffReport", () => {
           },
         ]),
       ),
-    ).toThrow("Primary image must match");
+    ).toThrow("main image does not match");
   });
 
   test("rejects an incorrect summary", () => {
@@ -107,7 +107,7 @@ describe("parseVisualDiffReport", () => {
         ...report([changedFile]),
         summary: { added: 0, changed: 0, removed: 0, unchanged: 0 },
       }),
-    ).toThrow("Expected 1 changed files");
+    ).toThrow("Expected 1 files marked changed");
   });
 
   test("exports a strict JSON Schema for external producers", () => {

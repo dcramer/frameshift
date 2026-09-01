@@ -1,4 +1,4 @@
-name: CI
+name: Project checks
 
 on:
   pull_request:
@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: 24.20.0
           cache: pnpm
-      - name: Install dependencies
+      - name: Install packages
         run: pnpm install --frozen-lockfile
-      - name: Check repository
+      - name: Run all checks
         run: pnpm check

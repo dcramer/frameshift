@@ -3,7 +3,7 @@ import { pathToFileURL } from "node:url";
 
 export function normalizeCommitSha(sha) {
   if (!/^[0-9a-f]{40}$/i.test(sha ?? "")) {
-    throw new Error("sha must be a full commit SHA");
+    throw new Error("sha must be a full 40-character Git commit ID");
   }
   return sha.toLowerCase();
 }
@@ -11,7 +11,7 @@ export function normalizeCommitSha(sha) {
 export function artifactName(name, sha) {
   if (!/^[A-Za-z0-9_.-]+$/.test(name ?? "")) {
     throw new Error(
-      "name must contain only letters, numbers, dots, dashes, and underscores",
+      "name may contain letters, numbers, dots, dashes, and underscores only",
     );
   }
   return `${name}-${normalizeCommitSha(sha)}`;
@@ -19,7 +19,7 @@ export function artifactName(name, sha) {
 
 function setOutput(name, value) {
   const output = process.env.GITHUB_OUTPUT;
-  if (!output) throw new Error("GITHUB_OUTPUT is required");
+  if (!output) throw new Error("GitHub did not provide an output file");
   fs.appendFileSync(output, `${name}=${value}\n`);
 }
 

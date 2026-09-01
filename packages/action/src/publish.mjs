@@ -16,7 +16,7 @@ const MAX_THUMBNAILS = 18;
 
 function input(name, { required = false } = {}) {
   const value = process.env[`INPUT_${name.toUpperCase()}`]?.trim();
-  if (required && !value) throw new Error(`Missing ${name} input`);
+  if (required && !value) throw new Error(`The ${name} input is required`);
   return value;
 }
 
@@ -37,14 +37,14 @@ function git(args, options = {}) {
 
 function validateRepository(repository) {
   if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository)) {
-    throw new Error("repository must use owner/name form");
+    throw new Error("Enter the GitHub project as owner/name");
   }
   return repository;
 }
 
 function validateSha(sha) {
   if (!/^[0-9a-f]{40}$/i.test(sha)) {
-    throw new Error("head-sha must be a full commit SHA");
+    throw new Error("head-sha must be a full 40-character Git commit ID");
   }
   return sha.toLowerCase();
 }
@@ -52,7 +52,7 @@ function validateSha(sha) {
 function validatePullRequest(value) {
   if (!value) return undefined;
   if (!/^[1-9][0-9]*$/.test(value)) {
-    throw new Error("pull-request must be a positive integer");
+    throw new Error("pull-request must be a whole number greater than zero");
   }
   return Number(value);
 }
@@ -88,7 +88,7 @@ function captionFromFile(file) {
 function thumbnailPath(file) {
   const candidatePrefix = "images/candidate/";
   if (!file.images.candidate.startsWith(candidatePrefix)) {
-    throw new Error(`Candidate image must be inside ${candidatePrefix}`);
+    throw new Error(`The after image must be inside ${candidatePrefix}`);
   }
   return `thumbnails/${file.images.candidate.slice(candidatePrefix.length)}`;
 }
@@ -184,14 +184,14 @@ function renderThumbnailGallery(report, viewerUrl, imageRoot) {
 export function buildComment(report, viewerUrl, imageRoot) {
   const changes = changeCount(report);
   const headline = changes
-    ? `**${changes} visual change${changes === 1 ? "" : "s"}** — ${report.summary.changed} changed · ${report.summary.added} added · ${report.summary.removed} removed`
-    : "**No visual changes**";
+    ? `**${changes} screenshot change${changes === 1 ? "" : "s"}** — ${report.summary.changed} changed · ${report.summary.added} added · ${report.summary.removed} removed`
+    : "**No screenshot changes**";
   const gallery = renderThumbnailGallery(report, viewerUrl, imageRoot);
   return [
     COMMENT_MARKER,
     headline,
     "",
-    `[Review the visual report in Frameshift](${viewerUrl})`,
+    `[Review screenshots in Frameshift](${viewerUrl})`,
     "",
     gallery,
   ]
@@ -343,7 +343,7 @@ export async function main() {
 
   await updateStatus(token, repository, headSha, {
     context: "Frameshift",
-    description: "Publishing visual report",
+    description: "Saving screenshot report",
     state: "pending",
     target_url: runUrl,
   });
@@ -370,18 +370,18 @@ export async function main() {
     }
     await updateStatus(token, repository, headSha, {
       context: "Frameshift",
-      description: `${changes} visual change${changes === 1 ? "" : "s"}`,
+      description: `${changes} screenshot change${changes === 1 ? "" : "s"}`,
       state: "success",
       target_url: viewerUrl,
     });
     setOutput("changes", changes);
     setOutput("report_ref", reportRef);
     setOutput("viewer_url", viewerUrl);
-    console.log(`published ${changes} visual change(s) to ${viewerUrl}`);
+    console.log(`saved ${changes} screenshot change(s) at ${viewerUrl}`);
   } catch (error) {
     await updateStatus(token, repository, headSha, {
       context: "Frameshift",
-      description: "Could not publish visual report",
+      description: "Could not save screenshot report",
       state: "error",
       target_url: runUrl,
     }).catch(() => undefined);

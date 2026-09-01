@@ -5,7 +5,7 @@ import { classifyRun } from "./context.mjs";
 
 const repository = "owner/project";
 
-test("records the default branch as a baseline", () => {
+test("saves screenshots from the default branch", () => {
   assert.deepEqual(
     classifyRun({
       event: { repository: { default_branch: "trunk" } },
@@ -13,7 +13,7 @@ test("records the default branch as a baseline", () => {
       refName: "trunk",
       repository,
     }),
-    { mode: "baseline", reason: "default branch" },
+    { mode: "save", reason: "default branch" },
   );
 });
 
@@ -43,7 +43,7 @@ test("skips fork pull requests", () => {
     }),
     {
       mode: "skip",
-      reason: "fork pull requests cannot read baseline artifacts",
+      reason: "pull requests from forks cannot read saved screenshots",
     },
   );
 });

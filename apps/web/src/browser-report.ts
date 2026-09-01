@@ -39,7 +39,9 @@ function selectedPath(file: BrowserReportFile): string {
     path.includes("\\") ||
     segments.some((segment) => segment === "" || segment === "..")
   ) {
-    throw new Error(`Selected folder contains an unsafe path: ${path}`);
+    throw new Error(
+      `The selected folder contains a path Frameshift cannot use: ${path}`,
+    );
   }
   return path;
 }
@@ -64,7 +66,9 @@ export async function readBrowserReport(
   for (const file of selectedFiles) {
     const path = selectedPath(file);
     if (files.has(path)) {
-      throw new Error(`Selected folder contains the same path twice: ${path}`);
+      throw new Error(
+        `The selected folder contains the same file twice: ${path}`,
+      );
     }
     files.set(path, file);
   }
@@ -93,7 +97,7 @@ export async function readBrowserReport(
   try {
     report = parseVisualDiffReport(value);
   } catch {
-    throw new Error("report.json does not match Frameshift report version 2.");
+    throw new Error("report.json is not a valid Frameshift 2 report.");
   }
 
   const root = reportPath.slice(0, -"report.json".length);

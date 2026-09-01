@@ -5,7 +5,7 @@ import { artifactName, normalizeCommitSha } from "./artifact.mjs";
 
 function validateRepository(repository) {
   if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository ?? "")) {
-    throw new Error("repository must use owner/name form");
+    throw new Error("Enter the GitHub project as owner/name");
   }
   return repository;
 }
@@ -13,7 +13,7 @@ function validateRepository(repository) {
 function waitMilliseconds(value) {
   const seconds = Number(value ?? "180");
   if (!Number.isInteger(seconds) || seconds < 0 || seconds > 600) {
-    throw new Error("wait-seconds must be an integer from 0 through 600");
+    throw new Error("wait-seconds must be a whole number from 0 through 600");
   }
   return seconds * 1_000;
 }
@@ -23,13 +23,13 @@ export function pullRequestBaseSha({ event, githubSha, parents }) {
   const headSha = normalizeCommitSha(event?.pull_request?.head?.sha);
   if (parents.length !== 2) {
     throw new Error(
-      `${mergeSha} must be a two-parent pull request merge commit`,
+      `GitHub commit ${mergeSha} does not contain the expected pull request result`,
     );
   }
   const [baseSha, mergeHeadSha] = parents.map(normalizeCommitSha);
   if (mergeHeadSha !== headSha) {
     throw new Error(
-      `${mergeSha} does not merge the pull request head ${headSha}`,
+      `GitHub commit ${mergeSha} was not created from pull request commit ${headSha}`,
     );
   }
   return baseSha;
@@ -54,7 +54,9 @@ async function githubJson(token, url) {
 async function resolveSha(inputSha, token, repository) {
   if (inputSha) return normalizeCommitSha(inputSha);
   if (process.env.GITHUB_EVENT_NAME !== "pull_request") {
-    throw new Error("sha is required outside a pull_request workflow");
+    throw new Error(
+      "The sha input is required outside a pull request workflow",
+    );
   }
 
   const event = JSON.parse(
@@ -92,13 +94,13 @@ async function listArtifacts(token, repository, name) {
 
 function setOutput(name, value) {
   const output = process.env.GITHUB_OUTPUT;
-  if (!output) throw new Error("GITHUB_OUTPUT is required");
+  if (!output) throw new Error("GitHub did not provide an output file");
   fs.appendFileSync(output, `${name}=${value}\n`);
 }
 
 async function main() {
   const token = process.env.BASELINE_TOKEN;
-  if (!token) throw new Error("github-token is required");
+  if (!token) throw new Error("The github-token input is required");
   const repository = validateRepository(
     process.env.BASELINE_REPOSITORY || process.env.GITHUB_REPOSITORY,
   );
@@ -122,7 +124,7 @@ async function main() {
 
   if (!artifact) {
     throw new Error(
-      `No unexpired ${expectedName} artifact exists. Run the baseline workflow for ${sha}, then retry this job.`,
+      `No saved screenshots named ${expectedName} were found. Run the screenshot workflow for ${sha}, then retry this job.`,
     );
   }
 

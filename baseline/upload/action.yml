@@ -1,33 +1,33 @@
-name: Upload Frameshift baseline
-description: Store a baseline artifact under its exact Git commit SHA
+name: Save Frameshift screenshots
+description: Save screenshots for one Git commit
 
 inputs:
   name:
-    description: Stable name shared with the baseline restore Action
+    description: Name used by both the save and download steps
     default: frameshift-baseline-v1
     required: false
   sha:
-    description: Full source commit SHA; defaults to github.sha
+    description: Full Git commit ID; defaults to github.sha
     required: false
   path:
-    description: Baseline directory to upload
+    description: Folder of screenshots to save
     required: true
   retention-days:
-    description: Number of days GitHub retains the baseline artifact
+    description: Number of days GitHub keeps the screenshots
     default: "30"
     required: false
 
 runs:
   using: composite
   steps:
-    - name: Build immutable artifact name
+    - name: Name the saved screenshots
       id: artifact
       shell: bash
       env:
         BASELINE_NAME: ${{ inputs.name }}
         BASELINE_SHA: ${{ inputs.sha || github.sha }}
       run: node "$GITHUB_ACTION_PATH/../artifact.mjs"
-    - name: Upload exact baseline artifact
+    - name: Save screenshots
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         name: ${{ steps.artifact.outputs.artifact }}

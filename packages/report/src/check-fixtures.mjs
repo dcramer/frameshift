@@ -15,9 +15,9 @@ const fixtures = (await fs.readdir(fixturesRoot, { withFileTypes: true }))
   .filter((entry) => entry.isDirectory())
   .map((entry) => entry.name)
   .toSorted();
-if (fixtures.length === 0) throw new Error("No visual diff fixtures found");
+if (fixtures.length === 0) throw new Error("No sample reports found");
 
 for (const fixture of fixtures) {
   await checkReportDirectory(path.join(fixturesRoot, fixture));
 }
-console.log(`validated ${fixtures.length} visual diff fixture(s)`);
+console.log(`checked ${fixtures.length} sample report(s)`);

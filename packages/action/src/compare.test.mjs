@@ -11,7 +11,7 @@ import { compareDirectories } from "./compare.mjs";
 const tempDirectories = [];
 
 async function makeDirectories() {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "visual-diff-"));
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "frameshift-compare-"));
   tempDirectories.push(root);
   const baseline = path.join(root, "baseline");
   const candidate = path.join(root, "candidate");
@@ -71,7 +71,7 @@ describe("compareDirectories", () => {
 
     await expect(
       compareDirectories({ ...paths, output: paths.baseline }),
-    ).rejects.toThrow("Output directory must be separate");
+    ).rejects.toThrow("output folder outside the two screenshot folders");
   });
 
   it("writes the candidate image for matching pixels", async () => {

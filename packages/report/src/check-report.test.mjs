@@ -42,7 +42,7 @@ async function makeReport(files = []) {
 }
 
 describe("checkReportDirectory", () => {
-  test("accepts a complete report bundle", async () => {
+  test("accepts a complete report folder", async () => {
     const root = await makeReport();
 
     await expect(checkReportDirectory(root)).resolves.toMatchObject({

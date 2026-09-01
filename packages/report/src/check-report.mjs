@@ -23,7 +23,7 @@ async function main() {
   const report = await checkReportDirectory(reportRoot);
   const changes =
     report.summary.added + report.summary.changed + report.summary.removed;
-  console.log(`validated report with ${changes} visual change(s)`);
+  console.log(`checked report: ${changes} screenshot change(s)`);
 }
 
 if (

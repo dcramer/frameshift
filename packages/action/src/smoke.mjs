@@ -56,7 +56,7 @@ if (
 ) {
   runActionSmoke()
     .then(({ changes }) =>
-      console.log(`action smoke test found ${changes} changes`),
+      console.log(`built Action found changes in ${changes} screenshots`),
     )
     .catch((error) => {
       console.error(error instanceof Error ? error.stack : error);

@@ -90,8 +90,8 @@ const visualDiffReportV2StructureSchema = z
   })
   .strict()
   .meta({
-    description: "A Frameshift visual-diff report.",
-    title: "Visual diff report v2",
+    description: "A Frameshift screenshot report.",
+    title: "Frameshift screenshot report v2",
   });
 
 function addInvariantIssues(
@@ -110,7 +110,7 @@ function addInvariantIssues(
     if (file.image !== primaryImage) {
       context.addIssue({
         code: "custom",
-        message: "Primary image must match the status-specific review image",
+        message: "The main image does not match the image for this status",
         path: ["files", index, "image"],
       });
     }
@@ -120,7 +120,7 @@ function addInvariantIssues(
     if (report.summary[status] !== summary[status]) {
       context.addIssue({
         code: "custom",
-        message: `Expected ${summary[status]} ${status} files`,
+        message: `Expected ${summary[status]} files marked ${status}`,
         path: ["summary", status],
       });
     }

@@ -1,37 +1,37 @@
-name: Restore Frameshift baseline
-description: Download an unexpired baseline artifact for an exact Git commit
+name: Download saved Frameshift screenshots
+description: Download screenshots saved for one Git commit
 
 inputs:
   name:
-    description: Stable name shared with the baseline upload Action
+    description: Name used by both the save and download steps
     default: frameshift-baseline-v1
     required: false
   sha:
-    description: Full baseline commit SHA; defaults to the tested PR merge base
+    description: Full Git commit ID; defaults to the code GitHub tested
     required: false
   path:
-    description: Directory that receives the baseline artifact
+    description: Folder where Frameshift places the screenshots
     required: true
   github-token:
-    description: GitHub token with actions read access
+    description: GitHub token that can read Actions files
     required: false
   repository:
-    description: GitHub repository in owner/name form
+    description: GitHub project as owner/name
     required: false
   wait-seconds:
-    description: Maximum time to wait for a baseline that is still uploading
+    description: How long to wait while screenshots are still being saved
     default: "180"
     required: false
 
 outputs:
   sha:
-    description: Exact commit SHA restored as the baseline
+    description: Git commit ID used for the downloaded screenshots
     value: ${{ steps.resolve.outputs.sha }}
 
 runs:
   using: composite
   steps:
-    - name: Resolve exact baseline artifact
+    - name: Find saved screenshots
       id: resolve
       shell: bash
       env:
@@ -41,7 +41,7 @@ runs:
         BASELINE_TOKEN: ${{ inputs.github-token || github.token }}
         BASELINE_WAIT_SECONDS: ${{ inputs.wait-seconds }}
       run: node "$GITHUB_ACTION_PATH/resolve.mjs"
-    - name: Download exact baseline artifact
+    - name: Download saved screenshots
       uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
         name: ${{ steps.resolve.outputs.artifact }}

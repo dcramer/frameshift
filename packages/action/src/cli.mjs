@@ -13,13 +13,13 @@ function parseArgs(argv) {
     }
     const value = argv[++index];
     if (!value || value.startsWith("-")) {
-      throw new Error(`${arg} requires a directory`);
+      throw new Error(`${arg} requires a folder`);
     }
     values[arg.slice(2)] = path.resolve(value);
   }
 
   for (const name of ["baseline", "candidate", "output"]) {
-    if (!values[name]) throw new Error(`Missing --${name}`);
+    if (!values[name]) throw new Error(`The --${name} option is required`);
   }
   return values;
 }
@@ -28,7 +28,7 @@ async function main() {
   const report = await compareDirectories(parseArgs(process.argv.slice(2)));
   const changes =
     report.summary.added + report.summary.changed + report.summary.removed;
-  console.log(`visual diff found ${changes} change(s)`);
+  console.log(`found changes in ${changes} screenshot(s)`);
 }
 
 main().catch((error) => {

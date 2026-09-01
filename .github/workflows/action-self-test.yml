@@ -14,8 +14,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  contract:
-    name: Run checked-in action
+  test_action:
+    name: Run the checked-in Action
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -28,11 +28,11 @@ jobs:
         with:
           node-version: 24.20.0
           cache: pnpm
-      - name: Install verification dependencies
+      - name: Install test packages
         run: pnpm install --frozen-lockfile
-      - name: Test baseline artifact resolver
+      - name: Test saved screenshot lookup
         run: node --test baseline/resolve.test.mjs
-      - name: Prepare deterministic fixture
+      - name: Create repeatable test screenshots
         run: node packages/action/src/qa.mjs prepare "$RUNNER_TEMP/frameshift-action"
       - name: Run checked-in action
         id: frameshift
@@ -41,42 +41,42 @@ jobs:
           baseline: ${{ runner.temp }}/frameshift-action/baseline
           candidate: ${{ runner.temp }}/frameshift-action/candidate
           output: ${{ runner.temp }}/frameshift-action/report
-      - name: Verify action contract
+      - name: Check the report
         env:
           ACTION_CHANGES: ${{ steps.frameshift.outputs.changes }}
         run: node packages/action/src/qa.mjs verify "$RUNNER_TEMP/frameshift-action"
-      - name: Summarize demonstration
+      - name: Summarize the test
         env:
           ACTION_CHANGES: ${{ steps.frameshift.outputs.changes }}
         run: |
           printf '%s\n' \
             "## Frameshift Action self-test" \
             "" \
-            "The checked-in Action found **${ACTION_CHANGES} expected visual changes**." \
+            "The checked-in Action found changes in **${ACTION_CHANGES} screenshots**, as expected." \
             "" \
-            "The generated report is retained for seven days and published by the next job." \
+            "GitHub keeps the report for seven days. The next job also publishes it." \
             >> "$GITHUB_STEP_SUMMARY"
-      - name: Test baseline artifact upload
+      - name: Test saving screenshots
         uses: ./baseline/upload
         with:
           name: frameshift-action-baseline
           path: ${{ runner.temp }}/frameshift-action/report
           retention-days: 7
-      - name: Retain generated report
+      - name: Keep the report for seven days
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: frameshift-action-report
           path: ${{ runner.temp }}/frameshift-action/report
           if-no-files-found: error
           retention-days: 7
-      - name: Restore report for the tested PR base
+      - name: Download the report for the tested pull request base
         if: github.event_name == 'pull_request'
         id: baseline
         uses: ./baseline
         with:
           name: frameshift-action-baseline
           path: ${{ runner.temp }}/frameshift-base-report
-      - name: Verify automatic base selection
+      - name: Check the selected base commit
         if: github.event_name == 'pull_request'
         env:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
@@ -90,7 +90,7 @@ jobs:
 
   publish:
     name: Publish Frameshift report
-    needs: contract
+    needs: test_action
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -104,19 +104,19 @@ jobs:
           persist-credentials: false
           sparse-checkout: |
             publish
-      - name: Publish verified workflow report
+      - name: Publish the checked report
         id: publish
         uses: ./publish/workflow
         with:
           artifact-name: frameshift-action-report
           head-sha: ${{ github.sha }}
           run-id: ${{ github.run_id }}
-      - name: Link published report
+      - name: Link the report
         env:
           VIEWER_URL: ${{ steps.publish.outputs.viewer_url }}
         run: |
           printf '%s\n' \
             "## Published Frameshift report" \
             "" \
-            "[Open the immutable visual report](${VIEWER_URL})" \
+            "[Open the screenshot report](${VIEWER_URL})" \
             >> "$GITHUB_STEP_SUMMARY"

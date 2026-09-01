@@ -42,7 +42,7 @@ function selectedFile(path: string, contents = ""): BrowserReportFile {
 }
 
 describe("browser report", () => {
-  test("opens a complete report bundle and releases its image URLs", async () => {
+  test("opens a complete report folder and releases its image URLs", async () => {
     const files = [
       selectedFile("scan/report.json", JSON.stringify(changedReport)),
       selectedFile("scan/images/baseline/home.png"),
@@ -86,7 +86,7 @@ describe("browser report", () => {
     result.dispose();
   });
 
-  test("rejects an incomplete report bundle", async () => {
+  test("rejects an incomplete report folder", async () => {
     await expect(
       readBrowserReport([
         selectedFile("scan/report.json", JSON.stringify(changedReport)),

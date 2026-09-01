@@ -2,10 +2,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-export function countPngs(directory) {
+export function countPngs(folder) {
   let count = 0;
-  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
-    const absolute = path.join(directory, entry.name);
+  for (const entry of fs.readdirSync(folder, { withFileTypes: true })) {
+    const absolute = path.join(folder, entry.name);
     if (entry.isDirectory()) {
       count += countPngs(absolute);
     } else if (entry.isFile() && entry.name.endsWith(".png")) {
@@ -15,28 +15,28 @@ export function countPngs(directory) {
   return count;
 }
 
-export function validateSnapshots(value) {
-  const snapshots = path.resolve(value || "");
+export function validateScreenshots(value) {
+  const screenshots = path.resolve(value || "");
   let stat;
   try {
-    stat = fs.statSync(snapshots);
+    stat = fs.statSync(screenshots);
   } catch {
-    throw new Error(`Snapshot directory does not exist: ${snapshots}`);
+    throw new Error(`The screenshot folder does not exist: ${screenshots}`);
   }
   if (!stat.isDirectory()) {
-    throw new Error(`Snapshot path is not a directory: ${snapshots}`);
+    throw new Error(`The screenshot path is not a folder: ${screenshots}`);
   }
-  const count = countPngs(snapshots);
+  const count = countPngs(screenshots);
   if (count === 0) {
-    throw new Error(`No PNG screenshots found under ${snapshots}`);
+    throw new Error(`No PNG screenshots were found in ${screenshots}`);
   }
   return count;
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   try {
-    const count = validateSnapshots(process.env.FRAMESHIFT_SNAPSHOTS);
-    console.log(`Frameshift found ${count} PNG screenshot(s)`);
+    const count = validateScreenshots(process.env.FRAMESHIFT_SCREENSHOTS);
+    console.log(`found ${count} PNG screenshot(s)`);
   } catch (error) {
     console.error(error instanceof Error ? error.message : error);
     process.exitCode = 1;

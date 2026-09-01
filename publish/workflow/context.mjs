@@ -25,51 +25,62 @@ export function publicationContext({ event, eventName, repository, runId }) {
       !fullSha(headSha)
     ) {
       throw new Error(
-        "pull_request must contain a number, run ID, and full head SHA",
+        "The pull request must include its number, workflow run ID, and full Git commit ID",
       );
     }
     return {
       headSha: headSha.toLowerCase(),
       publish: true,
       pullRequest: String(pullRequest),
-      reason: "same-workflow pull request",
+      reason: "pull request in this workflow",
       runId: String(runId),
     };
   }
   if (eventName !== "workflow_run") {
     return {
       publish: false,
-      reason: `unsupported ${eventName || "unknown"} event`,
+      reason: `${eventName || "unknown"} events do not publish reports`,
     };
   }
   const run = event?.workflow_run;
   if (run?.conclusion !== "success") {
-    return { publish: false, reason: "source workflow did not succeed" };
+    return {
+      publish: false,
+      reason: "the screenshot workflow did not succeed",
+    };
   }
   const pullRequest = run.pull_requests?.[0]?.number;
   if (!positiveInteger(pullRequest)) {
-    return { publish: false, reason: "source workflow has no pull request" };
+    return {
+      publish: false,
+      reason: "the screenshot workflow has no pull request",
+    };
   }
   if (
     run.head_repository?.full_name?.toLowerCase() !== repository.toLowerCase()
   ) {
-    return { publish: false, reason: "source workflow belongs to a fork" };
+    return {
+      publish: false,
+      reason: "the screenshot workflow belongs to a fork",
+    };
   }
   if (!positiveInteger(run.id) || !fullSha(run.head_sha)) {
-    throw new Error("workflow_run must contain a run ID and full head SHA");
+    throw new Error(
+      "The finished workflow must include its run ID and full Git commit ID",
+    );
   }
   return {
     headSha: run.head_sha.toLowerCase(),
     publish: true,
     pullRequest: String(pullRequest),
-    reason: "successful same-repository pull request",
+    reason: "successful pull request from this project",
     runId: String(run.id),
   };
 }
 
 function setOutput(name, value) {
   const output = process.env.GITHUB_OUTPUT;
-  if (!output) throw new Error("GITHUB_OUTPUT is required");
+  if (!output) throw new Error("GitHub did not provide an output file");
   fs.appendFileSync(output, `${name}=${value}\n`);
 }
 
@@ -90,7 +101,7 @@ function main() {
     setOutput("run-id", result.runId);
   }
   console.log(
-    `Frameshift publish ${result.publish ? "ready" : "skip"}: ${result.reason}`,
+    `Frameshift will ${result.publish ? "publish" : "skip this report"}: ${result.reason}`,
   );
 }
 

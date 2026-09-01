@@ -5,7 +5,7 @@ import { compareDirectories } from "./compare.mjs";
 
 function input(name) {
   const value = process.env[`INPUT_${name.toUpperCase()}`];
-  if (!value) throw new Error(`Missing ${name} input`);
+  if (!value) throw new Error(`The ${name} input is required`);
   return path.resolve(value);
 }
 
@@ -24,7 +24,7 @@ async function main() {
   const changes =
     report.summary.added + report.summary.changed + report.summary.removed;
   output("changes", changes);
-  console.log(`visual diff found ${changes} change(s)`);
+  console.log(`found changes in ${changes} screenshot(s)`);
 }
 
 main().catch((error) => {
