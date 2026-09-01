@@ -201,21 +201,21 @@ function SetupPage() {
         <header className="setup-intro">
           <h1>Set up Frameshift</h1>
           <p>
-            Your tests take screenshots. Frameshift saves, compares, and shares
-            them from GitHub Actions.
+            Keep your current screenshot tests. Add one step after they write
+            PNG files, then add one small delivery job to the same workflow.
           </p>
         </header>
 
         <section className="setup-section">
-          <h2>Check screenshots</h2>
+          <h2>Add it to your CI workflow</h2>
           <p>
-            Use the same workflow for your default branch and pull requests.
-            Frameshift saves the current screenshots or compares a proposed
-            change automatically.
+            Replace the setup command, screenshot command, and folder below. If
+            your test job has another ID, update <code>needs</code> too.
+            Frameshift never reruns the tests.
           </p>
           {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- The code block scrolls on narrow screens. */}
           <pre tabIndex={0}>
-            <code>{`name: Check screenshots
+            <code>{`name: CI
 
 on:
   push:
@@ -227,61 +227,45 @@ permissions:
   contents: read
 
 jobs:
-  screenshots:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # Set up your app and browser here.
-      - run: pnpm capture:screenshots -- --all --output \${{ runner.temp }}/screenshots
-      - uses: dcramer/frameshift/ci@2c52603751a6c29dbe3802587bec832ad1df0581
+      - name: Run screenshot tests
+        run: pnpm test:screenshots
+      - name: Record screenshot test results
+        uses: dcramer/frameshift/ci@43268de9ab851991f7240217636d475806c15ae2
         with:
-          screenshots: \${{ runner.temp }}/screenshots`}</code>
-          </pre>
-        </section>
+          screenshots: path/to/test-output/screenshots
 
-        <section className="setup-section">
-          <h2>Publish</h2>
-          <p>
-            Run this job on your default branch after the screenshot check. It
-            posts a GitHub status, a pull request comment, and the review link.
-          </p>
-          {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- The code block scrolls on narrow screens. */}
-          <pre tabIndex={0}>
-            <code>{`name: Publish screenshot report
-
-on:
-  workflow_run:
-    workflows: [Check screenshots]
-    types: [completed]
-
-permissions:
-  actions: read
-  contents: write
-  pull-requests: write
-  statuses: write
-
-jobs:
-  publish:
-    if: >-
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.pull_requests[0] != null &&
-      github.event.workflow_run.head_repository.full_name == github.repository
+  frameshift:
+    needs: test
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+      pull-requests: write
+      statuses: write
     steps:
-      - uses: dcramer/frameshift/publish/workflow@2c52603751a6c29dbe3802587bec832ad1df0581`}</code>
+      # This job never checks out or runs pull request code.
+      - uses: dcramer/frameshift/publish/workflow@43268de9ab851991f7240217636d475806c15ae2`}</code>
           </pre>
         </section>
 
         <aside className="setup-warning">
-          <strong>Only the publishing job needs write access.</strong>
+          <strong>One test run. One workflow.</strong>
           <p>
-            Use a full Git commit ID for every Action version. Never give write
-            access to code from a pull request.
+            The test job saves screenshots or a report in GitHub Actions. The
+            small delivery job adds the pull request link with separate write
+            access. Run this workflow on the default branch once to save the
+            first screenshot set.
           </p>
         </aside>
 
         <footer className="setup-footer">
-          <a href={`${PROJECT_URL}#use-the-github-action`}>
+          <a href={`${PROJECT_URL}#add-frameshift-to-ci`}>
             View the complete workflow on GitHub →
           </a>
         </footer>

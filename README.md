@@ -17,13 +17,18 @@ Frameshift does not run a server or store your data.
 - `publish/action.yml` and `publish/dist/`: The Action that saves a report and
   links it from GitHub.
 
-## Use the GitHub Action
+## Add Frameshift to CI
 
-Your app takes the screenshots. Add one Frameshift step after that command.
-Use the same workflow for pushes to your default branch and pull requests:
+Keep your current screenshot tests. Add one Frameshift step after they write a
+complete folder of PNG files. Run the same job for pull requests and your
+default branch.
+
+This is a complete workflow. Replace the setup command, screenshot command,
+and `screenshots` path with the ones your project already uses. If your test
+job has another ID, use that ID in `needs`:
 
 ```yaml
-name: Check screenshots
+name: CI
 
 on:
   push:
@@ -35,78 +40,77 @@ permissions:
   contents: read
 
 jobs:
-  screenshots:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # Set up your app and browser here.
-      - name: Take screenshots
-        run: pnpm capture:screenshots -- --all --output "${{ runner.temp }}/screenshots"
-      - uses: dcramer/frameshift/ci@2c52603751a6c29dbe3802587bec832ad1df0581
+      - name: Run screenshot tests
+        run: pnpm test:screenshots
+      - name: Record screenshot test results
+        uses: dcramer/frameshift/ci@43268de9ab851991f7240217636d475806c15ae2
         with:
-          screenshots: ${{ runner.temp }}/screenshots
+          screenshots: path/to/test-output/screenshots
+
+  frameshift:
+    needs: test
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+      pull-requests: write
+      statuses: write
+    steps:
+      # This job never checks out or runs pull request code.
+      - uses: dcramer/frameshift/publish/workflow@43268de9ab851991f7240217636d475806c15ae2
 ```
 
-After a push to the default branch, Frameshift saves the screenshots with the
-full Git commit ID. On a pull request, it downloads that exact set, compares
-it with the new screenshots, and saves the report for the publishing job.
+The test job runs once. Frameshift does not take screenshots or rerun tests. On
+the default branch, it saves the completed screenshots under the full Git
+commit ID. On a pull request, it downloads that exact set, compares it with the
+screenshots the test just wrote, and saves the report as another GitHub Actions
+upload.
 
-Pull requests from forks are skipped because fork code must not receive the
-Actions read token. See [`baseline/README.md`](baseline/README.md) if you need
-more than one screenshot set or want to use the lower-level Actions.
+The small `frameshift` job downloads that report. It checks every file, saves
+the report under a Git tag that never moves, and adds the pull request comment
+and commit status. The separate job is a permission boundary, not a second test
+run. It never checks out pull request code.
 
-Use full Git commit IDs for Frameshift and every other third-party Action. The
-`changes` output counts screenshots that changed, were added, or were removed.
-A screenshot change does not fail the Action.
+Frameshift skips non-default pushes and pull requests from forks. It fails with
+a clear error when the screenshot folder is empty or the exact saved set is
+missing. It never chooses a nearby set or silently makes a new one.
 
-Make screenshot runs repeatable. Use fixed test data, the same browser and
-window size, a fixed language and time zone, loaded fonts, reduced motion, and
-no animation. The same relative PNG path means the same page in both sets.
+Run this workflow on the default branch once before expecting a pull request
+report. That first run saves the first screenshot set. Do not use a path filter
+that can skip a commit which later becomes a pull request base.
+
+Your test must write the same complete screenshot set on both revisions. Make
+runs repeatable with fixed test data, the same browser and window size, a fixed
+language and time zone, loaded fonts, reduced motion, and no animation. The
+same relative PNG path means the same page in both sets.
 
 Reports contain `report.json` and the images needed for review. A changed
 screenshot has before, after, and highlighted-change images. A new or removed
 screenshot has the one available image.
 
-## Add the report to GitHub
-
-Publish from a separate job on your default branch after the screenshot check
-finishes. This job does not run pull-request code:
-
-```yaml
-on:
-  workflow_run:
-    workflows: [Check screenshots]
-    types: [completed]
-
-permissions:
-  actions: read
-  contents: write
-  pull-requests: write
-  statuses: write
-
-jobs:
-  publish:
-    if: >-
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.pull_requests[0] != null &&
-      github.event.workflow_run.head_repository.full_name == github.repository
-    runs-on: ubuntu-latest
-    steps:
-      - uses: dcramer/frameshift/publish/workflow@2c52603751a6c29dbe3802587bec832ad1df0581
-```
-
-The publishing Action downloads the report, checks every file, saves it under
-a Git tag that never moves, and adds a GitHub status and pull request comment.
 The comment shows the after screenshots and links to the full report:
 
 ```text
 https://frameshift.pub/report/?repo=owner/project&ref=0123456789abcdef0123456789abcdef01234567
 ```
 
-Only this publishing job needs `contents: write` and `statuses: write`. Never
-give write access to a job that runs pull-request code. These examples skip
-pull requests from forks because downloading saved screenshots needs an
-Actions read token, which fork code must not receive.
+Frameshift currently supports public GitHub projects. The static website loads
+report files directly from GitHub and cannot sign in to a private project.
+
+Reports live behind orphan `frameshift-report/*` tags. Normal shallow clones
+and `actions/checkout` do not download those report objects. A command that
+explicitly fetches every tag will download them, and GitHub stores them until
+their tags are removed. This is the storage tradeoff that keeps Frameshift
+static and free of repository tokens.
+
+See [`baseline/README.md`](baseline/README.md) for retention and lower-level
+settings. Use full Git commit IDs for Frameshift and every third-party Action.
 
 ## Run locally
 

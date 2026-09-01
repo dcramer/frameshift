@@ -1,60 +1,54 @@
 # Save and download screenshots
 
-Frameshift calls the screenshots from your default branch the `baseline`.
-Take the full set after each change lands, then save it with GitHub Actions:
+The main [`ci` Action](../ci/action.yml) handles normal screenshot storage. Use
+it after your tests in a workflow that runs on pull requests and your default
+branch:
 
 ```yaml
-on:
-  push:
-  workflow_dispatch:
-
-jobs:
-  screenshots:
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      github.ref_name == github.event.repository.default_branch
-    runs-on: ubuntu-latest
-    steps:
-      - name: Take every screenshot
-        run: pnpm capture:screenshots -- --all --output path/to/current-screenshots
-      - uses: dcramer/frameshift/baseline/upload@2c52603751a6c29dbe3802587bec832ad1df0581
-        with:
-          path: path/to/current-screenshots
+- uses: dcramer/frameshift/ci@43268de9ab851991f7240217636d475806c15ae2
+  with:
+    screenshots: path/to/test-output/screenshots
 ```
 
-Before checking a pull request, download the set made from the exact
-default-branch code that GitHub tested:
+On the default branch, it saves the screenshots under the full current Git
+commit ID. On a pull request, it downloads the exact set that GitHub tested and
+creates the report. It does not rerun your tests.
+
+The default saved name is `frameshift-baseline-v1`. Change `saved-name` when a
+browser or screenshot-format change makes old screenshots incompatible:
 
 ```yaml
-permissions:
-  actions: read
-  contents: read
-
-steps:
-  - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-  - uses: dcramer/frameshift/baseline@2c52603751a6c29dbe3802587bec832ad1df0581
-    id: baseline
-    with:
-      path: path/to/before
+- uses: dcramer/frameshift/ci@43268de9ab851991f7240217636d475806c15ae2
+  with:
+    screenshots: path/to/test-output/screenshots
+    saved-name: screenshots-v2
+    screenshot-retention-days: 60
 ```
 
-The save Action uses `frameshift-baseline-v1` as its name and `github.sha` as
-the commit ID unless you override them. The download Action uses
-`github.token`. It asks GitHub which default-branch commit the pull request was
-tested against, so it does not depend on old event data or a full Git history.
+The job must write one complete set of PNG files. A missing new path means a
+removed screenshot, so do not compare a partial or sharded run with a complete
+saved set.
 
-The download Action refuses expired uploads and waits briefly if the
-default-branch job is still saving one. It never creates a missing set. If no
-set exists, the job fails and tells you which commit needs screenshots. The
-selected commit ID is available as `steps.baseline.outputs.sha`.
+## Lower-level Actions
 
-Frameshift names each saved set with its shared name and full Git commit ID.
-Use a different `name` when one project has more than one screenshot set.
-Change the version at the end of the name when older screenshots can no longer
-be compared with new ones. Set `sha` or `github-token` only in workflows that
-cannot use the pull-request defaults.
+Use the separate save and download Actions only when the combined CI Action
+cannot fit your workflow:
 
-Take every current screenshot in the default-branch job. A pull request may
-take fewer screenshots, but select the matching files from the downloaded set
-before comparing. Frameshift marks current screenshots with no matching new
-file as removed.
+```yaml
+- uses: dcramer/frameshift/baseline/upload@43268de9ab851991f7240217636d475806c15ae2
+  with:
+    path: path/to/current-screenshots
+
+- uses: dcramer/frameshift/baseline@43268de9ab851991f7240217636d475806c15ae2
+  id: baseline
+  with:
+    path: path/to/before
+```
+
+Save uses `github.sha` unless you pass `sha`. Download uses `github.token` and
+asks GitHub which default-branch commit the pull request was tested against. It
+does not need full Git history or stale pull request event data.
+
+Download refuses expired uploads and waits briefly while the default-branch
+job is still saving one. It never chooses a nearby set or creates a missing
+one. The selected commit ID is available as `steps.baseline.outputs.sha`.
