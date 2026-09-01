@@ -108,9 +108,8 @@ button:focus-visible {
 }
 
 .empty-state {
-  width: min(900px, 100%);
-  margin: 7vh auto 0;
-  overflow: hidden;
+  width: min(960px, 100%);
+  margin: 8vh auto 0;
 }
 
 .home-brand,
@@ -125,8 +124,7 @@ button:focus-visible {
 }
 
 .home-brand {
-  border-bottom: 1px solid var(--line);
-  padding: 20px 56px;
+  margin-bottom: clamp(64px, 10vh, 104px);
 }
 
 .brand-mark {
@@ -158,8 +156,7 @@ button:focus-visible {
 }
 
 .home-copy {
-  max-width: 760px;
-  padding: 58px 56px 38px;
+  max-width: 800px;
 }
 
 .kicker {
@@ -193,7 +190,7 @@ h1 {
   display: grid;
   grid-template-columns: 1.15fr 1fr;
   gap: 12px;
-  padding: 0 56px 48px;
+  margin-top: 44px;
 }
 
 .source-card {
@@ -262,9 +259,8 @@ h1 {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  border-top: 1px solid var(--line);
   color: var(--faint);
-  padding: 17px 56px 18px;
+  margin-top: 22px;
   font:
     11px ui-monospace,
     SFMono-Regular,
@@ -794,11 +790,11 @@ figcaption small {
   }
 
   .home-brand {
-    padding: 18px 22px;
+    margin-bottom: 52px;
   }
 
   .home-copy {
-    padding: 38px 22px 30px;
+    padding: 0;
   }
 
   .home-copy h1 {
@@ -807,7 +803,7 @@ figcaption small {
 
   .source-actions {
     grid-template-columns: 1fr;
-    padding: 0 22px 34px;
+    margin-top: 34px;
   }
 
   .source-card {
@@ -816,7 +812,7 @@ figcaption small {
   }
 
   .home-note {
-    padding-inline: 22px;
+    margin-top: 18px;
   }
 
   .status-panel {

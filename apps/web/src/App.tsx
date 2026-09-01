@@ -56,7 +56,7 @@ function statusLabel(status: VisualDiffFile["status"]): string {
 
 function SourceForm() {
   return (
-    <section className="empty-state panel">
+    <section className="empty-state">
       <header className="home-brand">
         <BrandMark />
         <span>Frameshift</span>
