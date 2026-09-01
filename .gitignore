@@ -12,6 +12,7 @@ node_modules/
 coverage/
 playwright-report/
 test-results/
+/test-output/
 
 # Tool state
 .frameshift/

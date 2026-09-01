@@ -33,8 +33,10 @@ test("account settings", async ({ page }) => {
 });
 ```
 
-File names become labels. Use `__` for variants: `account__desktop.png` and
-`account__mobile.png` appear together under **Account**.
+File names become labels. Folders and dots separate label parts. Use `__` for
+variants: `account__desktop.png` and `account__mobile.png` appear together
+under **Account**. `checkout/payment__mobile.png` and
+`checkout.payment__mobile.png` produce the same label.
 
 Add Frameshift after those tests:
 
@@ -93,6 +95,18 @@ corepack enable
 pnpm install
 pnpm dev:fixture
 ```
+
+Install Chromium once, then run the browser tests:
+
+```sh
+pnpm e2e:install
+pnpm e2e
+```
+
+The suite checks the home page, guide, report controls, keyboard shortcuts, and
+mobile layout. It writes stable PNGs to `test-output/screenshots`. The Action
+self-test compares those PNGs with the screenshots saved from `main`, then
+links the Frameshift report from each pull request.
 
 Run every project check:
 

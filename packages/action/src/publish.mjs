@@ -96,9 +96,11 @@ function encodePath(value) {
 }
 
 function captionFromFile(file) {
-  return path.posix
-    .basename(file, ".png")
-    .split("__")
+  return file
+    .replace(/\.png$/i, "")
+    .split("/")
+    .flatMap((part) => part.split(/__|\./))
+    .filter(Boolean)
     .map((part) =>
       part
         .replaceAll(/[_-]+/g, " ")

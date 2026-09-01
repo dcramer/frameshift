@@ -7,7 +7,9 @@
     "build": "tsc --noEmit && vite build",
     "dev": "vite",
     "dev:fixture": "vite --open '/sample/'",
-    "test": "vitest run",
+    "e2e": "playwright test",
+    "e2e:install": "playwright install chromium",
+    "test": "vitest run src",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -17,6 +19,7 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
+    "@playwright/test": "1.62.1",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

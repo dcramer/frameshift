@@ -766,6 +766,11 @@ h1 {
 }
 
 .review-header {
+  display: flex;
+  min-width: 0;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
   margin-bottom: 20px;
 }
 
@@ -800,6 +805,64 @@ h1 {
   white-space: nowrap;
 }
 
+.review-shortcuts {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 14px;
+  color: var(--faint);
+  font:
+    9px ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.review-shortcuts span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.review-shortcuts kbd,
+.keyboard-view-cue kbd {
+  min-width: 20px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-raised);
+  color: var(--muted);
+  padding: 3px 5px;
+  font: inherit;
+  text-align: center;
+}
+
+.review-shortcuts kbd + kbd {
+  margin-left: -3px;
+}
+
+.review-content[data-navigation="up"] {
+  animation: screenshot-enter-up 160ms ease-out;
+}
+
+.review-content[data-navigation="down"] {
+  animation: screenshot-enter-down 160ms ease-out;
+}
+
+@keyframes screenshot-enter-up {
+  from {
+    opacity: 0.45;
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes screenshot-enter-down {
+  from {
+    opacity: 0.45;
+    transform: translateY(8px);
+  }
+}
+
 .status-badge {
   flex: none;
   border: 1px solid currentColor;
@@ -826,6 +889,7 @@ h1 {
 }
 
 .comparison-viewer {
+  position: relative;
   overflow: hidden;
   background: var(--canvas);
 }
@@ -987,6 +1051,77 @@ h1 {
   }
 }
 
+.keyboard-view-cue {
+  position: fixed;
+  z-index: 19;
+  top: 50%;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid var(--accent-text);
+  background: var(--image-overlay);
+  color: var(--image-overlay-text);
+  padding: 9px 10px;
+  pointer-events: none;
+}
+
+.keyboard-view-cue[data-side="before"] {
+  left: 288px;
+  border-left: 0;
+  animation: keyboard-cue-left 160ms ease-out;
+}
+
+.keyboard-view-cue[data-side="after"] {
+  right: 0;
+  border-right: 0;
+  animation: keyboard-cue-right 160ms ease-out;
+}
+
+.keyboard-view-cue span {
+  display: grid;
+  gap: 2px;
+}
+
+.keyboard-view-cue strong {
+  font:
+    10px ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.keyboard-view-cue small {
+  color: var(--muted);
+  font:
+    8px ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  text-transform: uppercase;
+}
+
+.keyboard-view-cue kbd {
+  border-color: var(--accent-text);
+  color: var(--image-overlay-text);
+  font-size: 12px;
+}
+
+@keyframes keyboard-cue-left {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+}
+
+@keyframes keyboard-cue-right {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+}
+
 .comparison-pair {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1071,7 +1206,10 @@ h1 {
 
 .comparison-canvas {
   position: relative;
+  width: fit-content;
+  max-width: 100%;
   overflow: hidden;
+  margin: 0 auto;
   background:
     linear-gradient(45deg, var(--surface) 25%, transparent 25%) 0 0 / 16px 16px,
     linear-gradient(45deg, transparent 75%, var(--surface) 75%) 0 0 / 16px 16px,
@@ -1083,7 +1221,8 @@ h1 {
 
 .comparison-canvas img {
   display: block;
-  width: 100%;
+  width: auto;
+  max-width: 100%;
   height: auto;
   pointer-events: none;
   user-select: none;
@@ -1095,6 +1234,7 @@ h1 {
 }
 
 .comparison-viewer[data-scale="actual"] .difference-trigger,
+.comparison-viewer[data-scale="actual"] .keyboard-image-trigger,
 .comparison-viewer[data-scale="actual"] .comparison-canvas,
 .comparison-viewer[data-scale="actual"] .comparison-pair {
   width: max-content;
@@ -1106,6 +1246,7 @@ h1 {
 }
 
 .comparison-viewer[data-scale="actual"] .difference-trigger img,
+.comparison-viewer[data-scale="actual"] .keyboard-image-trigger img,
 .comparison-viewer[data-scale="actual"] .comparison-canvas > img,
 .comparison-viewer[data-scale="actual"] .comparison-pane .image-trigger img {
   width: auto;
@@ -1208,7 +1349,9 @@ h1 {
 .image-trigger {
   position: relative;
   display: block;
-  width: 100%;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
   border: 0;
   outline: none;
   background: transparent;
@@ -1249,7 +1392,8 @@ h1 {
 
 .image-trigger img {
   display: block;
-  width: 100%;
+  width: auto;
+  max-width: 100%;
   height: auto;
   transition: opacity 120ms ease;
 }
@@ -1265,6 +1409,16 @@ h1 {
 .single-figure {
   max-width: 960px;
   margin: 0 auto;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .image-lightbox {
@@ -1454,6 +1608,14 @@ h1 {
   .report-layout {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto minmax(0, 1fr);
+  }
+
+  .review-shortcuts {
+    display: none;
+  }
+
+  .keyboard-view-cue[data-side="before"] {
+    left: 0;
   }
 
   .report-header {
@@ -1794,7 +1956,9 @@ h1 {
 
 @media (prefers-reduced-motion: reduce) {
   .comparison-scroll,
+  .keyboard-view-cue,
   .loading-pulse,
+  .review-content,
   .image-trigger::after,
   .image-trigger img,
   .scale-switch button,

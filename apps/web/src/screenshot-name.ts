@@ -10,7 +10,7 @@ export function screenshotName(file: string) {
   const rawParts = file
     .replace(/\.png$/i, "")
     .split("/")
-    .flatMap((part) => part.split("__"))
+    .flatMap((part) => part.split(/__|\./))
     .filter(Boolean);
   const parts = rawParts.map((part) => part.replace(/[-_]+/g, " "));
   const leaf = parts.at(-1) ?? file;
