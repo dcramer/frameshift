@@ -99,12 +99,13 @@ jobs:
         run: |
           set -euo pipefail
 
-          tag_sha="$({
-            gh api "repos/$GITHUB_REPOSITORY/commits/$RELEASE_TAG" --jq '.sha'
-          } 2>/dev/null || true)"
-          if [[ -n "$tag_sha" && "$tag_sha" != "$GITHUB_SHA" ]]; then
-            echo "$RELEASE_TAG already points to $tag_sha instead of $GITHUB_SHA." >&2
-            exit 1
+          if tag_sha="$(gh api \
+            "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_TAG" \
+            --jq '.object.sha' 2>/dev/null)"; then
+            if [[ "$tag_sha" != "$GITHUB_SHA" ]]; then
+              echo "$RELEASE_TAG already points to $tag_sha instead of $GITHUB_SHA." >&2
+              exit 1
+            fi
           fi
       - name: Enable Corepack
         run: corepack enable
