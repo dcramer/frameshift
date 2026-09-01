@@ -36,6 +36,17 @@ function BrandMark() {
   return <span className="brand-mark" aria-hidden="true" />;
 }
 
+function GitHubIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24">
+      <path
+        d="M12 2C6.477 2 2 6.59 2 12.253c0 4.53 2.865 8.373 6.839 9.73.5.094.682-.223.682-.493 0-.244-.009-1.052-.014-1.907-2.782.618-3.369-1.375-3.369-1.375-.455-1.184-1.11-1.499-1.11-1.499-.908-.636.069-.623.069-.623 1.004.073 1.532 1.057 1.532 1.057.892 1.568 2.341 1.115 2.91.853.091-.664.349-1.115.635-1.371-2.221-.259-4.555-1.139-4.555-5.066 0-1.119.39-2.034 1.029-2.751-.103-.26-.446-1.303.098-2.715 0 0 .84-.276 2.75 1.051A9.303 9.303 0 0 1 12 6.404a9.3 9.3 0 0 1 2.504.345c1.909-1.327 2.748-1.051 2.748-1.051.546 1.412.203 2.455.1 2.715.64.717 1.027 1.632 1.027 2.751 0 3.937-2.338 4.804-4.566 5.058.359.318.679.945.679 1.905 0 1.375-.012 2.484-.012 2.821 0 .273.18.592.688.492A10.02 10.02 0 0 0 22 12.253C22 6.59 17.523 2 12 2Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
 function statusLabel(status: VisualDiffFile["status"]): string {
   if (status === "added") return "Added screenshot";
   if (status === "removed") return "Removed screenshot";
@@ -79,7 +90,12 @@ function SourceForm() {
       </div>
       <footer className="home-note">
         <span>Static, open source, and happy without a login.</span>
-        <a href="https://github.com/dcramer/frameshift">GitHub ↗</a>
+        <a
+          aria-label="Frameshift on GitHub"
+          href="https://github.com/dcramer/frameshift"
+        >
+          <GitHubIcon />
+        </a>
       </footer>
     </section>
   );
@@ -202,24 +218,18 @@ function ReportViewer({
   );
   const [previewImage, setPreviewImage] = useState<PreviewImage | null>(null);
   const selected = changes.find((file) => file.file === selectedFile);
-  const sourceName =
-    source.kind === "fixture"
-      ? "Sample report"
-      : source.kind === "browser"
-        ? "Local folder"
-        : source.kind === "github"
-          ? "GitHub report"
-          : "Local report";
   const sourceLink =
     source.kind === "github"
       ? {
           href: `https://github.com/${source.repo}/commit/${source.ref}`,
-          label: `${source.repo} · ${source.ref.slice(0, 7)}`,
+          label: source.repo,
+          ref: source.ref.slice(0, 7),
         }
       : source.kind === "fixture"
         ? {
             href: "https://github.com/dcramer/frameshift",
             label: "dcramer/frameshift",
+            ref: null,
           }
         : null;
 
@@ -230,20 +240,15 @@ function ReportViewer({
           <BrandMark />
           <span>Frameshift</span>
         </a>
-        <div className="scan-summary">
-          <p>Report</p>
-          <strong>
-            <span>{changes.length}</span>{" "}
-            {changes.length === 1 ? "change" : "changes"}
-          </strong>
-          <small>{sourceName}</small>
-          {sourceLink && (
-            <a className="source-link" href={sourceLink.href}>
+        {sourceLink && (
+          <div className="report-source">
+            <a href={sourceLink.href}>
+              <GitHubIcon />
               <span>{sourceLink.label}</span>
-              <b aria-hidden="true">↗</b>
+              {sourceLink.ref && <code>{sourceLink.ref}</code>}
             </a>
-          )}
-        </div>
+          </div>
+        )}
         <fieldset className="summary-row" aria-label="Report summary">
           <span>
             <b>{report.summary.changed}</b> changed
