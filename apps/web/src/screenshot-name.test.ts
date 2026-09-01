@@ -12,6 +12,15 @@ describe("screenshot names", () => {
     });
   });
 
+  test("accepts dots as path separators", () => {
+    expect(screenshotName("settings.account_profile__mobile.png")).toEqual({
+      full: "settings · account profile · mobile",
+      leaf: "mobile",
+      parent: "settings / account profile",
+      parentKey: "settings\0account_profile",
+    });
+  });
+
   test("groups siblings under one compact label", () => {
     expect(
       screenshotBranches([

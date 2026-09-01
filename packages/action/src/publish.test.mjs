@@ -85,6 +85,24 @@ describe("Frameshift report publishing", () => {
     expect(body.match(/<img /g)).toHaveLength(8);
   });
 
+  test("formats folders and dots as caption sections", () => {
+    const body = buildComment(
+      {
+        files: [
+          changedFile("settings/account__mobile.png"),
+          changedFile("settings.profile__desktop.png"),
+        ],
+        summary: { added: 0, changed: 2, removed: 0, unchanged: 0 },
+        version: 2,
+      },
+      "https://frameshift.pub/report/?repo=owner%2Frepo&ref=abc",
+      "https://raw.githubusercontent.com/owner/repo/abc",
+    );
+
+    expect(body).toContain("Settings · Account · Mobile");
+    expect(body).toContain("Settings · Profile · Desktop");
+  });
+
   test("reports no screenshot changes", () => {
     const body = buildComment(
       report({ added: 0, changed: 0, removed: 0, unchanged: 3 }),

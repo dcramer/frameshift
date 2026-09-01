@@ -16,6 +16,8 @@
     "dev": "pnpm --filter @frameshift/web dev",
     "dev:fixture": "pnpm --filter @frameshift/web dev:fixture",
     "dev:report": "node scripts/dev-report.mjs",
+    "e2e": "pnpm --filter @frameshift/web e2e",
+    "e2e:install": "pnpm --filter @frameshift/web e2e:install",
     "fixture:generate": "pnpm --filter @frameshift/action fixture:generate",
     "fixtures:check": "pnpm --filter @frameshift/report fixtures:check",
     "format": "prettier --write .",

@@ -28,6 +28,8 @@ GitHub Action for creating screenshot reports.
 - Develop: `pnpm dev`
 - Develop with the mixed sample report: `pnpm dev:fixture`
 - Develop with any local report: `pnpm dev:report -- <report-directory>`
+- Install the E2E browser: `pnpm e2e:install`
+- Run browser tests: `pnpm e2e`
 - Build: `pnpm build`
 - Rebuild the action: `pnpm action:build`
 - Test the built Action: `pnpm action:smoke`
@@ -45,6 +47,7 @@ GitHub Action for creating screenshot reports.
 ## Architecture
 
 - `apps/web` owns the static review interface.
+- `apps/web/e2e` owns browser tests and the screenshots used to test Frameshift.
 - `packages/report` owns the versioned report format and its checks.
 - `fixtures` contains reports made by the Action for local UI work and tests
   across packages. Do not hand-edit generated sample files.

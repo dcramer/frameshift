@@ -16,9 +16,9 @@ concurrency:
 
 jobs:
   test_action:
-    name: Run the checked-in Action
+    name: Run browser tests and the checked-in Action
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Enable Corepack
@@ -43,6 +43,12 @@ jobs:
             path="$RUNNER_TEMP/frameshift-action/baseline"
           fi
           echo "path=$path" >> "$GITHUB_OUTPUT"
+      - name: Install Chromium
+        run: pnpm --filter @frameshift/web exec playwright install --with-deps chromium
+      - name: Run browser tests
+        run: pnpm e2e
+      - name: Add browser screenshots to the Action test
+        run: cp test-output/screenshots/*.png "${{ steps.screenshots.outputs.path }}/"
       - name: Record completed test screenshots
         id: frameshift
         uses: ./ci
@@ -61,13 +67,16 @@ jobs:
           node packages/action/src/qa.mjs verify
           "$RUNNER_TEMP/frameshift-action"
           "$RUNNER_TEMP/frameshift/report"
+          "$RUNNER_TEMP/frameshift-action/candidate"
       - name: Check the current-only pull request report
         if: github.event_name == 'pull_request' && steps.frameshift.outputs['before-commit'] == ''
         env:
           ACTION_CHANGES: ${{ steps.frameshift.outputs.changes }}
-        run: |
-          test "$ACTION_CHANGES" = "2"
-          pnpm report:check -- "$RUNNER_TEMP/frameshift/report"
+        run: >-
+          node packages/action/src/qa.mjs verify-current
+          "$RUNNER_TEMP/frameshift-action"
+          "$RUNNER_TEMP/frameshift/report"
+          "$RUNNER_TEMP/frameshift-action/candidate"
       - name: Summarize the test
         if: github.event_name == 'pull_request'
         env:
@@ -76,7 +85,7 @@ jobs:
           printf '%s\n' \
             "## Frameshift Action self-test" \
             "" \
-            "The checked-in Action found changes in **${ACTION_CHANGES} screenshots**, as expected." \
+            "The browser suite passed. The checked-in Action found changes in **${ACTION_CHANGES} screenshots**." \
             "" \
             "GitHub keeps the report for seven days. The next job links it from the pull request." \
             >> "$GITHUB_STEP_SUMMARY"

@@ -6,6 +6,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { loadReport } from "./load-report";
 import {
+  adjacentScreenshot,
+  reportArrowAction,
+  type ReportQuickView,
+  type ScreenshotDirection,
+} from "./report-keyboard";
+import {
   type ComparisonMode,
   type ImageScale,
   readReportView,
@@ -151,6 +157,15 @@ function initialComparisonMode(): ComparisonMode {
     // Some browsers block saved settings.
   }
   return "difference";
+}
+
+function targetUsesArrowKeys(target: EventTarget | null): boolean {
+  return (
+    target instanceof HTMLElement &&
+    (target.isContentEditable ||
+      target.closest("input, select, textarea, [contenteditable='true']") !==
+        null)
+  );
 }
 
 function BrandMark() {
@@ -299,8 +314,8 @@ function GuidePage() {
           </p>
           <CodeBlock code={PLAYWRIGHT_EXAMPLE} language="typescript" />
           <p>
-            File names become labels. Use <code>__</code> for variants:
-            <code> account__desktop.png</code> and
+            File names become labels. Folders and dots separate label parts. Use
+            <code> __</code> for variants: <code>account__desktop.png</code> and
             <code> account__mobile.png</code> appear together under Account.
           </p>
           <p>
@@ -384,6 +399,7 @@ function ImagePanel({
   onModeChange,
   onPreview,
   onScaleChange,
+  quickView,
   scale,
   source,
 }: {
@@ -392,6 +408,7 @@ function ImagePanel({
   onModeChange(mode: ComparisonMode): void;
   onPreview(image: PreviewImage): void;
   onScaleChange(scale: ImageScale): void;
+  quickView: ReportQuickView | null;
   scale: ImageScale;
   source: ImageSource;
 }) {
@@ -426,6 +443,7 @@ function ImagePanel({
     const before = previewImage("Before", file.images.baseline);
     const after = previewImage("After", file.images.candidate);
     const difference = previewImage("Highlights", file.images.diff);
+    const quickImage = quickView === "before" ? before : after;
 
     return (
       <section className="comparison-viewer" data-scale={scale}>
@@ -458,7 +476,7 @@ function ImagePanel({
             {COMPARISON_MODES.map((item) => (
               <button
                 aria-label={item.label}
-                aria-pressed={mode === item.value}
+                aria-pressed={!quickView && mode === item.value}
                 data-label={item.label}
                 key={item.value}
                 onClick={() => onModeChange(item.value)}
@@ -472,7 +490,35 @@ function ImagePanel({
           </fieldset>
         </header>
 
-        {mode === "side-by-side" ? (
+        {quickView ? (
+          <>
+            <div
+              aria-hidden="true"
+              className="keyboard-view-cue"
+              data-side={quickView}
+            >
+              {quickView === "before" && <kbd>←</kbd>}
+              <span>
+                <strong>{quickImage.label}</strong>
+                <small>Esc to compare</small>
+              </span>
+              {quickView === "after" && <kbd>→</kbd>}
+            </div>
+            <div
+              className="comparison-scroll keyboard-image-view"
+              key={`keyboard-${quickView}`}
+            >
+              <button
+                aria-label={`Open ${quickImage.label.toLowerCase()} image full screen`}
+                className="image-trigger keyboard-image-trigger"
+                onClick={() => onPreview(quickImage)}
+                type="button"
+              >
+                <img alt={quickImage.alt} src={quickImage.src} />
+              </button>
+            </div>
+          </>
+        ) : mode === "side-by-side" ? (
           <div className="comparison-scroll" key={mode}>
             <div className="comparison-pair">
               <div className="comparison-pane">
@@ -689,6 +735,7 @@ function ScreenshotList({
     <button
       aria-label={`${displayName(file.file)}, ${file.status}`}
       className={file.file === selectedFile ? "selected" : ""}
+      data-screenshot={file.file}
       key={file.file}
       onClick={() => onSelect(file.file)}
       type="button"
@@ -729,8 +776,18 @@ function ReportViewer({
   );
   const [scale, setScale] = useState<ImageScale>(initialView.scale ?? "fit");
   const [previewImage, setPreviewImage] = useState<PreviewImage | null>(null);
+  const [quickView, setQuickView] = useState<ReportQuickView | null>(null);
+  const [navigationDirection, setNavigationDirection] =
+    useState<ScreenshotDirection | null>(null);
+  const [keyboardAnnouncement, setKeyboardAnnouncement] = useState("");
   const mobilePicker = useRef<HTMLDetailsElement>(null);
-  const selected = report.files.find((file) => file.file === selectedFile);
+  const selected = files.find((file) => file.file === selectedFile);
+  const keyboardShortcuts = [
+    "ArrowUp",
+    "ArrowDown",
+    ...(selected?.status === "changed" ? ["ArrowLeft", "ArrowRight"] : []),
+    ...(quickView ? ["Escape"] : []),
+  ].join(" ");
   const sourceDetails =
     source.kind === "github"
       ? {
@@ -748,6 +805,10 @@ function ReportViewer({
           }
         : null;
   const pullRequest = report.metadata?.pullRequest;
+  const pullRequestHref =
+    pullRequest?.number && sourceDetails
+      ? `${sourceDetails.repoHref}/pull/${pullRequest.number}`
+      : null;
 
   useEffect(() => {
     if (!selectedFile) return;
@@ -763,13 +824,93 @@ function ReportViewer({
     );
   }, [mode, scale, selectedFile]);
 
+  useEffect(() => {
+    const selectedButton = [
+      ...document.querySelectorAll<HTMLElement>(
+        ".desktop-screenshot-nav button[data-screenshot]",
+      ),
+    ].find((button) => button.dataset.screenshot === selectedFile);
+    selectedButton?.scrollIntoView({ block: "nearest" });
+  }, [selectedFile]);
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (
+        !selected ||
+        previewImage ||
+        event.defaultPrevented ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey ||
+        targetUsesArrowKeys(event.target)
+      ) {
+        return;
+      }
+
+      if (event.key === "Escape" && quickView) {
+        event.preventDefault();
+        setQuickView(null);
+        setKeyboardAnnouncement("Showing the comparison again.");
+        return;
+      }
+
+      const action = reportArrowAction(event.key, selected.status);
+      if (!action) return;
+      event.preventDefault();
+
+      if (action.kind === "quick-view") {
+        setQuickView(action.view);
+        setKeyboardAnnouncement(
+          `Showing the ${action.view} image for ${displayName(selected.file)}.`,
+        );
+        return;
+      }
+
+      const nextFile = adjacentScreenshot(
+        files.map((file) => file.file),
+        selected.file,
+        action.offset,
+      );
+      if (!nextFile) return;
+      const next = files.find((file) => file.file === nextFile)!;
+      const focusedNavigation =
+        event.target instanceof HTMLElement
+          ? event.target.closest<HTMLElement>(".report-index nav")
+          : null;
+      setSelectedFile(nextFile);
+      setNavigationDirection(action.direction);
+      if (next.status !== "changed") setQuickView(null);
+      mobilePicker.current?.removeAttribute("open");
+      if (focusedNavigation) {
+        window.requestAnimationFrame(() => {
+          const nextButton = [
+            ...focusedNavigation.querySelectorAll<HTMLElement>(
+              "button[data-screenshot]",
+            ),
+          ].find((button) => button.dataset.screenshot === nextFile);
+          nextButton?.focus();
+        });
+      }
+      setKeyboardAnnouncement(
+        `${displayName(next.file)}, ${next.status} screenshot.`,
+      );
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [files, previewImage, quickView, selected]);
+
   function selectScreenshot(file: string) {
     setSelectedFile(file);
+    setNavigationDirection(null);
+    setQuickView(null);
     mobilePicker.current?.removeAttribute("open");
   }
 
   function selectMode(nextMode: ComparisonMode) {
     setMode(nextMode);
+    setQuickView(null);
     try {
       window.localStorage.setItem(COMPARISON_MODE_STORAGE_KEY, nextMode);
     } catch {
@@ -803,7 +944,12 @@ function ReportViewer({
           )}
           {pullRequest && (
             <div className="report-pull-request">
-              {pullRequest.number && <span>PR #{pullRequest.number}</span>}
+              {pullRequest.number &&
+                (pullRequestHref ? (
+                  <a href={pullRequestHref}>PR #{pullRequest.number}</a>
+                ) : (
+                  <span>PR #{pullRequest.number}</span>
+                ))}
               <strong title={pullRequest.title}>{pullRequest.title}</strong>
             </div>
           )}
@@ -834,9 +980,16 @@ function ReportViewer({
           </details>
         )}
       </aside>
-      <section className="panel review-stage">
+      <section
+        aria-keyshortcuts={keyboardShortcuts}
+        className="panel review-stage"
+      >
         {selected ? (
-          <>
+          <div
+            className="review-content"
+            data-navigation={navigationDirection ?? undefined}
+            key={selected.file}
+          >
             <header className="review-header">
               <div className="review-heading">
                 <div className="review-title-row">
@@ -847,6 +1000,26 @@ function ReportViewer({
                 </div>
                 <code>{selected.file}</code>
               </div>
+              <div
+                aria-label="Keyboard shortcuts: Up and down change screenshots. Left shows before. Right shows after."
+                className="review-shortcuts"
+                role="note"
+              >
+                <span>
+                  <kbd>↑</kbd>
+                  <kbd>↓</kbd> Screenshots
+                </span>
+                {selected.status === "changed" && (
+                  <>
+                    <span>
+                      <kbd>←</kbd> Before
+                    </span>
+                    <span>
+                      After <kbd>→</kbd>
+                    </span>
+                  </>
+                )}
+              </div>
             </header>
             <ImagePanel
               file={selected}
@@ -854,10 +1027,11 @@ function ReportViewer({
               onModeChange={selectMode}
               onPreview={setPreviewImage}
               onScaleChange={setScale}
+              quickView={quickView}
               scale={scale}
               source={source}
             />
-          </>
+          </div>
         ) : (
           <div className="no-changes">
             <p className="kicker">Empty report</p>
@@ -871,6 +1045,9 @@ function ReportViewer({
           onClose={() => setPreviewImage(null)}
         />
       )}
+      <output aria-live="polite" className="visually-hidden">
+        {keyboardAnnouncement}
+      </output>
     </main>
   );
 }
