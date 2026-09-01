@@ -7,6 +7,9 @@ import { pathToFileURL } from "node:url";
 import { checkReportDirectory } from "@frameshift/report/directory";
 
 export const COMMENT_MARKER = "<!-- frameshift-report -->";
+const THUMBNAIL_COLUMNS = 3;
+const VISIBLE_THUMBNAILS = 6;
+const MAX_THUMBNAILS = 18;
 
 function input(name, { required = false } = {}) {
   const value = process.env[`INPUT_${name.toUpperCase()}`]?.trim();
@@ -55,11 +58,82 @@ function changeCount(report) {
   return report.summary.added + report.summary.changed + report.summary.removed;
 }
 
-export function buildComment(report, viewerUrl) {
+function escapeHtml(value) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
+function encodePath(value) {
+  return value.split("/").map(encodeURIComponent).join("/");
+}
+
+function captionFromFile(file) {
+  return path.posix
+    .basename(file, ".png")
+    .split("__")
+    .map((part) =>
+      part
+        .replaceAll(/[_-]+/g, " ")
+        .replaceAll(/\b\w/g, (character) => character.toUpperCase()),
+    )
+    .join(" · ");
+}
+
+function renderThumbnailTable(files, viewerUrl, imageRoot) {
+  const cells = files.map((file) => {
+    const caption = captionFromFile(file.file);
+    const imageUrl = `${imageRoot}/${encodePath(file.images.candidate)}`;
+    return [
+      '<td align="center" width="33%">',
+      `<a href="${escapeHtml(viewerUrl)}"><img src="${escapeHtml(imageUrl)}" width="180" alt="${escapeHtml(caption)}"></a><br>`,
+      `<sub><strong>${escapeHtml(caption)}</strong><br>Changed</sub>`,
+      "</td>",
+    ].join("\n");
+  });
+  const rows = [];
+  for (let index = 0; index < cells.length; index += THUMBNAIL_COLUMNS) {
+    rows.push(
+      `<tr>\n${cells.slice(index, index + THUMBNAIL_COLUMNS).join("\n")}\n</tr>`,
+    );
+  }
+  return `<table>\n<tbody>\n${rows.join("\n")}\n</tbody>\n</table>`;
+}
+
+function renderThumbnailGallery(report, viewerUrl, imageRoot) {
+  if (!imageRoot) return undefined;
+  const changedFiles = report.files.filter((file) => file.status === "changed");
+  if (changedFiles.length === 0) return undefined;
+
+  const visible = changedFiles.slice(0, VISIBLE_THUMBNAILS);
+  const hidden = changedFiles.slice(VISIBLE_THUMBNAILS, MAX_THUMBNAILS);
+  const lines = [renderThumbnailTable(visible, viewerUrl, imageRoot)];
+  if (hidden.length > 0) {
+    lines.push(
+      "<details>",
+      `<summary>Show ${hidden.length} more changed screenshot${hidden.length === 1 ? "" : "s"}</summary>`,
+      "",
+      renderThumbnailTable(hidden, viewerUrl, imageRoot),
+      "</details>",
+    );
+  }
+  const omitted = changedFiles.length - visible.length - hidden.length;
+  if (omitted > 0) {
+    lines.push(
+      `<sub>${omitted} more changed screenshot${omitted === 1 ? "" : "s"} in Frameshift.</sub>`,
+    );
+  }
+  return lines.join("\n\n");
+}
+
+export function buildComment(report, viewerUrl, imageRoot) {
   const changes = changeCount(report);
   const headline = changes
     ? `**${changes} visual change${changes === 1 ? "" : "s"}** — ${report.summary.changed} changed · ${report.summary.added} added · ${report.summary.removed} removed`
     : "**No visual changes**";
+  const gallery = renderThumbnailGallery(report, viewerUrl, imageRoot);
   return [
     COMMENT_MARKER,
     "## Frameshift",
@@ -68,7 +142,11 @@ export function buildComment(report, viewerUrl) {
     "",
     `[Review the visual report in Frameshift](${viewerUrl})`,
     "",
-  ].join("\n");
+    gallery,
+    gallery ? "" : undefined,
+  ]
+    .filter((line) => line !== undefined)
+    .join("\n");
 }
 
 export function buildViewerUrl(baseUrl, repository, reportRef) {
@@ -226,12 +304,13 @@ export async function main() {
       token,
     );
     const viewerUrl = buildViewerUrl(viewerBaseUrl, repository, reportRef);
+    const imageRoot = `https://raw.githubusercontent.com/${repository}/${reportRef}`;
     if (pullRequest) {
       await upsertComment(
         token,
         repository,
         pullRequest,
-        buildComment(report, viewerUrl),
+        buildComment(report, viewerUrl, imageRoot),
       );
     }
     await updateStatus(token, repository, headSha, {
