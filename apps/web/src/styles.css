@@ -556,7 +556,7 @@ h1 {
 .report-layout {
   display: grid;
   grid-template-columns: 288px minmax(0, 1fr);
-  grid-template-rows: 72px minmax(0, 1fr);
+  grid-template-rows: 64px minmax(0, 1fr);
   min-height: 100dvh;
 }
 
@@ -578,16 +578,15 @@ h1 {
 
 .report-layout > .report-index {
   position: sticky;
-  top: 72px;
-  height: calc(100dvh - 72px);
-  min-height: calc(100dvh - 72px);
+  top: 64px;
+  height: calc(100dvh - 64px);
+  min-height: calc(100dvh - 64px);
   overflow-y: auto;
   border-right: 1px solid var(--line);
 }
 
 .report-brand {
   min-width: 0;
-  border-right: 1px solid var(--line);
   padding: 0 24px;
   text-decoration: none;
 }
@@ -640,11 +639,10 @@ h1 {
 
 .report-github .report-commit {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 6px;
-  border-left: 1px solid var(--line-strong);
   margin-left: 3px;
-  padding-left: 12px;
+  padding-left: 3px;
   color: var(--faint);
   font-size: 9px;
   font-weight: 500;
@@ -663,11 +661,12 @@ h1 {
 .report-pull-request {
   display: flex;
   min-width: 0;
-  align-items: baseline;
+  align-items: center;
   gap: 9px;
 }
 
-.report-pull-request span {
+.report-pull-request > a,
+.report-pull-request > span {
   flex: none;
   color: var(--accent-text);
   font:
@@ -675,6 +674,7 @@ h1 {
     SFMono-Regular,
     Menlo,
     monospace;
+  text-decoration: none;
   text-transform: uppercase;
 }
 
@@ -760,7 +760,7 @@ h1 {
 
 .review-stage {
   min-width: 0;
-  min-height: calc(100dvh - 72px);
+  min-height: calc(100dvh - 64px);
   background: var(--bg);
   padding: 32px;
 }
@@ -1638,7 +1638,6 @@ h1 {
 
   .report-brand {
     min-height: 64px;
-    border-right: 1px solid var(--line);
   }
 
   .report-context {

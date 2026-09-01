@@ -805,6 +805,10 @@ function ReportViewer({
           }
         : null;
   const pullRequest = report.metadata?.pullRequest;
+  const pullRequestHref =
+    pullRequest?.number && sourceDetails
+      ? `${sourceDetails.repoHref}/pull/${pullRequest.number}`
+      : null;
 
   useEffect(() => {
     if (!selectedFile) return;
@@ -940,7 +944,12 @@ function ReportViewer({
           )}
           {pullRequest && (
             <div className="report-pull-request">
-              {pullRequest.number && <span>PR #{pullRequest.number}</span>}
+              {pullRequest.number &&
+                (pullRequestHref ? (
+                  <a href={pullRequestHref}>PR #{pullRequest.number}</a>
+                ) : (
+                  <span>PR #{pullRequest.number}</span>
+                ))}
               <strong title={pullRequest.title}>{pullRequest.title}</strong>
             </div>
           )}

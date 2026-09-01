@@ -62,6 +62,10 @@ test("report arrow keys switch screenshots and before-and-after views", async ({
   await expect(
     page.getByRole("button", { name: "Highlights" }),
   ).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("link", { name: "PR #42" })).toHaveAttribute(
+    "href",
+    "https://github.com/dcramer/frameshift/pull/42",
+  );
   await saveScreenshot(page, "report-highlights__desktop.png");
 
   await page.keyboard.press("ArrowLeft");
