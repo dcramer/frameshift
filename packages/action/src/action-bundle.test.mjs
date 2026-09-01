@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import { afterEach, describe, expect, it } from "vitest";
 
+import { copyHoneydiffAssets } from "./copy-honeydiff-assets.mjs";
 import { runActionSmoke } from "./smoke.mjs";
 
 const DIFF_DIR = path.dirname(fileURLToPath(import.meta.url));
@@ -47,15 +48,38 @@ describe("visual diff action bundle", () => {
       ],
       { cwd: PACKAGE_DIR, stdio: "pipe" },
     );
+    await copyHoneydiffAssets(output);
 
-    for (const file of ["index.mjs", "THIRD_PARTY_LICENSES.txt"]) {
+    for (const file of [
+      "index.mjs",
+      "load-platform.cjs",
+      "package.json",
+      "THIRD_PARTY_LICENSES.txt",
+    ]) {
       const [actual, expected] = await Promise.all([
         fs.readFile(path.join(ACTION_DIR, file), "utf8"),
         fs.readFile(path.join(output, file), "utf8"),
       ]);
       expect(actual, `${file} is out of date`).toBe(expected);
     }
-  });
+
+    const [actualPlatforms, platforms] = await Promise.all([
+      fs.readdir(path.join(ACTION_DIR, "platforms")),
+      fs.readdir(path.join(output, "platforms")),
+    ]);
+    expect(actualPlatforms, "platform file list is out of date").toEqual(
+      platforms,
+    );
+    for (const file of platforms) {
+      const [actual, expected] = await Promise.all([
+        fs.readFile(path.join(ACTION_DIR, "platforms", file)),
+        fs.readFile(path.join(output, "platforms", file)),
+      ]);
+      expect(actual.equals(expected), `platforms/${file} is out of date`).toBe(
+        true,
+      );
+    }
+  }, 15_000);
 
   it("runs without installed dependencies and writes the changes output", async () => {
     await expect(runActionSmoke()).resolves.toEqual({
@@ -67,7 +91,7 @@ describe("visual diff action bundle", () => {
         unchanged: 0,
       },
     });
-  });
+  }, 15_000);
 });
 
 describe("publisher action bundle", () => {

@@ -1,36 +1,36 @@
 {
   "files": [
     {
-      "file": "activity__desktop.png",
-      "image": "images/candidate/activity__desktop.png",
-      "images": {
-        "candidate": "images/candidate/activity__desktop.png"
-      },
-      "status": "added"
+      "file": "account__desktop.png",
+      "status": "unchanged"
     },
     {
-      "file": "dashboard__desktop.png",
-      "height": 420,
-      "image": "images/diff/dashboard__desktop.png",
+      "file": "legacy-approvals__desktop.png",
+      "image": "images/baseline/legacy-approvals__desktop.png",
       "images": {
-        "baseline": "images/baseline/dashboard__desktop.png",
-        "candidate": "images/candidate/dashboard__desktop.png",
-        "diff": "images/diff/dashboard__desktop.png"
-      },
-      "status": "changed",
-      "width": 720
-    },
-    {
-      "file": "legacy-settings__desktop.png",
-      "image": "images/baseline/legacy-settings__desktop.png",
-      "images": {
-        "baseline": "images/baseline/legacy-settings__desktop.png"
+        "baseline": "images/baseline/legacy-approvals__desktop.png"
       },
       "status": "removed"
     },
     {
-      "file": "profile__desktop.png",
-      "status": "unchanged"
+      "file": "team-itinerary__desktop.png",
+      "image": "images/candidate/team-itinerary__desktop.png",
+      "images": {
+        "candidate": "images/candidate/team-itinerary__desktop.png"
+      },
+      "status": "added"
+    },
+    {
+      "file": "trip-planner__desktop.png",
+      "height": 521,
+      "image": "images/diff/trip-planner__desktop.png",
+      "images": {
+        "baseline": "images/baseline/trip-planner__desktop.png",
+        "candidate": "images/candidate/trip-planner__desktop.png",
+        "diff": "images/diff/trip-planner__desktop.png"
+      },
+      "status": "changed",
+      "width": 720
     }
   ],
   "summary": {

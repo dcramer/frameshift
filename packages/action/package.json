@@ -8,15 +8,18 @@
     "build:compare": "ncc build src/action.mjs -o ../../dist --minify --license THIRD_PARTY_LICENSES.txt",
     "build:publish": "vite build --config vite.publish.config.ts",
     "fixture:generate": "node src/generate-fixture.mjs",
+    "postbuild:compare": "node src/copy-honeydiff-assets.mjs",
     "smoke": "node src/smoke.mjs",
     "test": "vitest run"
   },
   "dependencies": {
     "@frameshift/report": "workspace:*",
-    "pixelmatch": "catalog:",
+    "@vizzly-testing/honeydiff": "^0.16.0",
     "pngjs": "catalog:"
   },
   "devDependencies": {
+    "@fontsource/inter": "^5.3.0",
+    "@resvg/resvg-js": "^2.6.2",
     "@vercel/ncc": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:"

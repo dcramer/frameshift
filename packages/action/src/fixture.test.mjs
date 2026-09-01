@@ -53,5 +53,5 @@ describe("mixed visual diff fixture", () => {
         await fs.readFile(path.join(committedFixtureRoot, file)),
       );
     }
-  });
+  }, 30_000);
 });

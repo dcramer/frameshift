@@ -35,6 +35,28 @@ async function writePng(
   await fs.writeFile(file, PNG.sync.write(image));
 }
 
+async function writeRowPattern(file, rows) {
+  const width = 64;
+  const image = new PNG({ height: rows.length, width });
+  for (const [row, sourceRow] of rows.entries()) {
+    for (let column = 0; column < width; column += 1) {
+      const offset = (row * width + column) * 4;
+      if (sourceRow === null) {
+        image.data.set([255, 0, 0, 255], offset);
+        continue;
+      }
+      const value =
+        (sourceRow * 73 + column * 151 + ((column * sourceRow) % 251)) % 256;
+      image.data.set(
+        [value, (value * 37) % 256, (value * 83) % 256, 255],
+        offset,
+      );
+    }
+  }
+  await fs.mkdir(path.dirname(file), { recursive: true });
+  await fs.writeFile(file, PNG.sync.write(image));
+}
+
 afterEach(async () => {
   await Promise.all(
     tempDirectories
@@ -139,6 +161,46 @@ describe("compareDirectories", () => {
       width: 3,
     });
     expect([...diff.data.subarray(8, 12)]).toEqual([255, 0, 255, 255]);
+  });
+
+  it("aligns content below one inserted row block", async () => {
+    const paths = await makeDirectories();
+    const baselineRows = Array.from({ length: 120 }, (_, index) => index);
+    const candidateRows = [
+      ...baselineRows.slice(0, 40),
+      ...Array(8).fill(null),
+      ...baselineRows.slice(40),
+    ];
+    await Promise.all([
+      writeRowPattern(path.join(paths.baseline, "page.png"), baselineRows),
+      writeRowPattern(path.join(paths.candidate, "page.png"), candidateRows),
+    ]);
+
+    const report = await compareDirectories(paths);
+    const [candidate, diff] = await Promise.all([
+      fs
+        .readFile(path.join(paths.output, "images/candidate/page.png"))
+        .then(PNG.sync.read),
+      fs
+        .readFile(path.join(paths.output, "images/diff/page.png"))
+        .then(PNG.sync.read),
+    ]);
+    const insertedPixel = (40 * candidate.width + 10) * 4;
+    const alignedPixel = (80 * candidate.width + 10) * 4;
+
+    expect(report.summary.changed).toBe(1);
+    expect({ height: diff.height, width: diff.width }).toEqual({
+      height: 128,
+      width: 64,
+    });
+    expect([
+      ...diff.data.subarray(insertedPixel, insertedPixel + 4),
+    ]).not.toEqual([
+      ...candidate.data.subarray(insertedPixel, insertedPixel + 4),
+    ]);
+    expect([...diff.data.subarray(alignedPixel, alignedPixel + 4)]).toEqual([
+      ...candidate.data.subarray(alignedPixel, alignedPixel + 4),
+    ]);
   });
 
   it("copies added and removed images into the report", async () => {

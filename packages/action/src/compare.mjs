@@ -2,10 +2,16 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import pixelmatch from "pixelmatch";
+import { compare, getDimensions } from "@vizzly-testing/honeydiff";
 import { PNG } from "pngjs";
 
 const REPORT_VERSION = 1;
+const COMPARISON_OPTIONS = {
+  alignHeightChanges: true,
+  antialiasing: true,
+  minimumRegionPixels: 2,
+  threshold: 2,
+};
 
 async function listPngs(root) {
   const files = new Map();
@@ -29,10 +35,10 @@ async function listPngs(root) {
   return files;
 }
 
-function fit(image, width, height) {
-  if (image.width === width && image.height === height) return image;
+function fitWidth(image, width) {
+  if (image.width === width) return image;
 
-  const result = new PNG({ height, width });
+  const result = new PNG({ height: image.height, width });
   result.data.fill(0);
   for (let row = 0; row < image.height; row += 1) {
     const start = row * image.width * 4;
@@ -46,6 +52,26 @@ function fit(image, width, height) {
   return result;
 }
 
+async function comparisonInputs(baselinePath, candidatePath) {
+  const [baselineSize, candidateSize] = await Promise.all([
+    getDimensions(baselinePath),
+    getDimensions(candidatePath),
+  ]);
+  if (baselineSize.width === candidateSize.width) {
+    return [baselinePath, candidatePath];
+  }
+
+  const width = Math.max(baselineSize.width, candidateSize.width);
+  const [baseline, candidate] = await Promise.all([
+    fs.readFile(baselinePath).then(PNG.sync.read),
+    fs.readFile(candidatePath).then(PNG.sync.read),
+  ]);
+  return [
+    PNG.sync.write(fitWidth(baseline, width)),
+    PNG.sync.write(fitWidth(candidate, width)),
+  ];
+}
+
 async function copyReportImage(source, output, kind, relative) {
   const destination = path.join(output, "images", kind, ...relative.split("/"));
   await fs.mkdir(path.dirname(destination), { recursive: true });
@@ -54,51 +80,29 @@ async function copyReportImage(source, output, kind, relative) {
 }
 
 async function comparePair(baselinePath, candidatePath, output, relative) {
-  const baselineSource = PNG.sync.read(await fs.readFile(baselinePath));
-  const candidateSource = PNG.sync.read(await fs.readFile(candidatePath));
-  const width = Math.max(baselineSource.width, candidateSource.width);
-  const height = Math.max(baselineSource.height, candidateSource.height);
-  const baseline = fit(baselineSource, width, height);
-  const candidate = fit(candidateSource, width, height);
-  const diff = new PNG({ height, width });
-  const pixelsChanged = pixelmatch(
-    baseline.data,
-    candidate.data,
-    diff.data,
-    width,
-    height,
+  const diffImage = path.join(output, "images", "diff", ...relative.split("/"));
+  await fs.mkdir(path.dirname(diffImage), { recursive: true });
+  const [baselineInput, candidateInput] = await comparisonInputs(
+    baselinePath,
+    candidatePath,
+  );
+  const analysis = await compare(
+    baselineInput,
+    candidateInput,
+    COMPARISON_OPTIONS,
     {
-      alpha: 0.15,
-      diffColor: [255, 0, 255],
-      threshold: 0.1,
+      color: "#ff00ff",
+      diffPath: diffImage,
+      overwrite: true,
     },
   );
-  const sizeChanged =
-    baselineSource.width !== candidateSource.width ||
-    baselineSource.height !== candidateSource.height;
 
-  if (sizeChanged) {
-    const sharedWidth = Math.min(baselineSource.width, candidateSource.width);
-    const sharedHeight = Math.min(
-      baselineSource.height,
-      candidateSource.height,
-    );
-    for (let row = 0; row < height; row += 1) {
-      for (let column = 0; column < width; column += 1) {
-        if (row < sharedHeight && column < sharedWidth) continue;
-        const offset = (row * width + column) * 4;
-        diff.data.set([255, 0, 255, 255], offset);
-      }
-    }
-  }
-
-  if (pixelsChanged === 0 && !sizeChanged) {
+  if (!analysis.different) {
+    await fs.rm(diffImage, { force: true });
     return { file: relative, status: "unchanged" };
   }
 
-  const diffImage = path.join(output, "images", "diff", ...relative.split("/"));
-  await fs.mkdir(path.dirname(diffImage), { recursive: true });
-  await fs.writeFile(diffImage, PNG.sync.write(diff));
+  const { height, width } = analysis.images.canvas;
   const [baselineImage, candidateImage] = await Promise.all([
     copyReportImage(baselinePath, output, "baseline", relative),
     copyReportImage(candidatePath, output, "candidate", relative),
