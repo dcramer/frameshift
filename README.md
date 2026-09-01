@@ -24,6 +24,8 @@ Run the expensive baseline capture once for each default-branch commit and
 store it in GitHub Actions artifacts:
 
 ```yaml
+name: Visual baseline
+
 on:
   push:
   workflow_dispatch:
@@ -44,15 +46,17 @@ jobs:
         run: pnpm capture:screenshots -- --all --output path/to/baseline
       - uses: dcramer/frameshift/baseline/upload@<full-commit-sha>
         with:
-          name: web-screenshots-v1
-          sha: ${{ github.sha }}
           path: path/to/baseline
 ```
 
-The pull request workflow restores the artifact for its exact base SHA. It
-only captures the candidate revision:
+The pull request workflow restores the artifact for the exact base that GitHub
+tested. Keep the default checkout behavior so Frameshift can verify the PR
+merge commit and derive its immutable first parent. The workflow only captures
+the candidate revision:
 
 ```yaml
+name: Visual diff
+
 on:
   pull_request:
 
@@ -62,6 +66,7 @@ permissions:
 
 jobs:
   visual-diff:
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@<full-commit-sha>
@@ -69,11 +74,9 @@ jobs:
       - name: Capture candidate screenshots
         run: pnpm capture:screenshots -- --output "${{ runner.temp }}/frameshift/candidate"
       - uses: dcramer/frameshift/baseline@<full-commit-sha>
+        id: baseline
         with:
-          name: web-screenshots-v1
-          sha: ${{ github.event.pull_request.base.sha }}
           path: ${{ runner.temp }}/frameshift/baseline
-          github-token: ${{ github.token }}
       - name: Compare screenshots
         id: visual-diff
         uses: dcramer/frameshift@<full-commit-sha>
@@ -81,17 +84,27 @@ jobs:
           baseline: ${{ runner.temp }}/frameshift/baseline
           candidate: ${{ runner.temp }}/frameshift/candidate
           output: ${{ runner.temp }}/frameshift/report
+      - uses: actions/upload-artifact@<full-commit-sha>
+        with:
+          name: frameshift-report
+          path: ${{ runner.temp }}/frameshift/report
+          if-no-files-found: error
 ```
+
+That is the complete baseline plumbing. The Actions default to the
+`frameshift-baseline-v1` baseline ID, the current SHA during upload, and the
+workflow token during restore. The restore Action outputs the selected SHA as
+`steps.baseline.outputs.sha` when another step needs to validate a manifest.
 
 The restore Action checks the artifact name and source SHA. It waits briefly
 when the default-branch workflow is still uploading. It does not silently
 regenerate a missing baseline. See [`baseline/README.md`](baseline/README.md)
-for retention and partial-capture details.
+for overrides, retention, and partial-capture details.
 
-`name` is the baseline ID. Include a capture-contract version in it when
-browser or screenshot semantics can change, such as `web-screenshots-v1`.
-Restore uses this ID plus the full base SHA; it never follows a branch name or
-chooses a nearby artifact.
+Override `name` only when the repository has multiple screenshot suites or
+when a capture-contract change must invalidate existing artifacts. Restore
+uses this ID plus the full base SHA; it never follows a branch name or chooses
+a nearby artifact.
 
 Pin Frameshift and other third-party actions to full commit SHAs. The
 `changes` output counts changed, added, and removed images. A visual change does
@@ -111,26 +124,31 @@ and does not need a token.
 
 ## Publish a GitHub report
 
-Keep the Vercel app static. Pass the report artifact to Frameshift's publisher
-from a trusted job on the default branch:
+Keep the Vercel app static. Run Frameshift's publisher after the untrusted pull
+request workflow completes. The wrapper downloads `frameshift-report` from the
+completed run, validates it, and publishes it:
 
 ```yaml
+on:
+  workflow_run:
+    workflows: [Visual diff]
+    types: [completed]
+
 permissions:
+  actions: read
   contents: write
   pull-requests: write
   statuses: write
 
-steps:
-  - uses: actions/download-artifact@<full-commit-sha>
-    with:
-      name: frameshift-report
-      path: ${{ runner.temp }}/frameshift-report
-  - uses: dcramer/frameshift/publish@<full-commit-sha>
-    with:
-      report: ${{ runner.temp }}/frameshift-report
-      github-token: ${{ secrets.GITHUB_TOKEN }}
-      head-sha: ${{ github.event.workflow_run.head_sha }}
-      pull-request: ${{ github.event.workflow_run.pull_requests[0].number }}
+jobs:
+  publish:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.pull_requests[0] != null &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dcramer/frameshift/publish/workflow@<full-commit-sha>
 ```
 
 The publisher validates the Zod report contract, preserves the report with an
@@ -146,9 +164,9 @@ The `Action self-test` workflow proves this flow in this repository. Report
 tags do not trigger Vercel preview deployments.
 
 Only the publishing job receives `contents: write` and `statuses: write`.
-Frameshift's comparison Action remains token-free. Publishing is skipped for
-fork pull requests because GitHub correctly gives those workflows read-only
-tokens.
+Frameshift's comparison Action remains token-free. The examples skip fork pull
+requests because baseline restore needs an Actions read token and untrusted
+pull request code must not receive it.
 
 ## Run locally
 

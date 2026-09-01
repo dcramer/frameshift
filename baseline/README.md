@@ -20,13 +20,12 @@ jobs:
         run: pnpm capture:screenshots -- --all --output path/to/baseline
       - uses: dcramer/frameshift/baseline/upload@<full-commit-sha>
         with:
-          name: web-screenshots-v1
-          sha: ${{ github.sha }}
           path: path/to/baseline
 ```
 
-Restore the artifact for the pull request's exact base commit before comparing
-it with candidate screenshots:
+Restore the artifact for the exact base that GitHub tested before comparing it
+with candidate screenshots. The default checkout must keep GitHub's synthetic
+PR merge commit:
 
 ```yaml
 permissions:
@@ -34,22 +33,29 @@ permissions:
   contents: read
 
 steps:
+  - uses: actions/checkout@<full-commit-sha>
   - uses: dcramer/frameshift/baseline@<full-commit-sha>
+    id: baseline
     with:
-      name: web-screenshots-v1
-      sha: ${{ github.event.pull_request.base.sha }}
       path: path/to/baseline
-      github-token: ${{ github.token }}
 ```
 
-The upload Action names the artifact with the full source SHA. The restore
-Action requires that exact SHA, rejects expired artifacts, and waits briefly
-when the default-branch workflow is still uploading it. It does not silently
-regenerate a baseline. A missing artifact is an actionable setup failure.
+The upload Action defaults to the `frameshift-baseline-v1` ID and
+`github.sha`. The restore Action uses `github.token` and derives the exact base
+from the checked-out PR merge commit. It verifies that the commit's second
+parent is the PR head before it accepts the first parent as the base. This
+avoids stale `pull_request.base.sha` event data.
 
-`name` is a repository-scoped baseline ID. Include a capture-contract version
-and increment it when the browser or screenshot semantics become incompatible.
+Restore rejects expired artifacts and waits briefly when the default-branch
+workflow is still uploading one. It does not silently regenerate a baseline.
+A missing artifact is an actionable setup failure. The selected base is
+available as `steps.baseline.outputs.sha`.
+
 The immutable artifact key is the baseline ID plus the full source SHA.
+Override `name` when the repository has multiple screenshot suites. Increment
+its contract suffix when the browser or screenshot semantics become
+incompatible. Pass `sha` or `github-token` only for workflows that cannot use
+the safe pull-request defaults.
 
 Capture all baseline scenarios in the default-branch workflow. A pull request
 can capture a smaller candidate set, but it must select the matching files from

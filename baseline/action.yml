@@ -4,16 +4,17 @@ description: Download an unexpired baseline artifact for an exact Git commit
 inputs:
   name:
     description: Stable name shared with the baseline upload Action
-    required: true
+    default: frameshift-baseline-v1
+    required: false
   sha:
-    description: Full Git commit SHA that produced the baseline
-    required: true
+    description: Full baseline commit SHA; defaults to the tested PR merge base
+    required: false
   path:
     description: Directory that receives the baseline artifact
     required: true
   github-token:
     description: GitHub token with actions read access
-    required: true
+    required: false
   repository:
     description: GitHub repository in owner/name form
     required: false
@@ -21,6 +22,11 @@ inputs:
     description: Maximum time to wait for a baseline that is still uploading
     default: "180"
     required: false
+
+outputs:
+  sha:
+    description: Exact commit SHA restored as the baseline
+    value: ${{ steps.resolve.outputs.sha }}
 
 runs:
   using: composite
@@ -32,7 +38,7 @@ runs:
         BASELINE_NAME: ${{ inputs.name }}
         BASELINE_REPOSITORY: ${{ inputs.repository }}
         BASELINE_SHA: ${{ inputs.sha }}
-        BASELINE_TOKEN: ${{ inputs.github-token }}
+        BASELINE_TOKEN: ${{ inputs.github-token || github.token }}
         BASELINE_WAIT_SECONDS: ${{ inputs.wait-seconds }}
       run: node "$GITHUB_ACTION_PATH/resolve.mjs"
     - name: Download exact baseline artifact
@@ -42,7 +48,7 @@ runs:
         path: ${{ inputs.path }}
         repository: ${{ steps.resolve.outputs.repository }}
         run-id: ${{ steps.resolve.outputs.run-id }}
-        github-token: ${{ inputs.github-token }}
+        github-token: ${{ inputs.github-token || github.token }}
 
 branding:
   icon: archive

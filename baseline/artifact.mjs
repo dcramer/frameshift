@@ -1,16 +1,20 @@
 import fs from "node:fs";
 import { pathToFileURL } from "node:url";
 
+export function normalizeCommitSha(sha) {
+  if (!/^[0-9a-f]{40}$/i.test(sha ?? "")) {
+    throw new Error("sha must be a full commit SHA");
+  }
+  return sha.toLowerCase();
+}
+
 export function artifactName(name, sha) {
   if (!/^[A-Za-z0-9_.-]+$/.test(name ?? "")) {
     throw new Error(
       "name must contain only letters, numbers, dots, dashes, and underscores",
     );
   }
-  if (!/^[0-9a-f]{40}$/i.test(sha ?? "")) {
-    throw new Error("sha must be a full commit SHA");
-  }
-  return `${name}-${sha.toLowerCase()}`;
+  return `${name}-${normalizeCommitSha(sha)}`;
 }
 
 function setOutput(name, value) {

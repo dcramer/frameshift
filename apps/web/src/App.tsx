@@ -121,29 +121,77 @@ function SetupPage() {
         </header>
 
         <section className="setup-section">
-          <h2>Compare</h2>
+          <h2>Store the baseline</h2>
           <p>
-            Run this in your pull request workflow. Capture both versions on the
-            same runner, and use matching paths for matching screenshots.
+            Capture all screenshots once for each commit on your configured
+            default branch. GitHub stores them by exact commit SHA.
           </p>
           {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- The code block scrolls on narrow screens. */}
           <pre tabIndex={0}>
-            <code>{`permissions:
+            <code>{`name: Visual baseline
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
   contents: read
 
-steps:
-  - name: Compare screenshots
-    id: visual-diff
-    uses: dcramer/frameshift@<full-commit-sha>
-    with:
-      baseline: \${{ runner.temp }}/frameshift/baseline
-      candidate: \${{ runner.temp }}/frameshift/candidate
-      output: \${{ runner.temp }}/frameshift/report
+jobs:
+  baseline:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@<full-commit-sha>
+      # Set up your app and browser here.
+      - run: pnpm capture:screenshots -- --all --output path/to/baseline
+      - uses: dcramer/frameshift/baseline/upload@<full-commit-sha>
+        with:
+          path: path/to/baseline`}</code>
+          </pre>
+        </section>
 
-  - uses: actions/upload-artifact@<full-commit-sha>
-    with:
-      name: frameshift-report
-      path: \${{ runner.temp }}/frameshift/report`}</code>
+        <section className="setup-section">
+          <h2>Compare the pull request</h2>
+          <p>
+            Keep the default checkout. Capture only the candidate; Frameshift
+            restores the exact base that GitHub tested.
+          </p>
+          {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- The code block scrolls on narrow screens. */}
+          <pre tabIndex={0}>
+            <code>{`name: Visual diff
+
+on:
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  visual-diff:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@<full-commit-sha>
+      # Set up your app and browser here.
+      - run: pnpm capture:screenshots -- --output \${{ runner.temp }}/frameshift/candidate
+      - uses: dcramer/frameshift/baseline@<full-commit-sha>
+        with:
+          path: \${{ runner.temp }}/frameshift/baseline
+      - uses: dcramer/frameshift@<full-commit-sha>
+        with:
+          baseline: \${{ runner.temp }}/frameshift/baseline
+          candidate: \${{ runner.temp }}/frameshift/candidate
+          output: \${{ runner.temp }}/frameshift/report
+
+      - uses: actions/upload-artifact@<full-commit-sha>
+        with:
+          name: frameshift-report
+          path: \${{ runner.temp }}/frameshift/report
+          if-no-files-found: error`}</code>
           </pre>
         </section>
 
@@ -155,23 +203,28 @@ steps:
           </p>
           {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- The code block scrolls on narrow screens. */}
           <pre tabIndex={0}>
-            <code>{`permissions:
+            <code>{`name: Publish visual diff
+
+on:
+  workflow_run:
+    workflows: [Visual diff]
+    types: [completed]
+
+permissions:
+  actions: read
   contents: write
   pull-requests: write
   statuses: write
 
-steps:
-  - uses: actions/download-artifact@<full-commit-sha>
-    with:
-      name: frameshift-report
-      path: \${{ runner.temp }}/frameshift-report
-
-  - uses: dcramer/frameshift/publish@<full-commit-sha>
-    with:
-      report: \${{ runner.temp }}/frameshift-report
-      github-token: \${{ secrets.GITHUB_TOKEN }}
-      head-sha: \${{ github.event.workflow_run.head_sha }}
-      pull-request: \${{ github.event.workflow_run.pull_requests[0].number }}`}</code>
+jobs:
+  publish:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.pull_requests[0] != null &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dcramer/frameshift/publish/workflow@<full-commit-sha>`}</code>
           </pre>
         </section>
 

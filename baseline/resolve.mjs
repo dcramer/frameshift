@@ -1,7 +1,8 @@
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import { pathToFileURL } from "node:url";
 
-import { artifactName } from "./artifact.mjs";
+import { artifactName, normalizeCommitSha } from "./artifact.mjs";
 
 function validateRepository(repository) {
   if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository ?? "")) {
@@ -16,6 +17,43 @@ function waitMilliseconds(value) {
     throw new Error("wait-seconds must be an integer from 0 through 600");
   }
   return seconds * 1_000;
+}
+
+export function pullRequestBaseSha({ event, githubSha, parents }) {
+  const mergeSha = normalizeCommitSha(githubSha);
+  const headSha = normalizeCommitSha(event?.pull_request?.head?.sha);
+  if (parents.length !== 2) {
+    throw new Error(
+      `${mergeSha} must be a two-parent pull request merge commit`,
+    );
+  }
+  const [baseSha, mergeHeadSha] = parents.map(normalizeCommitSha);
+  if (mergeHeadSha !== headSha) {
+    throw new Error(
+      `${mergeSha} does not merge the pull request head ${headSha}`,
+    );
+  }
+  return baseSha;
+}
+
+function resolveSha(inputSha) {
+  if (inputSha) return normalizeCommitSha(inputSha);
+  if (process.env.GITHUB_EVENT_NAME !== "pull_request") {
+    throw new Error("sha is required outside a pull_request workflow");
+  }
+
+  const event = JSON.parse(
+    fs.readFileSync(process.env.GITHUB_EVENT_PATH, "utf8"),
+  );
+  const githubSha = normalizeCommitSha(process.env.GITHUB_SHA);
+  const parents = execFileSync(
+    "git",
+    ["show", "--no-patch", "--format=%P", githubSha],
+    { encoding: "utf8" },
+  )
+    .trim()
+    .split(/\s+/);
+  return pullRequestBaseSha({ event, githubSha, parents });
 }
 
 export function selectArtifact(artifacts, expectedName, sha) {
@@ -62,7 +100,7 @@ async function main() {
   const repository = validateRepository(
     process.env.BASELINE_REPOSITORY || process.env.GITHUB_REPOSITORY,
   );
-  const sha = process.env.BASELINE_SHA?.toLowerCase();
+  const sha = resolveSha(process.env.BASELINE_SHA);
   const expectedName = artifactName(process.env.BASELINE_NAME, sha);
   const attempts =
     Math.floor(waitMilliseconds(process.env.BASELINE_WAIT_SECONDS) / 5_000) + 1;
@@ -89,6 +127,7 @@ async function main() {
   setOutput("artifact", expectedName);
   setOutput("repository", repository);
   setOutput("run-id", String(artifact.workflow_run.id));
+  setOutput("sha", sha);
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {

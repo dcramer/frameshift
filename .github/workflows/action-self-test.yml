@@ -60,9 +60,22 @@ jobs:
         uses: ./baseline/upload
         with:
           name: frameshift-action-report
-          sha: ${{ github.sha }}
           path: ${{ runner.temp }}/frameshift-action/report
           retention-days: 7
+      - name: Restore report for the tested PR base
+        if: github.event_name == 'pull_request'
+        id: baseline
+        uses: ./baseline
+        with:
+          name: frameshift-action-report
+          path: ${{ runner.temp }}/frameshift-base-report
+      - name: Verify automatic base selection
+        if: github.event_name == 'pull_request'
+        env:
+          BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
+        run: |
+          test "$BASELINE_SHA" = "$(git rev-parse '${{ github.sha }}^1')"
+          test -f "$RUNNER_TEMP/frameshift-base-report/report.json"
 
   publish:
     name: Publish Frameshift report
@@ -79,22 +92,14 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: |
-            baseline
             publish
-      - name: Download verified report
-        uses: ./baseline
-        with:
-          name: frameshift-action-report
-          sha: ${{ github.sha }}
-          path: ${{ runner.temp }}/frameshift-report
-          github-token: ${{ github.token }}
-      - name: Publish immutable report
+      - name: Publish verified workflow report
         id: publish
-        uses: ./publish
+        uses: ./publish/workflow
         with:
-          report: ${{ runner.temp }}/frameshift-report
-          github-token: ${{ github.token }}
+          artifact-name: frameshift-action-report
           head-sha: ${{ github.sha }}
+          run-id: ${{ github.run_id }}
       - name: Link published report
         env:
           VIEWER_URL: ${{ steps.publish.outputs.viewer_url }}

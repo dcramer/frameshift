@@ -4,10 +4,11 @@ description: Store a baseline artifact under its exact Git commit SHA
 inputs:
   name:
     description: Stable name shared with the baseline restore Action
-    required: true
+    default: frameshift-baseline-v1
+    required: false
   sha:
-    description: Full Git commit SHA that produced the baseline
-    required: true
+    description: Full source commit SHA; defaults to github.sha
+    required: false
   path:
     description: Baseline directory to upload
     required: true
@@ -24,7 +25,7 @@ runs:
       shell: bash
       env:
         BASELINE_NAME: ${{ inputs.name }}
-        BASELINE_SHA: ${{ inputs.sha }}
+        BASELINE_SHA: ${{ inputs.sha || github.sha }}
       run: node "$GITHUB_ACTION_PATH/../artifact.mjs"
     - name: Upload exact baseline artifact
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

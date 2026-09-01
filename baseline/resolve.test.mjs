@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { artifactName } from "./artifact.mjs";
-import { selectArtifact } from "./resolve.mjs";
+import { pullRequestBaseSha, selectArtifact } from "./resolve.mjs";
 
 const SHA = "0123456789abcdef0123456789abcdef01234567";
+const HEAD_SHA = "89abcdef0123456789abcdef0123456789abcdef";
+const MERGE_SHA = "fedcba9876543210fedcba9876543210fedcba98";
 
 test("builds an immutable artifact name", () => {
   assert.equal(artifactName("web-screenshots", SHA), `web-screenshots-${SHA}`);
@@ -49,4 +51,27 @@ test("selects the newest unexpired artifact for the exact source SHA", () => {
   );
 
   assert.equal(selected.workflow_run.id, 4);
+});
+
+test("derives the exact base from the checked-out pull request merge", () => {
+  assert.equal(
+    pullRequestBaseSha({
+      event: { pull_request: { head: { sha: HEAD_SHA } } },
+      githubSha: MERGE_SHA,
+      parents: [SHA, HEAD_SHA],
+    }),
+    SHA,
+  );
+});
+
+test("rejects a merge commit for a different pull request head", () => {
+  assert.throws(
+    () =>
+      pullRequestBaseSha({
+        event: { pull_request: { head: { sha: HEAD_SHA } } },
+        githubSha: MERGE_SHA,
+        parents: [SHA, "ffffffffffffffffffffffffffffffffffffffff"],
+      }),
+    /does not merge the pull request head/,
+  );
 });
