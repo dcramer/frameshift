@@ -40,7 +40,9 @@ async function fixtureContents(root, file) {
   const contents = await fs.readFile(path.join(root, file));
   if (!file.endsWith(".png")) return contents;
   const image = PNG.sync.read(contents);
-  return { data: image.data, height: image.height, width: image.width };
+  // SVG rasterization can differ by platform. Comparator tests own pixel math;
+  // this fixture test owns the report file contract and image dimensions.
+  return { height: image.height, width: image.width };
 }
 
 describe("mixed visual diff fixture", () => {
