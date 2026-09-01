@@ -5,6 +5,8 @@ node_modules/
 **/dist/
 !/dist/
 !/dist/**
+!/publish/dist/
+!/publish/dist/**
 
 # Test and browser output
 coverage/

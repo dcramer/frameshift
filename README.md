@@ -13,7 +13,8 @@ runtime.
 - `apps/web`: Static report viewer.
 - `packages/action`: PNG comparison and GitHub Action source.
 - `packages/report`: Versioned report types and validation.
-- `action.yml` and `dist/`: Published GitHub Action entry point and bundle.
+- `action.yml` and `dist/`: Token-free comparison Action and bundle.
+- `publish/action.yml` and `publish/dist/`: GitHub publisher Action and bundle.
 
 ## Use the GitHub Action
 
@@ -50,20 +51,38 @@ and does not need a token.
 
 ## Publish a GitHub report
 
-Keep the Vercel app static. Run Frameshift inside GitHub Actions, publish its
-output as the root tree of a Git commit with an immutable report tag, and
-create a commit status that links to the publication commit:
+Keep the Vercel app static. Pass the report artifact to Frameshift's publisher
+from a trusted job on the default branch:
+
+```yaml
+permissions:
+  contents: write
+  pull-requests: write
+  statuses: write
+
+steps:
+  - uses: actions/download-artifact@<full-commit-sha>
+    with:
+      name: frameshift-report
+      path: ${{ runner.temp }}/frameshift-report
+  - uses: dcramer/frameshift/publish@<full-commit-sha>
+    with:
+      report: ${{ runner.temp }}/frameshift-report
+      github-token: ${{ secrets.GITHUB_TOKEN }}
+      head-sha: ${{ github.event.workflow_run.head_sha }}
+      pull-request: ${{ github.event.workflow_run.pull_requests[0].number }}
+```
+
+The publisher validates the Zod report contract, preserves the report with an
+immutable Git tag, and creates a native commit status. Its pull request comment
+contains only a change summary and a link to the review UI:
 
 ```text
 https://frameshift.pub/?repo=owner/repository&ref=report-commit-sha
 ```
 
-The `Action self-test` workflow proves this flow in this repository. It uploads
-the verified report between jobs, builds a report-only commit from the
-`frameshift-reports` seed, and preserves that commit with a
-`frameshift-report/*` tag. The `Frameshift` status on the source commit links
-directly to the report on `frameshift.pub`. Report tags do not trigger Vercel
-preview deployments.
+The `Action self-test` workflow proves this flow in this repository. Report
+tags do not trigger Vercel preview deployments.
 
 Only the publishing job receives `contents: write` and `statuses: write`.
 Frameshift's comparison Action remains token-free. Publishing is skipped for

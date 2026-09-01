@@ -4,7 +4,7 @@ import path from "node:path";
 
 import { afterEach, describe, expect, test } from "vitest";
 
-import { checkReportDirectory } from "./check-report.mjs";
+import { checkReportDirectory } from "./directory.ts";
 
 const tempDirectories = [];
 

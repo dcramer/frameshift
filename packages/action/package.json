@@ -4,18 +4,21 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "build": "ncc build src/action.mjs -o ../../dist --minify --license THIRD_PARTY_LICENSES.txt",
+    "build": "pnpm build:compare && pnpm build:publish",
+    "build:compare": "ncc build src/action.mjs -o ../../dist --minify --license THIRD_PARTY_LICENSES.txt",
+    "build:publish": "vite build --config vite.publish.config.ts",
     "fixture:generate": "node src/generate-fixture.mjs",
     "smoke": "node src/smoke.mjs",
     "test": "vitest run"
   },
   "dependencies": {
+    "@frameshift/report": "workspace:*",
     "pixelmatch": "catalog:",
     "pngjs": "catalog:"
   },
   "devDependencies": {
-    "@frameshift/report": "workspace:*",
     "@vercel/ncc": "catalog:",
+    "vite": "catalog:",
     "vitest": "catalog:"
   }
 }

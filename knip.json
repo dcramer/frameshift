@@ -3,7 +3,7 @@
   "ignore": ["dist/**"],
   "workspaces": {
     "packages/action": {
-      "entry": ["src/action.mjs"]
+      "entry": ["src/action.mjs", "src/publish.mjs"]
     }
   }
 }

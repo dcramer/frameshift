@@ -12,7 +12,11 @@ const DIFF_DIR = path.dirname(fileURLToPath(import.meta.url));
 const PACKAGE_DIR = path.resolve(DIFF_DIR, "..");
 const REPOSITORY_DIR = path.resolve(PACKAGE_DIR, "../..");
 const ACTION_DIR = path.join(REPOSITORY_DIR, "dist");
+const PUBLISH_ACTION_DIR = path.join(REPOSITORY_DIR, "publish/dist");
 const NCC = fileURLToPath(import.meta.resolve("@vercel/ncc/dist/ncc/cli.js"));
+const VITE = fileURLToPath(
+  new URL("bin/vite.js", import.meta.resolve("vite/package.json")),
+);
 const tempDirectories = [];
 
 afterEach(async () => {
@@ -63,5 +67,32 @@ describe("visual diff action bundle", () => {
         unchanged: 0,
       },
     });
+  });
+});
+
+describe("publisher action bundle", () => {
+  it("matches the source", async () => {
+    const output = await fs.mkdtemp(
+      path.join(os.tmpdir(), "frameshift-publisher-action-"),
+    );
+    tempDirectories.push(output);
+    execFileSync(
+      process.execPath,
+      [
+        VITE,
+        "build",
+        "--config",
+        path.join(PACKAGE_DIR, "vite.publish.config.ts"),
+        "--outDir",
+        output,
+      ],
+      { cwd: PACKAGE_DIR, stdio: "pipe" },
+    );
+
+    const [actual, expected] = await Promise.all([
+      fs.readFile(path.join(PUBLISH_ACTION_DIR, "index.mjs"), "utf8"),
+      fs.readFile(path.join(output, "index.mjs"), "utf8"),
+    ]);
+    expect(actual, "publish/dist/index.mjs is out of date").toBe(expected);
   });
 });
