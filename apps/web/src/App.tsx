@@ -78,7 +78,8 @@ function SourceForm() {
         </a>
       </div>
       <footer className="home-note">
-        Static, open source, and happy without a login.
+        <span>Static, open source, and happy without a login.</span>
+        <a href="https://github.com/dcramer/frameshift">GitHub ↗</a>
       </footer>
     </section>
   );
@@ -209,6 +210,18 @@ function ReportViewer({
         : source.kind === "github"
           ? "GitHub report"
           : "Local report";
+  const sourceLink =
+    source.kind === "github"
+      ? {
+          href: `https://github.com/${source.repo}/commit/${source.ref}`,
+          label: `${source.repo} · ${source.ref.slice(0, 7)}`,
+        }
+      : source.kind === "fixture"
+        ? {
+            href: "https://github.com/dcramer/frameshift",
+            label: "dcramer/frameshift",
+          }
+        : null;
 
   return (
     <main className="report-layout">
@@ -224,6 +237,12 @@ function ReportViewer({
             {changes.length === 1 ? "change" : "changes"}
           </strong>
           <small>{sourceName}</small>
+          {sourceLink && (
+            <a className="source-link" href={sourceLink.href}>
+              <span>{sourceLink.label}</span>
+              <b aria-hidden="true">↗</b>
+            </a>
+          )}
         </div>
         <fieldset className="summary-row" aria-label="Report summary">
           <span>
