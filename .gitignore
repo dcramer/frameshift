@@ -1,8 +1,26 @@
+# Dependencies
 node_modules/
+
+# Generated builds. Keep the published GitHub Action bundle.
 **/dist/
 !/dist/
 !/dist/**
+
+# Test and browser output
 coverage/
+playwright-report/
+test-results/
+
+# Tool state
 .vercel/
+*.tsbuildinfo
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Operating system files and logs
 .DS_Store
 *.log
