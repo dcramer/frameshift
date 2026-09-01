@@ -26,7 +26,9 @@ export function selectArtifact(artifacts, expectedName, sha) {
         artifact.expired === false &&
         artifact.workflow_run?.head_sha?.toLowerCase() === sha.toLowerCase(),
     )
-    .sort((left, right) => right.created_at.localeCompare(left.created_at))[0];
+    .toSorted((left, right) =>
+      right.created_at.localeCompare(left.created_at),
+    )[0];
 }
 
 async function listArtifacts(token, repository, name) {
@@ -62,19 +64,21 @@ async function main() {
   );
   const sha = process.env.BASELINE_SHA?.toLowerCase();
   const expectedName = artifactName(process.env.BASELINE_NAME, sha);
-  const deadline =
-    Date.now() + waitMilliseconds(process.env.BASELINE_WAIT_SECONDS);
+  const attempts =
+    Math.floor(waitMilliseconds(process.env.BASELINE_WAIT_SECONDS) / 5_000) + 1;
 
   let artifact;
-  do {
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
     artifact = selectArtifact(
       await listArtifacts(token, repository, expectedName),
       expectedName,
       sha,
     );
-    if (artifact || Date.now() >= deadline) break;
-    await new Promise((resolve) => setTimeout(resolve, 5_000));
-  } while (true);
+    if (artifact) break;
+    if (attempt + 1 < attempts) {
+      await new Promise((resolve) => setTimeout(resolve, 5_000));
+    }
+  }
 
   if (!artifact) {
     throw new Error(

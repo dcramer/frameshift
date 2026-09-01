@@ -14,67 +14,63 @@ runtime.
 - `packages/action`: PNG comparison and GitHub Action source.
 - `packages/report`: Versioned report types and validation.
 - `action.yml` and `dist/`: Token-free comparison Action and bundle.
+- `baseline/`: Exact-SHA baseline artifact upload and restore Actions.
 - `publish/action.yml` and `publish/dist/`: GitHub publisher Action and bundle.
 
 ## Use the GitHub Action
 
-Frameshift compares PNG files. It does not start your application or decide
-which Git revision is the baseline. Your workflow owns both captures.
+Frameshift compares PNG files. Your application owns the screenshot command.
+Run the expensive baseline capture once for each default-branch commit and
+store it in GitHub Actions artifacts:
 
-For a pull request, use this revision model:
+```yaml
+on:
+  push:
+    branches: [main]
 
-1. Check out the pull request merge commit and capture the candidate images.
-2. Resolve the merge commit's first parent.
-3. Check out that exact parent in a second directory and capture the baseline
-   images there.
-4. Pass both image directories to Frameshift.
+permissions:
+  contents: read
 
-This generates both sides on the same runner with the same browser and system
-libraries. It does not depend on a screenshot artifact from an earlier run.
-The baseline source is still an immutable Git commit; its screenshots are
-freshly generated for this comparison.
+jobs:
+  baseline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@<full-commit-sha>
+      # Set up the application and its browser here.
+      - name: Capture every baseline screenshot
+        run: pnpm capture:screenshots -- --all --output path/to/baseline
+      - uses: dcramer/frameshift/baseline/upload@<full-commit-sha>
+        with:
+          name: web-screenshots
+          sha: ${{ github.sha }}
+          path: path/to/baseline
+```
 
-The complete shape is:
+The pull request workflow restores the artifact for its exact base SHA. It
+only captures the candidate revision:
 
 ```yaml
 on:
   pull_request:
 
 permissions:
+  actions: read
   contents: read
 
 jobs:
   visual-diff:
     runs-on: ubuntu-latest
     steps:
-      # On a pull_request event, this is GitHub's candidate merge commit.
-      - name: Check out candidate merge
-        uses: actions/checkout@<full-commit-sha>
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Resolve baseline revision
-        id: revisions
-        run: echo "base=$(git rev-parse HEAD^1)" >> "$GITHUB_OUTPUT"
-
-      - name: Check out baseline source
-        uses: actions/checkout@<full-commit-sha>
-        with:
-          ref: ${{ steps.revisions.outputs.base }}
-          path: base-source
-          persist-credentials: false
-
-      # Install each revision from its own lockfile before capture.
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm --dir base-source install --frozen-lockfile
-
-      # Replace capture:screenshots with your deterministic capture command.
+      - uses: actions/checkout@<full-commit-sha>
+      # Set up the application and its browser here.
       - name: Capture candidate screenshots
         run: pnpm capture:screenshots -- --output "${{ runner.temp }}/frameshift/candidate"
-      - name: Capture baseline screenshots
-        run: pnpm --dir base-source capture:screenshots -- --output "${{ runner.temp }}/frameshift/baseline"
-
+      - uses: dcramer/frameshift/baseline@<full-commit-sha>
+        with:
+          name: web-screenshots
+          sha: ${{ github.event.pull_request.base.sha }}
+          path: ${{ runner.temp }}/frameshift/baseline
+          github-token: ${{ github.token }}
       - name: Compare screenshots
         id: visual-diff
         uses: dcramer/frameshift@<full-commit-sha>
@@ -82,14 +78,12 @@ jobs:
           baseline: ${{ runner.temp }}/frameshift/baseline
           candidate: ${{ runner.temp }}/frameshift/candidate
           output: ${{ runner.temp }}/frameshift/report
-
-      - name: Upload report for the trusted publisher job
-        uses: actions/upload-artifact@<full-commit-sha>
-        with:
-          name: frameshift-report
-          path: ${{ runner.temp }}/frameshift/report
-          if-no-files-found: error
 ```
+
+The restore Action checks the artifact name and source SHA. It waits briefly
+when the default-branch workflow is still uploading. It does not silently
+regenerate a missing baseline. See [`baseline/README.md`](baseline/README.md)
+for retention and partial-capture details.
 
 Pin Frameshift and other third-party actions to full commit SHAs. The
 `changes` output counts changed, added, and removed images. A visual change does
