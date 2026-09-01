@@ -4,13 +4,23 @@ const fixturePattern = /^[a-z0-9-]+$/;
 
 export type ScanSource =
   | { kind: "fixture"; name: string }
-  | { kind: "github"; ref: string; repo: string };
+  | { kind: "github"; ref: string; repo: string }
+  | { kind: "local" };
 
 export function parseScanSource(params: URLSearchParams): ScanSource | null {
   const repo = params.get("repo");
   const ref = params.get("ref");
   const fixture = params.get("fixture");
-  if (repo === null && ref === null && fixture === null) return null;
+  const local = params.get("local");
+  if (repo === null && ref === null && fixture === null && local === null) {
+    return null;
+  }
+  if (local !== null) {
+    if (local !== "1" || repo !== null || ref !== null || fixture !== null) {
+      throw new Error("Local report coordinates are invalid.");
+    }
+    return { kind: "local" };
+  }
   if (fixture !== null) {
     if (repo !== null || ref !== null) {
       throw new Error("Choose a fixture or a GitHub report, not both.");
@@ -32,6 +42,7 @@ export function parseScanSource(params: URLSearchParams): ScanSource | null {
 }
 
 function reportBaseUrl(source: ScanSource): string {
+  if (source.kind === "local") return "";
   if (source.kind === "fixture") {
     return `/${encodeURIComponent(source.name)}`;
   }

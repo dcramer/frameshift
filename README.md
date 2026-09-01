@@ -97,6 +97,30 @@ You can also open a report directly:
 http://localhost:5173/?repo=owner/repository&ref=40-character-commit-sha
 ```
 
+### Generate and view a local report
+
+Frameshift produces a report bundle, not a standalone JSON file. The bundle
+contains `report.json` plus each image referenced by that report. Generate one
+from two PNG directories:
+
+```sh
+pnpm compare -- \
+  --baseline path/to/baseline \
+  --candidate path/to/candidate \
+  --output .frameshift/report
+```
+
+Validate and open that exact output in the local viewer:
+
+```sh
+pnpm report:check -- .frameshift/report
+pnpm dev:report -- .frameshift/report
+```
+
+`dev:report` accepts either the bundle directory or its `report.json` path. It
+validates the Zod contract and rejects missing, extra, or linked files before
+it serves anything. `.frameshift` is ignored by Git.
+
 ## Report contract
 
 `packages/report` owns the versioned Zod parser. TypeScript types are inferred

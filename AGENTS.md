@@ -27,10 +27,12 @@ GitHub Action for creating visual-diff reports.
 - Install: `pnpm install`
 - Develop: `pnpm dev`
 - Develop with the mixed report fixture: `pnpm dev:fixture`
+- Develop with any local report: `pnpm dev:report -- <report-directory>`
 - Build: `pnpm build`
 - Rebuild the action: `pnpm action:build`
 - Smoke-test the bundled action: `pnpm action:smoke`
 - Compare PNG directories: `pnpm compare -- --baseline <dir> --candidate <dir> --output <dir>`
+- Validate a report bundle: `pnpm report:check -- <report-directory>`
 - Regenerate the mixed report fixture: `pnpm fixture:generate`
 - Validate committed fixtures: `pnpm fixtures:check`
 - Regenerate the public JSON Schema: `pnpm schema:build`

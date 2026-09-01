@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { parseScanSource, reportUrl } from "./scan-source";
+import { imageUrl, parseScanSource, reportUrl } from "./scan-source";
 
 describe("scan source", () => {
   test("builds an immutable public report URL", () => {
@@ -39,5 +39,23 @@ describe("scan source", () => {
         new URLSearchParams({ fixture: "mixed", repo: "owner/repository" }),
       ),
     ).toThrow("not both");
+  });
+
+  test("loads a local report bundle from the development origin", () => {
+    const source = parseScanSource(new URLSearchParams({ local: "1" }));
+
+    expect(source).toEqual({ kind: "local" });
+    expect(reportUrl(source!)).toBe("/report.json");
+    expect(imageUrl(source!, "images/diff/home.png")).toBe(
+      "/images/diff/home.png",
+    );
+  });
+
+  test("does not mix local and remote report coordinates", () => {
+    expect(() =>
+      parseScanSource(
+        new URLSearchParams({ local: "1", repo: "owner/repository" }),
+      ),
+    ).toThrow("Local report coordinates are invalid");
   });
 });
