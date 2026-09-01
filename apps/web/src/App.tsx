@@ -144,10 +144,10 @@ jobs:
       github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@<full-commit-sha>
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # Set up your app and browser here.
       - run: pnpm capture:screenshots -- --all --output path/to/baseline
-      - uses: dcramer/frameshift/baseline/upload@<full-commit-sha>
+      - uses: dcramer/frameshift/baseline/upload@88dd29021aa9b1d86a091fc45d96b6b76bc35847
         with:
           path: path/to/baseline`}</code>
           </pre>
@@ -175,19 +175,19 @@ jobs:
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@<full-commit-sha>
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # Set up your app and browser here.
       - run: pnpm capture:screenshots -- --output \${{ runner.temp }}/frameshift/candidate
-      - uses: dcramer/frameshift/baseline@<full-commit-sha>
+      - uses: dcramer/frameshift/baseline@88dd29021aa9b1d86a091fc45d96b6b76bc35847
         with:
           path: \${{ runner.temp }}/frameshift/baseline
-      - uses: dcramer/frameshift@<full-commit-sha>
+      - uses: dcramer/frameshift@88dd29021aa9b1d86a091fc45d96b6b76bc35847
         with:
           baseline: \${{ runner.temp }}/frameshift/baseline
           candidate: \${{ runner.temp }}/frameshift/candidate
           output: \${{ runner.temp }}/frameshift/report
 
-      - uses: actions/upload-artifact@<full-commit-sha>
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: frameshift-report
           path: \${{ runner.temp }}/frameshift/report
@@ -224,7 +224,7 @@ jobs:
       github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
-      - uses: dcramer/frameshift/publish/workflow@<full-commit-sha>`}</code>
+      - uses: dcramer/frameshift/publish/workflow@88dd29021aa9b1d86a091fc45d96b6b76bc35847`}</code>
           </pre>
         </section>
 

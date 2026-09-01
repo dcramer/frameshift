@@ -18,7 +18,7 @@ jobs:
     steps:
       - name: Capture baseline screenshots
         run: pnpm capture:screenshots -- --all --output path/to/baseline
-      - uses: dcramer/frameshift/baseline/upload@<full-commit-sha>
+      - uses: dcramer/frameshift/baseline/upload@88dd29021aa9b1d86a091fc45d96b6b76bc35847
         with:
           path: path/to/baseline
 ```
@@ -33,8 +33,8 @@ permissions:
   contents: read
 
 steps:
-  - uses: actions/checkout@<full-commit-sha>
-  - uses: dcramer/frameshift/baseline@<full-commit-sha>
+  - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+  - uses: dcramer/frameshift/baseline@88dd29021aa9b1d86a091fc45d96b6b76bc35847
     id: baseline
     with:
       path: path/to/baseline
