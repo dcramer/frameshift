@@ -18,29 +18,87 @@ runtime.
 
 ## Use the GitHub Action
 
-Capture baseline and candidate PNG files before this step. Matching relative
-paths identify the same screenshot.
+Frameshift compares PNG files. It does not start your application or decide
+which Git revision is the baseline. Your workflow owns both captures.
+
+For a pull request, use this revision model:
+
+1. Check out the pull request merge commit and capture the candidate images.
+2. Resolve the merge commit's first parent.
+3. Check out that exact parent in a second directory and capture the baseline
+   images there.
+4. Pass both image directories to Frameshift.
+
+This generates both sides on the same runner with the same browser and system
+libraries. It does not depend on a screenshot artifact from an earlier run.
+The baseline source is still an immutable Git commit; its screenshots are
+freshly generated for this comparison.
+
+The complete shape is:
 
 ```yaml
+on:
+  pull_request:
+
 permissions:
   contents: read
 
-steps:
-  - uses: actions/checkout@<full-commit-sha>
-  - name: Compare screenshots
-    id: visual-diff
-    uses: dcramer/frameshift@<full-commit-sha>
-    with:
-      baseline: path/to/baseline
-      candidate: path/to/candidate
-      output: path/to/report
-  - name: Show change count
-    run: echo "${{ steps.visual-diff.outputs.changes }} visual changes"
+jobs:
+  visual-diff:
+    runs-on: ubuntu-latest
+    steps:
+      # On a pull_request event, this is GitHub's candidate merge commit.
+      - name: Check out candidate merge
+        uses: actions/checkout@<full-commit-sha>
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Resolve baseline revision
+        id: revisions
+        run: echo "base=$(git rev-parse HEAD^1)" >> "$GITHUB_OUTPUT"
+
+      - name: Check out baseline source
+        uses: actions/checkout@<full-commit-sha>
+        with:
+          ref: ${{ steps.revisions.outputs.base }}
+          path: base-source
+          persist-credentials: false
+
+      # Install each revision from its own lockfile before capture.
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --dir base-source install --frozen-lockfile
+
+      # Replace capture:screenshots with your deterministic capture command.
+      - name: Capture candidate screenshots
+        run: pnpm capture:screenshots -- --output "${{ runner.temp }}/frameshift/candidate"
+      - name: Capture baseline screenshots
+        run: pnpm --dir base-source capture:screenshots -- --output "${{ runner.temp }}/frameshift/baseline"
+
+      - name: Compare screenshots
+        id: visual-diff
+        uses: dcramer/frameshift@<full-commit-sha>
+        with:
+          baseline: ${{ runner.temp }}/frameshift/baseline
+          candidate: ${{ runner.temp }}/frameshift/candidate
+          output: ${{ runner.temp }}/frameshift/report
+
+      - name: Upload report for the trusted publisher job
+        uses: actions/upload-artifact@<full-commit-sha>
+        with:
+          name: frameshift-report
+          path: ${{ runner.temp }}/frameshift/report
+          if-no-files-found: error
 ```
 
 Pin Frameshift and other third-party actions to full commit SHAs. The
 `changes` output counts changed, added, and removed images. A visual change does
 not fail the action.
+
+Your capture command must make both revisions reproducible. Use fixed test
+data, a mock API, pinned browser versions, explicit viewports, a fixed locale
+and timezone, loaded fonts, reduced motion, and disabled animations. Matching
+relative PNG paths identify the same screenshot.
 
 The output directory contains `report.json` and only the images required for
 review. Changed pairs include baseline, candidate, and pixel-diff images. Added
@@ -75,7 +133,8 @@ steps:
 
 The publisher validates the Zod report contract, preserves the report with an
 immutable Git tag, and creates a native commit status. Its pull request comment
-contains only a change summary and a link to the review UI:
+contains a compact change summary, candidate thumbnails, and a link to the
+review UI:
 
 ```text
 https://frameshift.pub/?repo=owner/repository&ref=report-commit-sha
