@@ -113,42 +113,24 @@ function SetupPage() {
         <a href="/report/?fixture=mixed">View the sample →</a>
       </header>
 
-      <section className="setup-hero">
-        <p className="kicker">Setup</p>
-        <h1>Add screenshot review to your pull requests.</h1>
-        <p>
-          Frameshift compares two folders of PNGs. Your workflow takes the
-          screenshots; Frameshift finds what moved and builds the report.
-        </p>
-      </section>
+      <article className="setup-document">
+        <header className="setup-intro">
+          <h1>Set up Frameshift</h1>
+          <p>
+            Capture the same screenshots before and after a change. Frameshift
+            compares the folders and builds the report. That is the whole trick.
+          </p>
+        </header>
 
-      <div className="setup-layout">
-        <ol className="setup-steps">
-          <li>
-            <span className="step-number">1</span>
-            <div>
-              <h2>Capture before and after</h2>
-              <p>
-                Check out the pull request merge commit for the new version and
-                its first parent for the old one. Capture both on the same
-                runner so the browser, fonts, and system libraries match.
-              </p>
-              <p className="step-aside">
-                Matching relative paths identify the same screenshot.
-              </p>
-            </div>
-          </li>
-
-          <li>
-            <span className="step-number">2</span>
-            <div>
-              <h2>Compare the folders</h2>
-              <p>
-                Give the Action read-only permissions. It reads local files,
-                writes the report, and never needs a GitHub token.
-              </p>
-              <pre>
-                <code>{`permissions:
+        <section className="setup-section">
+          <h2>Compare</h2>
+          <p>
+            Run this in your pull request workflow. Capture both versions on the
+            same runner, and use matching paths for matching screenshots.
+          </p>
+          {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- The code block scrolls on narrow screens. */}
+          <pre tabIndex={0}>
+            <code>{`permissions:
   contents: read
 
 steps:
@@ -164,21 +146,18 @@ steps:
     with:
       name: frameshift-report
       path: \${{ runner.temp }}/frameshift/report`}</code>
-              </pre>
-            </div>
-          </li>
+          </pre>
+        </section>
 
-          <li>
-            <span className="step-number">3</span>
-            <div>
-              <h2>Publish from a trusted job</h2>
-              <p>
-                Download the report from a job on your default branch, then let
-                the publisher add the status, pull request comment, and review
-                link.
-              </p>
-              <pre>
-                <code>{`permissions:
+        <section className="setup-section">
+          <h2>Publish</h2>
+          <p>
+            Run the publisher from a trusted workflow on your default branch. It
+            adds the status, pull request comment, and review link.
+          </p>
+          {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- The code block scrolls on narrow screens. */}
+          <pre tabIndex={0}>
+            <code>{`permissions:
   contents: write
   pull-requests: write
   statuses: write
@@ -195,25 +174,23 @@ steps:
       github-token: \${{ secrets.GITHUB_TOKEN }}
       head-sha: \${{ github.event.workflow_run.head_sha }}
       pull-request: \${{ github.event.workflow_run.pull_requests[0].number }}`}</code>
-              </pre>
-            </div>
-          </li>
-        </ol>
+          </pre>
+        </section>
 
-        <aside className="setup-notes">
-          <h2>Worth knowing</h2>
-          <ul>
-            <li>Pin every Action to a full commit SHA.</li>
-            <li>Keep screenshot capture deterministic.</li>
-            <li>
-              Never give write access to a job that runs pull request code.
-            </li>
-          </ul>
-          <a href="https://github.com/dcramer/frameshift#use-the-github-action">
-            Read the full workflow on GitHub ↗
-          </a>
+        <aside className="setup-warning">
+          <strong>Keep the trust boundary boring.</strong>
+          <p>
+            Pin Actions to full commit SHAs. Never give write access to a job
+            that runs pull request code.
+          </p>
         </aside>
-      </div>
+
+        <footer className="setup-footer">
+          <a href="https://github.com/dcramer/frameshift#use-the-github-action">
+            Full workflow on GitHub ↗
+          </a>
+        </footer>
+      </article>
     </main>
   );
 }

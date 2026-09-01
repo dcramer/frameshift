@@ -328,80 +328,47 @@ h1 {
   text-decoration-color: var(--accent-text);
 }
 
-.setup-hero {
-  max-width: 800px;
-  margin-top: clamp(88px, 13vh, 140px);
+.setup-document {
+  width: min(760px, 100%);
+  margin: clamp(72px, 10vh, 104px) auto 0;
 }
 
-.setup-hero > p:last-child {
-  max-width: 680px;
-  margin: 24px 0 0;
+.setup-intro {
+  margin-bottom: 64px;
+}
+
+.setup-intro h1 {
+  font-size: clamp(36px, 5vw, 48px);
+}
+
+.setup-intro p {
+  max-width: 620px;
+  margin: 18px 0 0;
   color: var(--muted);
-  font-size: clamp(16px, 2vw, 19px);
+  font-size: 17px;
   line-height: 1.6;
 }
 
-.setup-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 270px;
-  gap: clamp(48px, 8vw, 96px);
-  align-items: start;
-  margin-top: clamp(72px, 10vw, 112px);
-}
-
-.setup-steps {
-  display: grid;
-  gap: 0;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.setup-steps > li {
-  display: grid;
-  grid-template-columns: 30px minmax(0, 1fr);
-  gap: 18px;
+.setup-section {
   border-top: 1px solid var(--line);
-  padding: 28px 0 64px;
+  padding: 28px 0 56px;
 }
 
-.step-number {
-  color: var(--accent-text);
-  font:
-    12px ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    monospace;
-}
-
-.setup-steps h2,
-.setup-notes h2 {
+.setup-section h2 {
   margin: 0;
   color: var(--text);
+  font-size: 22px;
   letter-spacing: -0.03em;
 }
 
-.setup-steps h2 {
-  font-size: 24px;
-}
-
-.setup-steps p {
-  max-width: 690px;
-  margin: 14px 0 0;
+.setup-section p {
+  max-width: 660px;
+  margin: 12px 0 0;
   color: var(--muted);
   line-height: 1.65;
 }
 
-.setup-steps .step-aside {
-  color: var(--faint);
-  font:
-    11px/1.6 ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    monospace;
-}
-
-.setup-steps pre {
+.setup-section pre {
   max-width: 100%;
   margin: 24px 0 0;
   overflow: auto;
@@ -412,7 +379,7 @@ h1 {
   tab-size: 2;
 }
 
-.setup-steps code {
+.setup-section code {
   font:
     12px/1.7 ui-monospace,
     SFMono-Regular,
@@ -420,35 +387,35 @@ h1 {
     monospace;
 }
 
-.setup-notes {
-  position: sticky;
-  top: 32px;
-  border-top: 3px solid var(--accent-text);
-  padding-top: 20px;
-}
-
-.setup-notes h2 {
-  font-size: 17px;
-}
-
-.setup-notes ul {
-  display: grid;
-  gap: 12px;
-  margin: 18px 0 24px;
-  color: var(--muted);
+.setup-warning {
+  border-left: 2px solid var(--accent-text);
+  margin-top: 8px;
   padding-left: 18px;
   font-size: 13px;
-  line-height: 1.55;
+  line-height: 1.6;
 }
 
-.setup-notes a {
+.setup-warning strong {
+  color: var(--text);
+}
+
+.setup-warning p {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.setup-footer {
+  margin-top: 36px;
+}
+
+.setup-footer a {
   color: var(--text);
   font-size: 13px;
   text-decoration-color: var(--line-strong);
   text-underline-offset: 4px;
 }
 
-.setup-notes a:hover {
+.setup-footer a:hover {
   text-decoration-color: var(--accent-text);
 }
 
@@ -944,13 +911,8 @@ figcaption small {
     grid-column: auto;
   }
 
-  .setup-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .setup-notes {
-    position: static;
-    max-width: 520px;
+  .app-shell.setup-shell {
+    padding-inline: 28px;
   }
 }
 
@@ -1002,30 +964,23 @@ figcaption small {
     font-size: 12px;
   }
 
-  .setup-hero {
-    margin-top: 76px;
+  .setup-document {
+    margin-top: 64px;
   }
 
-  .setup-hero h1 {
-    font-size: clamp(36px, 11vw, 52px);
+  .setup-intro {
+    margin-bottom: 48px;
   }
 
-  .setup-layout {
-    gap: 48px;
-    margin-top: 72px;
+  .setup-intro p {
+    font-size: 16px;
   }
 
-  .setup-steps > li {
-    grid-template-columns: 24px minmax(0, 1fr);
-    gap: 10px;
-    padding-bottom: 52px;
+  .setup-section {
+    padding: 24px 0 44px;
   }
 
-  .setup-steps h2 {
-    font-size: 21px;
-  }
-
-  .setup-steps pre {
+  .setup-section pre {
     padding: 15px;
   }
 
