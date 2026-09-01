@@ -26,6 +26,10 @@ interface PreviewImage {
   src: string;
 }
 
+const PROJECT_URL = "https://github.com/dcramer/frameshift";
+const SAMPLE_PATH = "/sample/";
+const SETUP_PATH = "/setup/";
+
 function displayName(file: string): string {
   return file
     .replace(/\.png$/, "")
@@ -63,35 +67,32 @@ function SourceForm() {
         <span>Frameshift</span>
       </header>
       <div className="home-copy">
-        <p className="kicker">Screenshot review for GitHub</p>
-        <h1>Your screenshots changed. Let’s find out why.</h1>
+        <p className="kicker">Visual regression testing for GitHub</p>
+        <h1>Review visual changes in one report.</h1>
         <p>
-          Frameshift puts the old, the new, and the suspiciously pink bits in
-          one tidy report.
+          Frameshift compares baseline and candidate screenshots, then publishes
+          a static report for each pull request.
         </p>
       </div>
       <div className="source-actions">
-        <a className="source-card source-card-primary" href="/sample/">
+        <a className="source-card source-card-primary" href={SAMPLE_PATH}>
           <span>
-            <strong>Open the sample</strong>
-            <em>Three changes. No scavenger hunt.</em>
+            <strong>View the sample report</strong>
+            <em>See changed, added, and removed pages.</em>
           </span>
           <b aria-hidden="true">→</b>
         </a>
-        <a className="source-card" href="/setup/">
+        <a className="source-card" href={SETUP_PATH}>
           <span>
-            <strong>Set up the GitHub Action</strong>
-            <em>Bring your own screenshots.</em>
+            <strong>Set up Frameshift</strong>
+            <em>Add comparison and publishing to your workflow.</em>
           </span>
           <b aria-hidden="true">↗</b>
         </a>
       </div>
       <footer className="home-note">
-        <span>Static, open source, and happy without a login.</span>
-        <a
-          aria-label="Frameshift on GitHub"
-          href="https://github.com/dcramer/frameshift"
-        >
+        <span>Static, open source, and no sign-in required.</span>
+        <a aria-label="Frameshift on GitHub" href={PROJECT_URL}>
           <GitHubIcon />
         </a>
       </footer>
@@ -107,15 +108,15 @@ function SetupPage() {
           <BrandMark />
           <span>Frameshift</span>
         </a>
-        <a href="/sample/">View the sample →</a>
+        <a href={SAMPLE_PATH}>View the sample report →</a>
       </header>
 
       <article className="setup-document">
         <header className="setup-intro">
           <h1>Set up Frameshift</h1>
           <p>
-            Capture the same screenshots before and after a change. Frameshift
-            compares the folders and builds the report. That is the whole trick.
+            Capture matching baseline and candidate screenshots. Frameshift
+            compares them and generates a static report.
           </p>
         </header>
 
@@ -175,7 +176,7 @@ steps:
         </section>
 
         <aside className="setup-warning">
-          <strong>Keep the trust boundary boring.</strong>
+          <strong>Limit write permissions to the publisher.</strong>
           <p>
             Pin Actions to full commit SHAs. Never give write access to a job
             that runs pull request code.
@@ -183,8 +184,8 @@ steps:
         </aside>
 
         <footer className="setup-footer">
-          <a href="https://github.com/dcramer/frameshift#use-the-github-action">
-            Full workflow on GitHub ↗
+          <a href={`${PROJECT_URL}#use-the-github-action`}>
+            View the complete workflow on GitHub →
           </a>
         </footer>
       </article>
@@ -287,7 +288,7 @@ function ImageLightbox({
         <div className="lightbox-canvas">
           <img alt={image.alt} src={image.src} />
         </div>
-        <footer>Esc closes this. Very advanced.</footer>
+        <footer>Press Esc to close.</footer>
       </div>
     </dialog>
   );
@@ -318,7 +319,7 @@ function ReportViewer({
         }
       : source.kind === "fixture"
         ? {
-            href: "https://github.com/dcramer/frameshift",
+            href: PROJECT_URL,
             label: "dcramer/frameshift",
             ref: null,
           }
@@ -383,9 +384,11 @@ function ReportViewer({
           </>
         ) : (
           <div className="no-changes">
-            <p className="kicker">Nothing to review</p>
-            <h1>Not a pixel out of place.</h1>
-            <p>Suspicious, but we’ll allow it.</p>
+            <p className="kicker">No visual changes</p>
+            <h1>All screenshots match.</h1>
+            <p>
+              The report contains no changed, added, or removed screenshots.
+            </p>
           </div>
         )}
       </section>
@@ -420,7 +423,7 @@ export function App() {
         }
         const response = await fetch(reportUrl(source));
         if (!response.ok)
-          throw new Error(`GitHub returned ${response.status}.`);
+          throw new Error(`Report request returned ${response.status}.`);
         const report = parseVisualDiffReport(await response.json());
         if (active) setState({ kind: "ready", report, source });
       } catch {
@@ -450,18 +453,15 @@ export function App() {
       {state.kind === "loading" && (
         <section className="status-panel panel">
           <div className="loading-pulse" />
-          <p>Fetching the screenshots…</p>
+          <p>Loading report…</p>
         </section>
       )}
       {state.kind === "error" && (
         <section className="status-panel panel error-panel">
-          <p className="kicker">Well, that didn’t work</p>
-          <h1>This report wouldn’t open.</h1>
-          <p>
-            Check the link and try again. The report may be missing, incomplete,
-            or simply having a day.
-          </p>
-          <a href="/">Back to safety</a>
+          <p className="kicker">Report unavailable</p>
+          <h1>Could not load this report.</h1>
+          <p>Verify the URL and confirm that the report files are available.</p>
+          <a href="/">Return home</a>
         </section>
       )}
       {state.kind === "ready" && (

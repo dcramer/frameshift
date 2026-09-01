@@ -139,7 +139,7 @@ contains a compact change summary, candidate thumbnails, and a link to the
 review UI:
 
 ```text
-https://frameshift.pub/report/?repo=owner/repository&ref=report-commit-sha
+https://frameshift.pub/report/?repo=owner/repository&ref=0123456789abcdef0123456789abcdef01234567
 ```
 
 The `Action self-test` workflow proves this flow in this repository. Report
@@ -161,12 +161,7 @@ pnpm dev
 Open the local URL and enter a public GitHub repository plus the immutable
 commit SHA that contains `report.json` and its `images/` directory.
 
-You can also select **Open report folder** on the home page. Choose the complete
-report bundle. The browser validates `report.json`, checks every referenced
-image, and displays it without uploading any file. A report with no visual
-changes can use a folder that contains only `report.json`.
-
-Select **View sample report** to open the committed mixed-change fixture. The
+Select **View the sample report** to open the committed mixed-change fixture. The
 static production build includes this fixture, so the sample works on the live
 site without a server or external request.
 
@@ -183,7 +178,7 @@ that path.
 You can also open a report directly:
 
 ```text
-http://localhost:5173/report/?repo=owner/repository&ref=40-character-commit-sha
+http://localhost:5173/report/?repo=owner/repository&ref=0123456789abcdef0123456789abcdef01234567
 ```
 
 ### Generate and view a local report

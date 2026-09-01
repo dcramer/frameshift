@@ -16,7 +16,8 @@ describe("scan source", () => {
   });
 
   test("builds an immutable public report URL", () => {
-    const source = parseScanSource(
+    const source = pageSource(
+      "/report/",
       new URLSearchParams({
         ref: "0123456789abcdef0123456789abcdef01234567",
         repo: "dcramer/peated",
