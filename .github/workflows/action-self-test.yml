@@ -52,13 +52,20 @@ jobs:
           screenshot-retention-days: 7
           report-retention-days: 7
       - name: Check the pull request report
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.frameshift.outputs['before-commit'] != ''
         env:
           ACTION_CHANGES: ${{ steps.frameshift.outputs.changes }}
         run: >-
           node packages/action/src/qa.mjs verify
           "$RUNNER_TEMP/frameshift-action"
           "$RUNNER_TEMP/frameshift/report"
+      - name: Check the current-only pull request report
+        if: github.event_name == 'pull_request' && steps.frameshift.outputs['before-commit'] == ''
+        env:
+          ACTION_CHANGES: ${{ steps.frameshift.outputs.changes }}
+        run: |
+          test "$ACTION_CHANGES" = "2"
+          pnpm report:check -- "$RUNNER_TEMP/frameshift/report"
       - name: Summarize the test
         if: github.event_name == 'pull_request'
         env:

@@ -79,12 +79,10 @@ jobs:
       - uses: dcramer/frameshift/publish/workflow@68a8b5e8bbd439088ef9a044e693c5de9efe7ecd
 ```
 
-Merge the workflow and let it finish on the default branch once. That run saves
-the screenshots Frameshift will use before your first pull request.
+You can add this workflow through a pull request.
 
-The [configuration guide](https://frameshift.pub/guide/#configuration) shows how
-to keep screenshots and reports longer, name more than one screenshot set, or
-save and download screenshots in separate jobs.
+The [setup guide](https://frameshift.pub/guide/) covers first runs, reliable
+screenshots, longer storage, and projects with more than one screenshot set.
 
 ## Development
 

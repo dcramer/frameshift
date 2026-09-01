@@ -2,7 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { artifactName } from "./artifact.mjs";
-import { pullRequestBaseSha, selectArtifact } from "./resolve.mjs";
+import {
+  artifactResult,
+  pullRequestBaseSha,
+  requireArtifact,
+  selectArtifact,
+} from "./resolve.mjs";
 
 const SHA = "0123456789abcdef0123456789abcdef01234567";
 const HEAD_SHA = "89abcdef0123456789abcdef0123456789abcdef";
@@ -54,6 +59,61 @@ test("selects the newest available upload for the exact Git commit", () => {
   );
 
   assert.equal(selected.workflow_run.id, 4);
+});
+
+test("requires a saved artifact by default", () => {
+  assert.equal(requireArtifact(undefined), true);
+  assert.equal(requireArtifact("true"), true);
+  assert.equal(requireArtifact("false"), false);
+  assert.throws(() => requireArtifact("yes"), /required must be true or false/);
+});
+
+test("can continue when the exact saved artifact is missing", () => {
+  const expectedName = artifactName("web-screenshots", SHA);
+  assert.deepEqual(
+    artifactResult(undefined, {
+      expectedName,
+      repository: "owner/project",
+      required: false,
+      sha: SHA,
+    }),
+    {
+      found: false,
+      message: `No saved screenshots named ${expectedName} were found.`,
+    },
+  );
+  assert.throws(
+    () =>
+      artifactResult(undefined, {
+        expectedName,
+        repository: "owner/project",
+        required: true,
+        sha: SHA,
+      }),
+    /Run the screenshot workflow for [0-9a-f]{40}, then retry this job/,
+  );
+});
+
+test("returns the exact artifact download coordinates", () => {
+  const expectedName = artifactName("web-screenshots", SHA);
+  assert.deepEqual(
+    artifactResult(
+      { workflow_run: { id: 42 } },
+      {
+        expectedName,
+        repository: "owner/project",
+        required: true,
+        sha: SHA,
+      },
+    ),
+    {
+      artifact: expectedName,
+      found: true,
+      repository: "owner/project",
+      runId: "42",
+      sha: SHA,
+    },
+  );
 });
 
 test("derives the exact base from the checked-out pull request merge", () => {

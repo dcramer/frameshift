@@ -307,6 +307,14 @@ function GuidePage() {
             <code> account__desktop.png</code> and
             <code> account__mobile.png</code> appear together under Account.
           </p>
+          <p>
+            Wait until the page is actually ready. A screenshot can happily
+            capture loading skeletons, half-finished data, or fallback fonts.
+            Wait for fonts and any visible loading states that change the
+            picture. Mark those states with
+            <code> aria-busy=&quot;true&quot;</code> so shared test helpers know
+            when the page is done.
+          </p>
         </section>
 
         <section className="setup-section">
@@ -321,11 +329,13 @@ function GuidePage() {
         </section>
 
         <aside className="setup-warning">
-          <strong>Merge this workflow before testing a pull request.</strong>
+          <strong>The first report may call every screenshot new.</strong>
           <p>
-            Let it finish on the default branch once. That run saves the
-            screenshots for that exact commit. Frameshift stops if they are
-            missing. It never guesses which screenshots to use.
+            If Frameshift has no earlier screenshots for the exact code the pull
+            request started from, it shows the current set and marks each one as
+            added. After the workflow lands, the first run on the default branch
+            saves screenshots for later pull requests. Frameshift never grabs
+            some other commit&apos;s screenshots and hopes for the best.
           </p>
         </aside>
 

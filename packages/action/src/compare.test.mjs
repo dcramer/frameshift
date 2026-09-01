@@ -266,4 +266,23 @@ describe("compareDirectories", () => {
       fs.stat(path.join(paths.output, "images/baseline/removed.png")),
     ).resolves.toBeDefined();
   });
+
+  it("shows current screenshots as added when the baseline is empty", async () => {
+    const paths = await makeDirectories();
+    await writePng(path.join(paths.candidate, "current.png"));
+
+    const report = await compareDirectories(paths);
+
+    expect(report.summary).toEqual({
+      added: 1,
+      changed: 0,
+      removed: 0,
+      unchanged: 0,
+    });
+    expect(report.files[0]).toMatchObject({
+      file: "current.png",
+      images: { candidate: "images/candidate/current.png" },
+      status: "added",
+    });
+  });
 });

@@ -339,7 +339,7 @@ h1 {
 }
 
 .setup-intro {
-  margin-bottom: 64px;
+  margin-bottom: 72px;
 }
 
 .setup-intro h1 {
@@ -355,8 +355,11 @@ h1 {
 }
 
 .setup-section {
-  border-top: 1px solid var(--line);
-  padding: 28px 0 56px;
+  padding: 0;
+}
+
+.setup-section + .setup-section {
+  margin-top: 72px;
 }
 
 .setup-section h2 {
@@ -410,7 +413,7 @@ h1 {
   max-width: 100%;
   margin: 24px 0 0;
   overflow: auto;
-  border: 1px solid var(--line-strong);
+  border: 0;
   background: var(--code-bg);
   color: var(--code-text);
   padding: 20px;
@@ -464,9 +467,9 @@ h1 {
 }
 
 .setup-warning {
-  border-left: 2px solid var(--accent-text);
-  margin-top: 8px;
-  padding-left: 18px;
+  margin-top: 32px;
+  background: var(--surface);
+  padding: 18px 20px;
   font-size: 13px;
   line-height: 1.6;
 }
@@ -481,12 +484,11 @@ h1 {
 }
 
 .setup-behavior {
-  margin-top: 56px;
-  padding-bottom: 0;
+  margin-top: 72px;
 }
 
 .setup-footer {
-  margin-top: 36px;
+  margin-top: 56px;
 }
 
 .setup-footer a {
@@ -1637,7 +1639,7 @@ h1 {
   }
 
   .setup-intro {
-    margin-bottom: 48px;
+    margin-bottom: 56px;
   }
 
   .setup-intro p {
@@ -1645,7 +1647,20 @@ h1 {
   }
 
   .setup-section {
-    padding: 24px 0 44px;
+    padding: 0;
+  }
+
+  .setup-section + .setup-section {
+    margin-top: 56px;
+  }
+
+  .setup-warning {
+    margin-top: 24px;
+    padding: 16px;
+  }
+
+  .setup-behavior {
+    margin-top: 56px;
   }
 
   .setup-section pre {

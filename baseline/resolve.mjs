@@ -18,6 +18,13 @@ function waitMilliseconds(value) {
   return seconds * 1_000;
 }
 
+export function requireArtifact(value) {
+  if (value === undefined || value === "") return true;
+  if (value.toLowerCase() === "true") return true;
+  if (value.toLowerCase() === "false") return false;
+  throw new Error("required must be true or false");
+}
+
 export function pullRequestBaseSha({ event, githubSha, parents }) {
   const mergeSha = normalizeCommitSha(githubSha);
   const headSha = normalizeCommitSha(event?.pull_request?.head?.sha);
@@ -85,6 +92,29 @@ export function selectArtifact(artifacts, expectedName, sha) {
     )[0];
 }
 
+export function artifactResult(
+  artifact,
+  { expectedName, repository, required, sha },
+) {
+  if (!artifact) {
+    const message = `No saved screenshots named ${expectedName} were found.`;
+    if (required) {
+      throw new Error(
+        `${message} Run the screenshot workflow for ${sha}, then retry this job.`,
+      );
+    }
+    return { found: false, message };
+  }
+
+  return {
+    artifact: expectedName,
+    found: true,
+    repository,
+    runId: String(artifact.workflow_run.id),
+    sha,
+  };
+}
+
 async function listArtifacts(token, repository, name) {
   const apiUrl = process.env.GITHUB_API_URL ?? "https://api.github.com";
   const url = new URL(`${apiUrl}/repos/${repository}/actions/artifacts`);
@@ -106,6 +136,7 @@ async function main() {
   );
   const sha = await resolveSha(process.env.BASELINE_SHA, token, repository);
   const expectedName = artifactName(process.env.BASELINE_NAME, sha);
+  const required = requireArtifact(process.env.BASELINE_REQUIRED);
   const attempts =
     Math.floor(waitMilliseconds(process.env.BASELINE_WAIT_SECONDS) / 5_000) + 1;
 
@@ -122,16 +153,24 @@ async function main() {
     }
   }
 
-  if (!artifact) {
-    throw new Error(
-      `No saved screenshots named ${expectedName} were found. Run the screenshot workflow for ${sha}, then retry this job.`,
+  const result = artifactResult(artifact, {
+    expectedName,
+    repository,
+    required,
+    sha,
+  });
+  setOutput("found", result.found ? "true" : "false");
+  if (!result.found) {
+    console.warn(
+      `::warning::${result.message} Frameshift will show the current screenshots as added.`,
     );
+    return;
   }
 
-  setOutput("artifact", expectedName);
-  setOutput("repository", repository);
-  setOutput("run-id", String(artifact.workflow_run.id));
-  setOutput("sha", sha);
+  setOutput("artifact", result.artifact);
+  setOutput("repository", result.repository);
+  setOutput("run-id", result.runId);
+  setOutput("sha", result.sha);
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
