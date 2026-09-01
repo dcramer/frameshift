@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "ncc build src/action.mjs -o ../../dist --minify --license THIRD_PARTY_LICENSES.txt",
+    "fixture:generate": "node src/generate-fixture.mjs",
     "smoke": "node src/smoke.mjs",
     "test": "vitest run"
   },

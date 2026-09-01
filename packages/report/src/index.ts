@@ -1,108 +1,154 @@
-const statuses = ["added", "changed", "removed", "unchanged"] as const;
+import * as z from "zod";
 
-export type VisualDiffStatus = (typeof statuses)[number];
+export const VISUAL_DIFF_REPORT_VERSION = 1 as const;
+export const VISUAL_DIFF_STATUSES = [
+  "added",
+  "changed",
+  "removed",
+  "unchanged",
+] as const;
 
-export type VisualDiffFile = {
-  file: string;
-  height?: number;
-  image?: string;
-  images?: Partial<Record<"baseline" | "candidate" | "diff", string>>;
-  status: VisualDiffStatus;
-  width?: number;
+const safePngPathPattern = /^(?!\/)(?!.*\\)(?!.*(?:^|\/)\.\.(?:\/|$)).+\.png$/;
+
+const pngPathSchema = z
+  .string()
+  .regex(safePngPathPattern, "Expected a safe relative PNG path");
+const baselineImagePathSchema = pngPathSchema.startsWith("images/baseline/");
+const candidateImagePathSchema = pngPathSchema.startsWith("images/candidate/");
+const diffImagePathSchema = pngPathSchema.startsWith("images/diff/");
+const dimensionSchema = z.int().positive();
+
+const fileShape = {
+  file: pngPathSchema,
+  height: dimensionSchema.optional(),
+  width: dimensionSchema.optional(),
 };
 
-export type VisualDiffReport = {
-  files: VisualDiffFile[];
-  summary: Record<VisualDiffStatus, number>;
-  version: 1;
-};
+const addedFileSchema = z
+  .object({
+    ...fileShape,
+    image: candidateImagePathSchema,
+    images: z.object({ candidate: candidateImagePathSchema }).strict(),
+    status: z.literal("added"),
+  })
+  .strict();
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
+const changedFileSchema = z
+  .object({
+    ...fileShape,
+    image: diffImagePathSchema,
+    images: z
+      .object({
+        baseline: baselineImagePathSchema,
+        candidate: candidateImagePathSchema,
+        diff: diffImagePathSchema,
+      })
+      .strict(),
+    status: z.literal("changed"),
+  })
+  .strict();
+
+const removedFileSchema = z
+  .object({
+    ...fileShape,
+    image: baselineImagePathSchema,
+    images: z.object({ baseline: baselineImagePathSchema }).strict(),
+    status: z.literal("removed"),
+  })
+  .strict();
+
+const unchangedFileSchema = z
+  .object({
+    ...fileShape,
+    status: z.literal("unchanged"),
+  })
+  .strict();
+
+export const visualDiffFileSchema = z.discriminatedUnion("status", [
+  addedFileSchema,
+  changedFileSchema,
+  removedFileSchema,
+  unchangedFileSchema,
+]);
+
+const visualDiffSummarySchema = z
+  .object({
+    added: z.int().nonnegative(),
+    changed: z.int().nonnegative(),
+    removed: z.int().nonnegative(),
+    unchanged: z.int().nonnegative(),
+  })
+  .strict();
+
+const visualDiffReportV1StructureSchema = z
+  .object({
+    files: z.array(visualDiffFileSchema),
+    summary: visualDiffSummarySchema,
+    version: z.literal(VISUAL_DIFF_REPORT_VERSION),
+  })
+  .strict()
+  .meta({
+    description: "A Scanner Sweep visual-diff report.",
+    title: "Visual diff report v1",
+  });
+
+function addInvariantIssues(
+  report: z.infer<typeof visualDiffReportV1StructureSchema>,
+  context: z.RefinementCtx,
+) {
+  const summary = { added: 0, changed: 0, removed: 0, unchanged: 0 };
+  for (const [index, file] of report.files.entries()) {
+    summary[file.status] += 1;
+    if (file.status === "unchanged") continue;
+
+    const primaryImage =
+      file.status === "changed"
+        ? file.images.diff
+        : file.status === "added"
+          ? file.images.candidate
+          : file.images.baseline;
+    if (file.image !== primaryImage) {
+      context.addIssue({
+        code: "custom",
+        message: "Primary image must match the status-specific review image",
+        path: ["files", index, "image"],
+      });
+    }
+  }
+
+  for (const status of VISUAL_DIFF_STATUSES) {
+    if (report.summary[status] !== summary[status]) {
+      context.addIssue({
+        code: "custom",
+        message: `Expected ${summary[status]} ${status} files`,
+        path: ["summary", status],
+      });
+    }
+  }
 }
 
-function validatePngPath(value: unknown, prefix = ""): asserts value is string {
-  if (
-    typeof value !== "string" ||
-    value.startsWith("/") ||
-    value.includes("\\") ||
-    value.split("/").includes("..") ||
-    !value.endsWith(".png") ||
-    (prefix !== "" && !value.startsWith(prefix))
-  ) {
-    throw new Error(`Invalid report image path: ${String(value)}`);
-  }
-}
+// Each published version stays immutable. Add a version-discriminated union at
+// this boundary when version 2 exists; do not weaken the version 1 schema.
+export const visualDiffReportSchema =
+  visualDiffReportV1StructureSchema.superRefine(addInvariantIssues);
 
-function parseFile(value: unknown): VisualDiffFile {
-  if (!isRecord(value)) throw new Error("Invalid visual diff file");
-
-  validatePngPath(value.file);
-  if (!statuses.includes(value.status as VisualDiffStatus)) {
-    throw new Error(`Invalid visual diff status: ${String(value.status)}`);
-  }
-
-  const status = value.status as VisualDiffStatus;
-  const expectedKeys = {
-    added: ["candidate"],
-    changed: ["baseline", "candidate", "diff"],
-    removed: ["baseline"],
-    unchanged: [],
-  }[status];
-  const images = isRecord(value.images) ? value.images : undefined;
-  const actualKeys = images ? Object.keys(images).toSorted() : [];
-
-  if (status === "unchanged") {
-    if (value.image !== undefined || value.images !== undefined) {
-      throw new Error("Unchanged files cannot publish review images");
-    }
-  } else {
-    validatePngPath(value.image, "images/");
-    if (images) {
-      if (
-        actualKeys.length !== expectedKeys.length ||
-        actualKeys.some((key, index) => key !== expectedKeys.toSorted()[index])
-      ) {
-        throw new Error(`Invalid visual diff images for ${status}`);
-      }
-      for (const key of expectedKeys) {
-        validatePngPath(images[key], `images/${key}/`);
-      }
-      const primaryKey = status === "changed" ? "diff" : expectedKeys[0];
-      if (value.image !== images[primaryKey]) {
-        throw new Error(`Invalid primary image for ${status}`);
-      }
-    }
-  }
-
-  for (const dimension of ["height", "width"] as const) {
-    const candidate = value[dimension];
-    if (
-      candidate !== undefined &&
-      (!Number.isInteger(candidate) || Number(candidate) <= 0)
-    ) {
-      throw new Error(`Invalid image ${dimension}`);
-    }
-  }
-
-  return {
-    file: value.file,
-    height: value.height as number | undefined,
-    image: value.image as string | undefined,
-    images: images as VisualDiffFile["images"],
-    status,
-    width: value.width as number | undefined,
-  };
-}
+export type VisualDiffStatus = (typeof VISUAL_DIFF_STATUSES)[number];
+export type VisualDiffFile = z.infer<typeof visualDiffFileSchema>;
+export type VisualDiffReport = z.infer<typeof visualDiffReportSchema>;
 
 export function parseVisualDiffReport(value: unknown): VisualDiffReport {
-  if (!isRecord(value) || value.version !== 1 || !Array.isArray(value.files)) {
-    throw new Error("Invalid visual diff report");
-  }
+  return visualDiffReportSchema.parse(value);
+}
 
-  const files = value.files.map(parseFile);
-  const summary = { added: 0, changed: 0, removed: 0, unchanged: 0 };
-  for (const file of files) summary[file.status] += 1;
+export function safeParseVisualDiffReport(value: unknown) {
+  return visualDiffReportSchema.safeParse(value);
+}
 
-  return { files, summary, version: 1 };
+export function visualDiffReportV1JsonSchema() {
+  return {
+    $id: "https://raw.githubusercontent.com/dcramer/scanner-sweep/main/schemas/report-v1.schema.json",
+    ...z.toJSONSchema(visualDiffReportV1StructureSchema, {
+      target: "draft-2020-12",
+    }),
+  };
 }

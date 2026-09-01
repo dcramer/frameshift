@@ -7,8 +7,14 @@
     ".": "./src/index.ts"
   },
   "scripts": {
+    "fixtures:check": "node src/check-fixtures.mjs",
+    "schema:check": "node src/write-schema.mjs --check",
+    "schema:write": "node src/write-schema.mjs",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "catalog:"
   },
   "devDependencies": {
     "vitest": "catalog:"

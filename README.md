@@ -59,6 +59,16 @@ pnpm dev
 Open the local URL and enter a public GitHub repository plus the immutable
 commit SHA that contains `report.json` and its `images/` directory.
 
+Start directly in the committed mixed-change fixture when working on the
+review UI:
+
+```sh
+pnpm dev:fixture
+```
+
+This opens `/?fixture=mixed`. The same fixture is available in a normal dev
+server at that path.
+
 You can also open a report directly:
 
 ```text
@@ -67,12 +77,26 @@ http://localhost:5173/?repo=owner/repository&ref=40-character-commit-sha
 
 ## Report contract
 
-The initial contract matches Scanner Sweep report version 1. Matching changed
-images have baseline, candidate, and diff files. Added and removed images have
-only the available side. Unchanged images have no published review image.
+`packages/report` owns the versioned Zod parser. TypeScript types are inferred
+from that schema. The generated [JSON Schema](schemas/report-v1.schema.json)
+supports producers in other languages. Run `pnpm schema:build` after an
+intentional schema change; CI rejects a stale generated schema.
+
+Report version 1 gives changed images baseline, candidate, and diff files.
+Added and removed images have only the available side. Unchanged images have no
+published review image.
 
 All report paths are relative to `report.json`. The viewer validates them
 before it creates image URLs.
+
+The committed `fixtures/mixed` report covers changed, added, removed, and
+unchanged files. Regenerate it through the real comparison code and validate
+all fixture schemas and image references with:
+
+```sh
+pnpm fixture:generate
+pnpm fixtures:check
+```
 
 ## Develop the action
 

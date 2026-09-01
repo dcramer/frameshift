@@ -17,3 +17,4 @@ catalog:
   react-dom: "^19.2.8"
   vite: "^8.2.2"
   vitest: "~4.1.11"
+  zod: "^4.5.4"

@@ -82,49 +82,44 @@ function ImagePanel({
   file: VisualDiffFile;
   source: ScanSource;
 }) {
-  if (file.status === "changed" && file.images) {
+  if (file.status === "changed") {
     return (
       <div className="comparison-grid">
         <figure>
           <figcaption>Baseline</figcaption>
           <img
             alt={`${displayName(file.file)} baseline`}
-            src={imageUrl(source, file.images!.baseline!)}
+            src={imageUrl(source, file.images.baseline)}
           />
         </figure>
         <figure>
           <figcaption>Candidate</figcaption>
           <img
             alt={`${displayName(file.file)} candidate`}
-            src={imageUrl(source, file.images!.candidate!)}
+            src={imageUrl(source, file.images.candidate)}
           />
         </figure>
         <figure className="diff-figure">
           <figcaption>Pixel diff</figcaption>
           <img
             alt={`${displayName(file.file)} pixel diff`}
-            src={imageUrl(source, file.images!.diff!)}
+            src={imageUrl(source, file.images.diff)}
           />
         </figure>
       </div>
     );
   }
 
-  const image = file.images
-    ? file.status === "added"
-      ? file.images.candidate
-      : file.images.baseline
-    : file.image;
+  if (file.status === "unchanged") return null;
+
+  const image =
+    file.status === "added" ? file.images.candidate : file.images.baseline;
   return (
     <figure className="single-figure">
       <figcaption>
-        {!file.images
-          ? "Comparison image"
-          : file.status === "added"
-            ? "Candidate"
-            : "Baseline"}
+        {file.status === "added" ? "Candidate" : "Baseline"}
       </figcaption>
-      <img alt={displayName(file.file)} src={imageUrl(source, image!)} />
+      <img alt={displayName(file.file)} src={imageUrl(source, image)} />
     </figure>
   );
 }

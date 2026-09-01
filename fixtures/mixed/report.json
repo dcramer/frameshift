@@ -1,0 +1,43 @@
+{
+  "files": [
+    {
+      "file": "activity__desktop.png",
+      "image": "images/candidate/activity__desktop.png",
+      "images": {
+        "candidate": "images/candidate/activity__desktop.png"
+      },
+      "status": "added"
+    },
+    {
+      "file": "dashboard__desktop.png",
+      "height": 420,
+      "image": "images/diff/dashboard__desktop.png",
+      "images": {
+        "baseline": "images/baseline/dashboard__desktop.png",
+        "candidate": "images/candidate/dashboard__desktop.png",
+        "diff": "images/diff/dashboard__desktop.png"
+      },
+      "status": "changed",
+      "width": 720
+    },
+    {
+      "file": "legacy-settings__desktop.png",
+      "image": "images/baseline/legacy-settings__desktop.png",
+      "images": {
+        "baseline": "images/baseline/legacy-settings__desktop.png"
+      },
+      "status": "removed"
+    },
+    {
+      "file": "profile__desktop.png",
+      "status": "unchanged"
+    }
+  ],
+  "summary": {
+    "added": 1,
+    "changed": 1,
+    "removed": 1,
+    "unchanged": 1
+  },
+  "version": 1
+}

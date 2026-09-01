@@ -12,6 +12,7 @@ describe("scan source", () => {
     );
 
     expect(source).not.toBeNull();
+    expect(source).toMatchObject({ kind: "github" });
     expect(reportUrl(source!)).toBe(
       "https://raw.githubusercontent.com/dcramer/peated/0123456789abcdef0123456789abcdef01234567/report.json",
     );
@@ -23,5 +24,20 @@ describe("scan source", () => {
         new URLSearchParams({ repo: "dcramer/peated", ref: "main" }),
       ),
     ).toThrow("full 40-character commit SHA");
+  });
+
+  test("builds a same-origin fixture URL", () => {
+    const source = parseScanSource(new URLSearchParams({ fixture: "mixed" }));
+
+    expect(source).toEqual({ kind: "fixture", name: "mixed" });
+    expect(reportUrl(source!)).toBe("/mixed/report.json");
+  });
+
+  test("does not mix fixture and GitHub sources", () => {
+    expect(() =>
+      parseScanSource(
+        new URLSearchParams({ fixture: "mixed", repo: "owner/repository" }),
+      ),
+    ).toThrow("not both");
   });
 });

@@ -1,0 +1,293 @@
+{
+  "$id": "https://raw.githubusercontent.com/dcramer/scanner-sweep/main/schemas/report-v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "files": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "file": {
+                "type": "string",
+                "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$"
+              },
+              "height": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              "width": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              "image": {
+                "type": "string",
+                "allOf": [
+                  {
+                    "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$"
+                  },
+                  {
+                    "pattern": "^images\\/candidate\\/.*"
+                  }
+                ]
+              },
+              "images": {
+                "type": "object",
+                "properties": {
+                  "candidate": {
+                    "type": "string",
+                    "allOf": [
+                      {
+                        "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$"
+                      },
+                      {
+                        "pattern": "^images\\/candidate\\/.*"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "candidate"
+                ],
+                "additionalProperties": false
+              },
+              "status": {
+                "type": "string",
+                "const": "added"
+              }
+            },
+            "required": [
+              "file",
+              "image",
+              "images",
+              "status"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "file": {
+                "type": "string",
+                "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$"
+              },
+              "height": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              "width": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              "image": {
+                "type": "string",
+                "allOf": [
+                  {
+                    "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$"
+                  },
+                  {
+                    "pattern": "^images\\/diff\\/.*"
+                  }
+                ]
+              },
+              "images": {
+                "type": "object",
+                "properties": {
+                  "baseline": {
+                    "type": "string",
+                    "allOf": [
+                      {
+                        "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$"
+                      },
+                      {
+                        "pattern": "^images\\/baseline\\/.*"
+                      }
+                    ]
+                  },
+                  "candidate": {
+                    "type": "string",
+                    "allOf": [
+                      {
+                        "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$"
+                      },
+                      {
+                        "pattern": "^images\\/candidate\\/.*"
+                      }
+                    ]
+                  },
+                  "diff": {
+                    "type": "string",
+                    "allOf": [
+                      {
+                        "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$"
+                      },
+                      {
+                        "pattern": "^images\\/diff\\/.*"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "baseline",
+                  "candidate",
+                  "diff"
+                ],
+                "additionalProperties": false
+              },
+              "status": {
+                "type": "string",
+                "const": "changed"
+              }
+            },
+            "required": [
+              "file",
+              "image",
+              "images",
+              "status"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "file": {
+                "type": "string",
+                "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$"
+              },
+              "height": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              "width": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              "image": {
+                "type": "string",
+                "allOf": [
+                  {
+                    "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$"
+                  },
+                  {
+                    "pattern": "^images\\/baseline\\/.*"
+                  }
+                ]
+              },
+              "images": {
+                "type": "object",
+                "properties": {
+                  "baseline": {
+                    "type": "string",
+                    "allOf": [
+                      {
+                        "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$"
+                      },
+                      {
+                        "pattern": "^images\\/baseline\\/.*"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "baseline"
+                ],
+                "additionalProperties": false
+              },
+              "status": {
+                "type": "string",
+                "const": "removed"
+              }
+            },
+            "required": [
+              "file",
+              "image",
+              "images",
+              "status"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "file": {
+                "type": "string",
+                "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$"
+              },
+              "height": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              "width": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              "status": {
+                "type": "string",
+                "const": "unchanged"
+              }
+            },
+            "required": [
+              "file",
+              "status"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "added": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "changed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "removed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "unchanged": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "added",
+        "changed",
+        "removed",
+        "unchanged"
+      ],
+      "additionalProperties": false
+    },
+    "version": {
+      "type": "number",
+      "const": 1
+    }
+  },
+  "required": [
+    "files",
+    "summary",
+    "version"
+  ],
+  "additionalProperties": false,
+  "description": "A Scanner Sweep visual-diff report.",
+  "title": "Visual diff report v1"
+}
