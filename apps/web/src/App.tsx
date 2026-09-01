@@ -3,9 +3,7 @@ import {
   type VisualDiffFile,
   type VisualDiffReport,
 } from "@frameshift/report";
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-
-import { readBrowserReport } from "./browser-report";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   imageUrl,
@@ -19,8 +17,6 @@ type LoadState =
   | { kind: "error"; message: string }
   | { kind: "loading" }
   | { kind: "ready"; report: VisualDiffReport; source: ImageSource };
-
-const directoryPickerAttributes = { webkitdirectory: "" };
 
 interface PreviewImage {
   alt: string;
@@ -36,88 +32,40 @@ function displayName(file: string): string {
     .replace(/-/g, " ");
 }
 
-function SourceForm({
-  onOpenReport,
-}: {
-  onOpenReport(files: readonly File[]): void;
-}) {
-  const [repo, setRepo] = useState("");
-  const [ref, setRef] = useState("");
-
-  function submit(event: FormEvent) {
-    event.preventDefault();
-    const params = new URLSearchParams({ ref: ref.trim(), repo: repo.trim() });
-    window.location.assign(`/?${params.toString()}`);
-  }
-
+function SourceForm() {
   return (
     <section className="empty-state panel">
       <div className="radar" aria-hidden="true">
         <span className="radar-contact contact-one" />
         <span className="radar-contact contact-two" />
       </div>
-      <p className="eyebrow">Awaiting coordinates</p>
+      <p className="eyebrow">Visual review</p>
       <h1>Review a visual scan</h1>
       <p>
-        Inspect a Frameshift report without uploading it, or explore a complete
-        example first.
+        Explore a complete sample, then add Frameshift to your GitHub Actions
+        workflow.
       </p>
       <div className="source-actions">
-        <label className="source-card source-card-primary">
+        <a className="source-card source-card-primary" href="/?fixture=mixed">
           <span>
-            <small>Your report</small>
-            <strong>Open a report folder</strong>
-            <em>Stays in this browser</em>
-          </span>
-          <b aria-hidden="true">↗</b>
-          <input
-            {...directoryPickerAttributes}
-            aria-label="Open local report folder"
-            multiple
-            onChange={(event) => {
-              const files = event.currentTarget.files;
-              if (files?.length) onOpenReport(Array.from(files));
-              event.currentTarget.value = "";
-            }}
-            type="file"
-          />
-        </label>
-        <a className="source-card" href="/?fixture=mixed">
-          <span>
-            <small>Guided preview</small>
+            <small>Live demo</small>
             <strong>View sample report</strong>
             <em>Changed, added, and removed</em>
           </span>
           <b aria-hidden="true">→</b>
         </a>
+        <a
+          className="source-card"
+          href="https://github.com/dcramer/frameshift#use-the-github-action"
+        >
+          <span>
+            <small>GitHub Action</small>
+            <strong>Setup instructions</strong>
+            <em>Add Frameshift to your workflow</em>
+          </span>
+          <b aria-hidden="true">↗</b>
+        </a>
       </div>
-      <div className="source-divider" aria-hidden="true">
-        <span>Load an immutable GitHub report</span>
-      </div>
-      <form className="github-source" onSubmit={submit}>
-        <label>
-          Repository
-          <input
-            name="repo"
-            onChange={(event) => setRepo(event.target.value)}
-            placeholder="owner/repository"
-            required
-            value={repo}
-          />
-        </label>
-        <label>
-          Report commit
-          <input
-            name="ref"
-            onChange={(event) => setRef(event.target.value)}
-            pattern="[a-fA-F0-9]{40}"
-            placeholder="40-character commit SHA"
-            required
-            value={ref}
-          />
-        </label>
-        <button type="submit">Begin scan</button>
-      </form>
     </section>
   );
 }
@@ -311,27 +259,6 @@ function ReportViewer({
 
 export function App() {
   const [state, setState] = useState<LoadState>({ kind: "loading" });
-  const disposeBrowserReport = useRef<(() => void) | null>(null);
-
-  async function openBrowserReport(files: readonly File[]) {
-    setState({ kind: "loading" });
-    try {
-      const browserReport = await readBrowserReport(files);
-      disposeBrowserReport.current?.();
-      disposeBrowserReport.current = browserReport.dispose;
-      setState({
-        kind: "ready",
-        report: browserReport.report,
-        source: browserReport.source,
-      });
-    } catch (error) {
-      setState({
-        kind: "error",
-        message:
-          error instanceof Error ? error.message : "Could not open report.",
-      });
-    }
-  }
 
   useEffect(() => {
     let active = true;
@@ -362,15 +289,16 @@ export function App() {
     void load();
     return () => {
       active = false;
-      disposeBrowserReport.current?.();
     };
   }, []);
 
   return (
-    <div className="app-shell">
-      {state.kind === "empty" && (
-        <SourceForm onOpenReport={(files) => void openBrowserReport(files)} />
-      )}
+    <div
+      className={
+        state.kind === "ready" ? "app-shell report-shell" : "app-shell"
+      }
+    >
+      {state.kind === "empty" && <SourceForm />}
       {state.kind === "loading" && (
         <section className="status-panel panel">
           <div className="loading-pulse" />
