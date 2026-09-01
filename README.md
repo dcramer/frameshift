@@ -81,6 +81,11 @@ pnpm dev
 Open the local URL and enter a public GitHub repository plus the immutable
 commit SHA that contains `report.json` and its `images/` directory.
 
+You can also select **Open report folder** on the home page. Choose the complete
+report bundle. The browser validates `report.json`, checks every referenced
+image, and displays it without uploading any file. A report with no visual
+changes can use a folder that contains only `report.json`.
+
 Start directly in the committed mixed-change fixture when working on the
 review UI:
 

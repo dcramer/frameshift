@@ -245,7 +245,8 @@ input:focus {
 }
 
 form button,
-.status-panel a {
+.status-panel a,
+.report-picker {
   height: 42px;
   border: 1px solid #67ded3;
   border-radius: 2px;
@@ -260,6 +261,67 @@ form button,
     monospace;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+}
+
+.source-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0 18px;
+  color: #4f6f70;
+  font:
+    9px ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.source-divider::before,
+.source-divider::after {
+  width: 100%;
+  height: 1px;
+  background: #193338;
+  content: "";
+}
+
+.browser-source {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+}
+
+.browser-source small {
+  color: #5f7c7d;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.report-picker {
+  position: relative;
+  display: inline-grid;
+  align-items: center;
+  cursor: pointer;
+}
+
+.report-picker:hover {
+  background: #205052;
+}
+
+.report-picker:focus-within {
+  outline: 2px solid #59cfc6;
+  outline-offset: 2px;
+}
+
+.report-picker input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .report-layout {

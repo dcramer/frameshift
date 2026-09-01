@@ -7,6 +7,9 @@ export type ScanSource =
   | { kind: "github"; ref: string; repo: string }
   | { kind: "local" };
 
+export type ImageSource =
+  ScanSource | { imageUrls: ReadonlyMap<string, string>; kind: "browser" };
+
 export function parseScanSource(params: URLSearchParams): ScanSource | null {
   const repo = params.get("repo");
   const ref = params.get("ref");
@@ -54,7 +57,12 @@ export function reportUrl(source: ScanSource): string {
   return `${reportBaseUrl(source)}/report.json`;
 }
 
-export function imageUrl(source: ScanSource, imagePath: string): string {
+export function imageUrl(source: ImageSource, imagePath: string): string {
+  if (source.kind === "browser") {
+    const url = source.imageUrls.get(imagePath);
+    if (!url) throw new Error(`Local report image is missing: ${imagePath}`);
+    return url;
+  }
   return `${reportBaseUrl(source)}/${imagePath
     .split("/")
     .map(encodeURIComponent)

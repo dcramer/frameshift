@@ -3,20 +3,24 @@ import {
   type VisualDiffFile,
   type VisualDiffReport,
 } from "@frameshift/report";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+
+import { readBrowserReport } from "./browser-report";
 
 import {
   imageUrl,
   parseScanSource,
   reportUrl,
-  type ScanSource,
+  type ImageSource,
 } from "./scan-source";
 
 type LoadState =
   | { kind: "empty" }
   | { kind: "error"; message: string }
   | { kind: "loading" }
-  | { kind: "ready"; report: VisualDiffReport; source: ScanSource };
+  | { kind: "ready"; report: VisualDiffReport; source: ImageSource };
+
+const directoryPickerAttributes = { webkitdirectory: "" };
 
 function displayName(file: string): string {
   return file
@@ -25,7 +29,11 @@ function displayName(file: string): string {
     .replace(/-/g, " ");
 }
 
-function SourceForm() {
+function SourceForm({
+  onOpenReport,
+}: {
+  onOpenReport(files: readonly File[]): void;
+}) {
   const [repo, setRepo] = useState("");
   const [ref, setRef] = useState("");
 
@@ -44,8 +52,8 @@ function SourceForm() {
       <p className="eyebrow">Awaiting coordinates</p>
       <h1>Review a visual scan</h1>
       <p>
-        Enter a public GitHub repository and the immutable commit that contains
-        the report bundle.
+        Enter a public GitHub report location, or inspect a report folder
+        directly in this browser.
       </p>
       <form onSubmit={submit}>
         <label>
@@ -71,6 +79,29 @@ function SourceForm() {
         </label>
         <button type="submit">Begin scan</button>
       </form>
+      <div className="source-divider" aria-hidden="true">
+        <span>or</span>
+      </div>
+      <div className="browser-source">
+        <label className="report-picker">
+          Open report folder
+          <input
+            {...directoryPickerAttributes}
+            aria-label="Open local report folder"
+            multiple
+            onChange={(event) => {
+              const files = event.currentTarget.files;
+              if (files?.length) onOpenReport(Array.from(files));
+              event.currentTarget.value = "";
+            }}
+            type="file"
+          />
+        </label>
+        <small>
+          Select the folder with report.json and its images. Nothing is
+          uploaded.
+        </small>
+      </div>
     </section>
   );
 }
@@ -80,7 +111,7 @@ function ImagePanel({
   source,
 }: {
   file: VisualDiffFile;
-  source: ScanSource;
+  source: ImageSource;
 }) {
   if (file.status === "changed") {
     return (
@@ -129,7 +160,7 @@ function ReportViewer({
   source,
 }: {
   report: VisualDiffReport;
-  source: ScanSource;
+  source: ImageSource;
 }) {
   const changes = useMemo(
     () => report.files.filter((file) => file.status !== "unchanged"),
@@ -190,6 +221,27 @@ function ReportViewer({
 
 export function App() {
   const [state, setState] = useState<LoadState>({ kind: "loading" });
+  const disposeBrowserReport = useRef<(() => void) | null>(null);
+
+  async function openBrowserReport(files: readonly File[]) {
+    setState({ kind: "loading" });
+    try {
+      const browserReport = await readBrowserReport(files);
+      disposeBrowserReport.current?.();
+      disposeBrowserReport.current = browserReport.dispose;
+      setState({
+        kind: "ready",
+        report: browserReport.report,
+        source: browserReport.source,
+      });
+    } catch (error) {
+      setState({
+        kind: "error",
+        message:
+          error instanceof Error ? error.message : "Could not open report.",
+      });
+    }
+  }
 
   useEffect(() => {
     let active = true;
@@ -220,6 +272,7 @@ export function App() {
     void load();
     return () => {
       active = false;
+      disposeBrowserReport.current?.();
     };
   }, []);
 
@@ -235,7 +288,9 @@ export function App() {
         </a>
         <span className="system-status">Advancing civilization since 2026</span>
       </header>
-      {state.kind === "empty" && <SourceForm />}
+      {state.kind === "empty" && (
+        <SourceForm onOpenReport={(files) => void openBrowserReport(files)} />
+      )}
       {state.kind === "loading" && (
         <section className="status-panel panel">
           <div className="loading-pulse" />
