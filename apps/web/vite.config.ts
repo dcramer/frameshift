@@ -18,7 +18,7 @@ export default defineConfig(({ command }) => {
           sample: fileURLToPath(
             new URL("./sample/index.html", import.meta.url),
           ),
-          setup: fileURLToPath(new URL("./setup/index.html", import.meta.url)),
+          guide: fileURLToPath(new URL("./guide/index.html", import.meta.url)),
         },
       },
     },

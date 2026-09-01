@@ -366,6 +366,12 @@ h1 {
   letter-spacing: -0.03em;
 }
 
+.setup-section h3 {
+  margin: 28px 0 0;
+  color: var(--text);
+  font-size: 15px;
+}
+
 .setup-section .setup-step {
   margin: 0 0 5px;
   color: var(--accent-text);
@@ -455,6 +461,27 @@ h1 {
 .setup-section pre .hljs-template-tag,
 .setup-section pre .hljs-template-variable {
   color: var(--code-string);
+}
+
+.setup-details {
+  margin-top: 28px;
+  border: 1px solid var(--line-strong);
+  padding: 16px 18px 20px;
+}
+
+.setup-details summary {
+  color: var(--text);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.setup-details[open] summary {
+  margin-bottom: 8px;
+}
+
+.setup-details .setup-checklist {
+  margin-top: 14px;
 }
 
 .setup-warning {
