@@ -51,11 +51,11 @@ jobs:
             | tail -n 1)"
 
           if [[ -z "$latest_tag" ]]; then
-            if [[ "$BUMP" != "major" ]]; then
-              echo "The first release must use a major bump to create v1.0.0." >&2
+            if [[ "$BUMP" != "minor" ]]; then
+              echo "The first release must use a minor bump to create v0.1.0." >&2
               exit 1
             fi
-            release_tag="v1.0.0"
+            release_tag="v0.1.0"
           else
             latest_sha="$(gh api \
               "repos/$GITHUB_REPOSITORY/commits/$latest_tag" \
