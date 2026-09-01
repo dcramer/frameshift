@@ -93,7 +93,8 @@ a {
 }
 
 a:focus-visible,
-button:focus-visible {
+button:focus-visible,
+summary:focus-visible {
   outline: 2px solid var(--accent-text);
   outline-offset: 3px;
 }
@@ -555,6 +556,7 @@ h1 {
 .report-layout {
   display: grid;
   grid-template-columns: 288px minmax(0, 1fr);
+  grid-template-rows: 72px minmax(0, 1fr);
   min-height: 100dvh;
 }
 
@@ -562,18 +564,30 @@ h1 {
   border: 0;
 }
 
+.report-header {
+  position: sticky;
+  z-index: 20;
+  top: 0;
+  display: grid;
+  min-width: 0;
+  grid-column: 1 / -1;
+  grid-template-columns: 288px minmax(0, 1fr);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
 .report-layout > .report-index {
   position: sticky;
-  top: 0;
-  height: 100dvh;
-  min-height: 100dvh;
+  top: 72px;
+  height: calc(100dvh - 72px);
+  min-height: calc(100dvh - 72px);
   overflow-y: auto;
   border-right: 1px solid var(--line);
 }
 
 .report-brand {
-  min-height: 65px;
-  border-bottom: 1px solid var(--line);
+  min-width: 0;
+  border-right: 1px solid var(--line);
   padding: 0 24px;
   text-decoration: none;
 }
@@ -582,123 +596,102 @@ h1 {
   color: var(--accent-text);
 }
 
-.report-source {
-  padding: 22px 24px;
-}
-
-.report-source a {
+.report-context {
   display: flex;
   min-width: 0;
   align-items: center;
+  gap: 28px;
+  padding: 0 32px;
+}
+
+.report-github {
+  display: flex;
+  min-width: 0;
+  flex: none;
+  align-items: center;
   gap: 9px;
+}
+
+.report-github > a {
+  min-width: 0;
   color: var(--text);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 650;
   letter-spacing: -0.02em;
   text-decoration: none;
 }
 
-.report-source a:hover {
+.report-github > a:hover,
+.report-pull-request a:hover {
   color: var(--accent-text);
 }
 
-.report-source svg {
-  width: 21px;
-  height: 21px;
+.report-github svg {
+  width: 18px;
+  height: 18px;
   flex: none;
 }
 
-.report-source span {
+.report-github > a:first-of-type {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.report-source code {
-  margin-left: auto;
+.report-github .report-commit {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  border-left: 1px solid var(--line-strong);
+  margin-left: 3px;
+  padding-left: 12px;
+  color: var(--faint);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.report-commit code {
   color: var(--faint);
   font-size: 10px;
   font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
-.summary-row {
+.report-pull-request {
   display: flex;
   min-width: 0;
-  flex-wrap: wrap;
-  gap: 6px 13px;
-  margin: 0;
-  padding: 11px 24px;
-  border: 0;
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-}
-
-.summary-row span {
-  display: inline-flex;
   align-items: baseline;
-  gap: 4px;
-  color: var(--faint);
-  font-size: 9px;
+  gap: 9px;
 }
 
-.summary-row b {
-  color: var(--text);
-  font:
-    11px ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    monospace;
-}
-
-.report-index nav {
-  display: grid;
-  padding: 8px 0;
-}
-
-.screenshot-group + .screenshot-group {
-  margin-top: 8px;
-  border-top: 1px solid var(--line);
-  padding-top: 8px;
-}
-
-.screenshot-group {
-  min-width: 0;
-  width: 100%;
-}
-
-.screenshot-group > h2 {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin: 0;
-  color: var(--faint);
-  padding: 10px 21px 6px 24px;
+.report-pull-request span {
+  flex: none;
+  color: var(--accent-text);
   font:
     10px ui-monospace,
     SFMono-Regular,
     Menlo,
     monospace;
-  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.screenshot-group > h2 small {
-  font: inherit;
+.report-pull-request strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 14px;
+  letter-spacing: -0.015em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.screenshot-tree-branch > h3 {
-  overflow: hidden;
-  margin: 0;
-  color: var(--muted);
-  padding: 7px 21px 2px 24px;
-  font:
-    10px/12px ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    monospace;
-  text-overflow: ellipsis;
-  text-transform: capitalize;
-  white-space: nowrap;
+.report-index nav {
+  display: grid;
+  gap: 2px;
+  padding: 10px 8px;
 }
 
 .report-index nav button {
@@ -707,12 +700,12 @@ h1 {
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
   border: 0;
-  border-left: 3px solid transparent;
+  border-left: 2px solid transparent;
   background: transparent;
   color: var(--muted);
   cursor: pointer;
   font-size: 13px;
-  padding: 14px 18px 14px 21px;
+  padding: 11px 12px;
   text-align: left;
   text-transform: capitalize;
 }
@@ -726,13 +719,6 @@ h1 {
   border-left-color: var(--accent-text);
   background: var(--surface-selected);
   color: var(--text);
-}
-
-.report-index nav .screenshot-tree-branch-grouped button {
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding-left: 29px;
-  font-size: 12px;
 }
 
 .report-index nav button > span {
@@ -774,7 +760,7 @@ h1 {
 
 .review-stage {
   min-width: 0;
-  min-height: 100dvh;
+  min-height: calc(100dvh - 72px);
   background: var(--bg);
   padding: 32px;
 }
@@ -1467,13 +1453,20 @@ h1 {
 
   .report-layout {
     grid-template-columns: 1fr;
+    grid-template-rows: auto auto minmax(0, 1fr);
+  }
+
+  .report-header {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(140px, 0.7fr) minmax(0, 1.3fr);
   }
 
   .report-layout > .report-index {
     position: relative;
     z-index: 10;
-    display: grid;
-    grid-template-columns: minmax(140px, 0.7fr) minmax(0, 1.3fr);
+    top: auto;
+    display: block;
     height: auto;
     min-height: auto;
     overflow: visible;
@@ -1484,11 +1477,26 @@ h1 {
   .report-brand {
     min-height: 64px;
     border-right: 1px solid var(--line);
-    border-bottom: 0;
   }
 
-  .report-index > .report-source,
-  .report-index > .summary-row,
+  .report-context {
+    min-height: 64px;
+    gap: 12px;
+    padding: 8px 18px;
+  }
+
+  .report-github {
+    flex: 1 1 auto;
+  }
+
+  .report-github .report-commit > span {
+    display: none;
+  }
+
+  .report-pull-request {
+    flex: 1 1 auto;
+  }
+
   .report-index > .desktop-screenshot-nav {
     display: none;
   }
@@ -1516,6 +1524,10 @@ h1 {
 
   .mobile-screenshot-picker > summary::-webkit-details-marker {
     display: none;
+  }
+
+  .mobile-screenshot-picker > summary:focus-visible {
+    outline-offset: -2px;
   }
 
   .mobile-screenshot-picker > summary > span {
@@ -1570,7 +1582,7 @@ h1 {
     border-bottom: 1px solid var(--line-strong);
     background: var(--surface);
     box-shadow: 0 18px 40px #0008;
-    padding: 8px 0;
+    padding: 8px;
   }
 
   .mobile-screenshot-picker:not([open]) > nav {
@@ -1587,6 +1599,46 @@ h1 {
 }
 
 @media (max-width: 640px) {
+  .report-header {
+    grid-template-columns: 54px minmax(0, 1fr);
+  }
+
+  .report-header .report-brand {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .report-header .report-brand > span:last-child {
+    display: none;
+  }
+
+  .report-context {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 4px;
+    padding-inline: 14px;
+  }
+
+  .report-github,
+  .report-pull-request {
+    width: 100%;
+    flex: none;
+  }
+
+  .report-github svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .report-github > a {
+    font-size: 11px;
+  }
+
+  .report-pull-request strong {
+    font-size: 12px;
+  }
+
   .app-shell:not(.report-shell) {
     padding: 12px;
   }
@@ -1723,6 +1775,20 @@ h1 {
 
   .lightbox-image-stage {
     padding: 8px;
+  }
+}
+
+@media (max-width: 360px) {
+  .scale-switch button[aria-pressed="true"],
+  .mode-switch button[aria-pressed="true"] {
+    width: 38px;
+    gap: 0;
+    padding: 0;
+  }
+
+  .scale-switch button > span,
+  .mode-switch button > span {
+    display: none;
   }
 }
 

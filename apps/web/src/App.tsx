@@ -12,11 +12,7 @@ import {
   writeReportView,
 } from "./report-view";
 import { imageUrl, pageSource, type ImageSource } from "./scan-source";
-import {
-  compareScreenshotNames,
-  displayName,
-  screenshotBranches,
-} from "./screenshot-name";
+import { compareScreenshotNames, displayName } from "./screenshot-name";
 
 type LoadState =
   | { kind: "empty" }
@@ -686,49 +682,26 @@ function ImageLightbox({
 }
 
 function ScreenshotList({
-  groups,
+  files,
   onSelect,
   selectedFile,
 }: {
-  groups: { files: VisualDiffFile[]; label: string }[];
+  files: VisualDiffFile[];
   onSelect(file: string): void;
   selectedFile?: string;
 }) {
-  return groups.map(
-    (group) =>
-      group.files.length > 0 && (
-        <section className="screenshot-group" key={group.label}>
-          <h2>
-            <span>{group.label}</span>
-            <small>{group.files.length}</small>
-          </h2>
-          {screenshotBranches(group.files).map((branch) => (
-            <div
-              className={
-                branch.label
-                  ? "screenshot-tree-branch screenshot-tree-branch-grouped"
-                  : "screenshot-tree-branch"
-              }
-              key={branch.key ? `parent:${branch.key}` : "root"}
-            >
-              {branch.label && <h3 title={branch.label}>{branch.label}</h3>}
-              {branch.items.map(({ file, label }) => (
-                <button
-                  aria-label={`${displayName(file.file)}, ${file.status}`}
-                  className={file.file === selectedFile ? "selected" : ""}
-                  key={file.file}
-                  onClick={() => onSelect(file.file)}
-                  type="button"
-                >
-                  <span>{label}</span>
-                  <small data-status={file.status}>{file.status}</small>
-                </button>
-              ))}
-            </div>
-          ))}
-        </section>
-      ),
-  );
+  return files.map((file) => (
+    <button
+      aria-label={`${displayName(file.file)}, ${file.status}`}
+      className={file.file === selectedFile ? "selected" : ""}
+      key={file.file}
+      onClick={() => onSelect(file.file)}
+      type="button"
+    >
+      <span>{displayName(file.file)}</span>
+      <small data-status={file.status}>{file.status}</small>
+    </button>
+  ));
 }
 
 function ReportViewer({
@@ -738,24 +711,11 @@ function ReportViewer({
   report: VisualDiffReport;
   source: ImageSource;
 }) {
-  const groups = useMemo(
-    () => [
-      {
-        files: report.files
-          .filter((file) => file.status !== "unchanged")
-          .toSorted(compareScreenshotNames),
-        label: "Changes",
-      },
-      {
-        files: report.files
-          .filter((file) => file.status === "unchanged")
-          .toSorted(compareScreenshotNames),
-        label: "Unchanged",
-      },
-    ],
+  const files = useMemo(
+    () => report.files.toSorted(compareScreenshotNames),
     [report],
   );
-  const changes = groups[0].files;
+  const changes = files.filter((file) => file.status !== "unchanged");
   const initialView = useMemo(
     () => readReportView(new URLSearchParams(window.location.search)),
     [],
@@ -776,20 +736,23 @@ function ReportViewer({
   const [previewImage, setPreviewImage] = useState<PreviewImage | null>(null);
   const mobilePicker = useRef<HTMLDetailsElement>(null);
   const selected = report.files.find((file) => file.file === selectedFile);
-  const sourceLink =
+  const sourceDetails =
     source.kind === "github"
       ? {
-          href: `https://github.com/${source.repo}/commit/${source.ref}`,
-          label: source.repo,
-          ref: source.ref.slice(0, 7),
+          commitHref: `https://github.com/${source.repo}/commit/${source.ref}`,
+          ref: source.ref,
+          repo: source.repo,
+          repoHref: `https://github.com/${source.repo}`,
         }
       : source.kind === "fixture"
         ? {
-            href: PROJECT_URL,
-            label: "dcramer/frameshift",
+            commitHref: null,
             ref: null,
+            repo: "dcramer/frameshift",
+            repoHref: PROJECT_URL,
           }
         : null;
+  const pullRequest = report.metadata?.pullRequest;
 
   useEffect(() => {
     if (!selectedFile) return;
@@ -821,37 +784,40 @@ function ReportViewer({
 
   return (
     <main className="report-layout">
-      <aside className="panel report-index">
+      <header className="report-header">
         <a className="report-brand" href="/">
           <BrandMark />
           <span>Frameshift</span>
         </a>
-        {sourceLink && (
-          <div className="report-source">
-            <a href={sourceLink.href}>
+        <div className="report-context">
+          {sourceDetails && (
+            <div className="report-github">
               <GitHubIcon />
-              <span>{sourceLink.label}</span>
-              {sourceLink.ref && <code>{sourceLink.ref}</code>}
-            </a>
-          </div>
-        )}
-        <fieldset className="summary-row" aria-label="Report summary">
-          <span>
-            <b>{report.summary.changed}</b> changed
-          </span>
-          <span>
-            <b>{report.summary.added}</b> added
-          </span>
-          <span>
-            <b>{report.summary.removed}</b> removed
-          </span>
-          <span>
-            <b>{report.summary.unchanged}</b> unchanged
-          </span>
-        </fieldset>
+              <a href={sourceDetails.repoHref}>{sourceDetails.repo}</a>
+              {sourceDetails.ref && (
+                <a
+                  className="report-commit"
+                  href={sourceDetails.commitHref ?? undefined}
+                  title={sourceDetails.ref}
+                >
+                  <span>Commit</span>
+                  <code>{sourceDetails.ref.slice(0, 7)}</code>
+                </a>
+              )}
+            </div>
+          )}
+          {pullRequest && (
+            <div className="report-pull-request">
+              {pullRequest.number && <span>PR #{pullRequest.number}</span>}
+              <strong title={pullRequest.title}>{pullRequest.title}</strong>
+            </div>
+          )}
+        </div>
+      </header>
+      <aside className="panel report-index">
         <nav className="desktop-screenshot-nav" aria-label="Screenshots">
           <ScreenshotList
-            groups={groups}
+            files={files}
             onSelect={selectScreenshot}
             selectedFile={selectedFile}
           />
@@ -865,7 +831,7 @@ function ReportViewer({
             </summary>
             <nav aria-label="Screenshots">
               <ScreenshotList
-                groups={groups}
+                files={files}
                 onSelect={selectScreenshot}
                 selectedFile={selectedFile}
               />
