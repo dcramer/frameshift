@@ -50,8 +50,8 @@ GitHub Action for creating visual-diff reports.
 - `packages/action` owns PNG comparison, report generation, and the GitHub
   Action entry point. It must not import the web app.
 - `action.yml` and `dist/` are the public GitHub Action boundary.
-- `frameshift-reports` stores one report bundle at the branch root. Each
-  publication creates a new commit so viewer URLs stay immutable.
+- `frameshift-reports` seeds the report-only Git history. Each publication uses
+  an immutable `frameshift-report/*` tag so Vercel does not deploy report data.
 - The web app can import the report package.
 - Use immutable Git commit SHAs for report URLs. Do not load reports from a
   moving branch name.

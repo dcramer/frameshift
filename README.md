@@ -51,17 +51,19 @@ and does not need a token.
 ## Publish a GitHub report
 
 Keep the Vercel app static. Run Frameshift inside GitHub Actions, publish its
-output as the root tree of a dedicated report branch, and create a commit
-status that links to the immutable publication commit:
+output as the root tree of a Git commit with an immutable report tag, and
+create a commit status that links to the publication commit:
 
 ```text
 https://frameshift.pub/?repo=owner/repository&ref=report-commit-sha
 ```
 
 The `Action self-test` workflow proves this flow in this repository. It uploads
-the verified report between jobs, commits it to `frameshift-reports`, and adds
-a `Frameshift` status to the source commit. The status links directly to the
-report on `frameshift.pub`.
+the verified report between jobs, builds a report-only commit from the
+`frameshift-reports` seed, and preserves that commit with a
+`frameshift-report/*` tag. The `Frameshift` status on the source commit links
+directly to the report on `frameshift.pub`. Report tags do not trigger Vercel
+preview deployments.
 
 Only the publishing job receives `contents: write` and `statuses: write`.
 Frameshift's comparison Action remains token-free. Publishing is skipped for

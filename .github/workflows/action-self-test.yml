@@ -70,9 +70,6 @@ jobs:
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    concurrency:
-      group: frameshift-report-publisher
-      cancel-in-progress: false
     permissions:
       actions: read
       contents: write
@@ -95,7 +92,7 @@ jobs:
         with:
           name: frameshift-action-report
           path: ${{ runner.temp }}/frameshift-report
-      - name: Check out report branch
+      - name: Check out report seed
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: frameshift-reports
@@ -104,16 +101,21 @@ jobs:
         id: publish
         env:
           REPORT_DIRECTORY: ${{ runner.temp }}/frameshift-report
+          TARGET_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
+          git -C published switch --detach
           git -C published rm -r --ignore-unmatch .
           cp -R "${REPORT_DIRECTORY}/." published/
           git -C published add .
           git -C published config user.name "github-actions[bot]"
           git -C published config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git -C published commit --allow-empty -m "Publish report for ${GITHUB_SHA}"
-          git -C published push origin HEAD:frameshift-reports
 
           report_ref=$(git -C published rev-parse HEAD)
+          report_tag="frameshift-report/${TARGET_SHA}/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          git -C published tag "$report_tag"
+          git -C published push origin "refs/tags/${report_tag}"
+
           viewer_url="https://frameshift.pub/?repo=${GITHUB_REPOSITORY}&ref=${report_ref}"
           printf 'report_ref=%s\nviewer_url=%s\n' "$report_ref" "$viewer_url" >> "$GITHUB_OUTPUT"
       - name: Complete Frameshift status
