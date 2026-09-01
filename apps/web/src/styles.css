@@ -582,6 +582,11 @@ h1 {
   padding-top: 8px;
 }
 
+.screenshot-group {
+  min-width: 0;
+  width: 100%;
+}
+
 .screenshot-group > h2 {
   display: flex;
   align-items: center;
@@ -604,6 +609,7 @@ h1 {
 
 .report-index nav button {
   display: grid;
+  width: 100%;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
   border: 0;
@@ -629,19 +635,24 @@ h1 {
 }
 
 .report-index nav button > span {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .report-index nav small {
   align-self: center;
+  justify-self: end;
   color: var(--faint);
   font:
     9px ui-monospace,
     SFMono-Regular,
     Menlo,
     monospace;
+  text-align: right;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .report-index nav small[data-status="changed"] {
