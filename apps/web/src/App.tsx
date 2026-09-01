@@ -370,38 +370,22 @@ function ImagePanel({
     return (
       <section className="comparison-viewer" data-scale={scale}>
         <header className="comparison-toolbar">
-          <div className="viewer-adjustments">
-            <fieldset className="scale-switch" aria-label="Image size">
-              <button
-                aria-pressed={scale === "fit"}
-                onClick={() => setScale("fit")}
-                type="button"
-              >
-                Fit
-              </button>
-              <button
-                aria-pressed={scale === "actual"}
-                onClick={() => setScale("actual")}
-                type="button"
-              >
-                Full size
-              </button>
-            </fieldset>
-            {mode === "blend" && (
-              <div className="opacity-control">
-                <label htmlFor={`blend-${file.file}`}>Show after image</label>
-                <input
-                  id={`blend-${file.file}`}
-                  max="100"
-                  min="0"
-                  onChange={(event) => setBlend(Number(event.target.value))}
-                  type="range"
-                  value={blend}
-                />
-                <output>{blend}%</output>
-              </div>
-            )}
-          </div>
+          <fieldset className="scale-switch" aria-label="Image size">
+            <button
+              aria-pressed={scale === "fit"}
+              onClick={() => setScale("fit")}
+              type="button"
+            >
+              Fit
+            </button>
+            <button
+              aria-pressed={scale === "actual"}
+              onClick={() => setScale("actual")}
+              type="button"
+            >
+              Full size
+            </button>
+          </fieldset>
           <fieldset className="mode-switch" aria-label="View">
             {COMPARISON_MODES.map((item) => (
               <button
@@ -478,7 +462,22 @@ function ImagePanel({
                 Before
                 <span aria-hidden="true">↗</span>
               </button>
-              {mode === "split" && <span>Drag the divider to compare</span>}
+              {mode === "split" ? (
+                <span>Drag the divider to compare</span>
+              ) : (
+                <div className="opacity-control">
+                  <label htmlFor={`blend-${file.file}`}>Show after image</label>
+                  <input
+                    id={`blend-${file.file}`}
+                    max="100"
+                    min="0"
+                    onChange={(event) => setBlend(Number(event.target.value))}
+                    type="range"
+                    value={blend}
+                  />
+                  <output>{blend}%</output>
+                </div>
+              )}
               <button onClick={() => onPreview(after)} type="button">
                 <i aria-hidden="true" className="legend-swatch legend-after" />
                 After
