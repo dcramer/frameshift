@@ -21,7 +21,7 @@
     "format:check": "prettier --check .",
     "knip": "knip",
     "lint": "pnpm lint:code && pnpm lint:workflows",
-    "lint:code": "oxlint . --ignore-pattern 'dist/**' --react-plugin --jsx-a11y-plugin --vitest-plugin --node-plugin -D correctness -D suspicious -A react-in-jsx-scope --deny-warnings",
+    "lint:code": "oxlint . --ignore-pattern '**/dist/**' --react-plugin --jsx-a11y-plugin --vitest-plugin --node-plugin -D correctness -D suspicious -A react-in-jsx-scope --deny-warnings",
     "lint:workflows": "github-actionlint",
     "report:check": "node packages/report/src/check-report.mjs",
     "schema:build": "pnpm --filter @frameshift/report schema:write",
