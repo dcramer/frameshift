@@ -909,39 +909,6 @@ h1 {
   background: var(--canvas);
 }
 
-.comparison-viewer figure {
-  border: 0;
-}
-
-figure {
-  min-width: 0;
-  margin: 0;
-  border: 1px solid var(--line);
-  background: var(--canvas);
-}
-
-figcaption {
-  display: flex;
-  min-height: 38px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  border-bottom: 1px solid var(--line);
-  background: var(--surface);
-  color: var(--muted);
-  padding: 0 12px;
-  font:
-    11px ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    monospace;
-}
-
-figcaption small {
-  color: var(--faint);
-  font-size: 9px;
-}
-
 .legend-swatch {
   display: block;
   width: 7px;
@@ -1200,8 +1167,6 @@ figcaption small {
   opacity: 0.86;
 }
 
-.difference-figure,
-.diff-figure,
 .single-figure {
   grid-column: 1 / -1;
 }
@@ -1507,8 +1472,6 @@ figcaption small {
     display: none;
   }
 
-  .diff-figure,
-  .difference-figure,
   .single-figure {
     grid-column: auto;
   }
