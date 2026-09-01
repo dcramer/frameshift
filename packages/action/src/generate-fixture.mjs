@@ -50,6 +50,8 @@ export async function generateMixedFixture(output = committedFixtureRoot) {
     await Promise.all([
       writePng(baseline, "trip-planner__desktop.png", before),
       writePng(candidate, "trip-planner__desktop.png", after),
+      writePng(baseline, "trip-planner__tablet.png", before),
+      writePng(candidate, "trip-planner__tablet.png", after),
       writePng(candidate, "team-itinerary__desktop.png", added),
       writePng(baseline, "approvals-queue__desktop.png", removed),
       writePng(baseline, "account__desktop.png", unchanged),

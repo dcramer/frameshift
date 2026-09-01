@@ -33,6 +33,9 @@ test("account settings", async ({ page }) => {
 });
 ```
 
+File names become labels. Use `__` for variants: `account__desktop.png` and
+`account__mobile.png` appear together under **Account**.
+
 Add Frameshift after those tests:
 
 ```yaml

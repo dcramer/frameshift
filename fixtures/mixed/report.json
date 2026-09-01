@@ -35,11 +35,23 @@
       },
       "status": "changed",
       "width": 720
+    },
+    {
+      "file": "trip-planner__tablet.png",
+      "height": 521,
+      "image": "images/diff/trip-planner__tablet.png",
+      "images": {
+        "baseline": "images/baseline/trip-planner__tablet.png",
+        "candidate": "images/candidate/trip-planner__tablet.png",
+        "diff": "images/diff/trip-planner__tablet.png"
+      },
+      "status": "changed",
+      "width": 720
     }
   ],
   "summary": {
     "added": 1,
-    "changed": 1,
+    "changed": 2,
     "removed": 1,
     "unchanged": 1
   },

@@ -6,6 +6,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { loadReport } from "./load-report";
 import { imageUrl, pageSource, type ImageSource } from "./scan-source";
+import {
+  compareScreenshotNames,
+  displayName,
+  screenshotBranches,
+} from "./screenshot-name";
 
 type LoadState =
   | { kind: "empty" }
@@ -117,21 +122,6 @@ function CodeBlock({
         dangerouslySetInnerHTML={{ __html: highlighted }}
       />
     </pre>
-  );
-}
-
-function displayName(file: string): string {
-  return file
-    .replace(/\.png$/, "")
-    .replace(/__/g, " · ")
-    .replace(/-/g, " ");
-}
-
-function compareScreenshotNames(left: VisualDiffFile, right: VisualDiffFile) {
-  return displayName(left.file).localeCompare(
-    displayName(right.file),
-    undefined,
-    { numeric: true, sensitivity: "base" },
   );
 }
 
@@ -293,6 +283,11 @@ function GuidePage() {
             Here is the whole idea in Playwright:
           </p>
           <CodeBlock code={PLAYWRIGHT_EXAMPLE} language="typescript" />
+          <p>
+            File names become labels. Use <code>__</code> for variants:
+            <code> account__desktop.png</code> and
+            <code> account__mobile.png</code> appear together under Account.
+          </p>
         </section>
 
         <section className="setup-section">
@@ -786,16 +781,29 @@ function ScreenshotList({
             <span>{group.label}</span>
             <small>{group.files.length}</small>
           </h2>
-          {group.files.map((file) => (
-            <button
-              className={file.file === selectedFile ? "selected" : ""}
-              key={file.file}
-              onClick={() => onSelect(file.file)}
-              type="button"
+          {screenshotBranches(group.files).map((branch) => (
+            <div
+              className={
+                branch.label
+                  ? "screenshot-tree-branch screenshot-tree-branch-grouped"
+                  : "screenshot-tree-branch"
+              }
+              key={branch.key ? `parent:${branch.key}` : "root"}
             >
-              <span>{displayName(file.file)}</span>
-              <small data-status={file.status}>{file.status}</small>
-            </button>
+              {branch.label && <h3 title={branch.label}>{branch.label}</h3>}
+              {branch.items.map(({ file, label }) => (
+                <button
+                  aria-label={`${displayName(file.file)}, ${file.status}`}
+                  className={file.file === selectedFile ? "selected" : ""}
+                  key={file.file}
+                  onClick={() => onSelect(file.file)}
+                  type="button"
+                >
+                  <span>{label}</span>
+                  <small data-status={file.status}>{file.status}</small>
+                </button>
+              ))}
+            </div>
           ))}
         </section>
       ),
