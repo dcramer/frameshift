@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-export function countPngs(folder) {
+function countPngs(folder) {
   let count = 0;
   for (const entry of fs.readdirSync(folder, { withFileTypes: true })) {
     const absolute = path.join(folder, entry.name);

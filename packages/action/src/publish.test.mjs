@@ -20,7 +20,7 @@ function changedFile(file) {
   };
 }
 
-describe("Frameshift publisher", () => {
+describe("Frameshift report publishing", () => {
   test("builds a compact summary and candidate thumbnail grid", () => {
     const visualReport = report({
       added: 1,

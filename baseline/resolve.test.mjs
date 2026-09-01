@@ -11,7 +11,10 @@ const MERGE_SHA = "fedcba9876543210fedcba9876543210fedcba98";
 test("builds a saved screenshot name from the full Git commit ID", () => {
   assert.equal(artifactName("web-screenshots", SHA), `web-screenshots-${SHA}`);
   assert.throws(() => artifactName("web screenshots", SHA), /name may contain/);
-  assert.throws(() => artifactName("web-screenshots", "main"), /full 40-character/);
+  assert.throws(
+    () => artifactName("web-screenshots", "main"),
+    /full 40-character/,
+  );
 });
 
 test("selects the newest available upload for the exact Git commit", () => {

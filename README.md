@@ -1,136 +1,81 @@
 # Frameshift
 
-Frameshift compares PNG screenshots and turns the resulting visual-diff
-reports into a focused review interface. Its reusable GitHub Action creates the
-report. Its static web app displays reports stored at immutable Git revisions.
+Frameshift compares two sets of PNG screenshots and gives reviewers one page
+to inspect them. Its GitHub Action builds the report. The website is made of
+static files and reads reports saved in GitHub.
 
-The first version is a static Vercel app. GitHub serves report JSON and image
-files. Frameshift does not need a database, object storage, or server-side
-runtime.
+Frameshift does not run a server or store your data.
 
-## Repository layout
+## Project folders
 
-- `apps/web`: Static report viewer.
-- `packages/action`: PNG comparison and GitHub Action source.
-- `packages/report`: Versioned report types and validation.
-- `action.yml` and `dist/`: Token-free comparison Action and bundle.
-- `baseline/`: Exact-SHA baseline artifact upload and restore Actions.
-- `publish/action.yml` and `publish/dist/`: GitHub publisher Action and bundle.
+- `apps/web`: The review website.
+- `packages/action`: Screenshot comparison and GitHub Action code.
+- `packages/report`: Report format and safety checks.
+- `ci/`: The one-step Action used after your screenshot command.
+- `action.yml` and `dist/`: The comparison Action and the file GitHub runs.
+- `baseline/`: Actions that save and download current screenshots.
+- `publish/action.yml` and `publish/dist/`: The Action that saves a report and
+  links it from GitHub.
 
 ## Use the GitHub Action
 
-Frameshift compares PNG files. Your application owns the screenshot command.
-Run the expensive baseline capture once for each default-branch commit and
-store it in GitHub Actions artifacts:
+Your app takes the screenshots. Add one Frameshift step after that command.
+Use the same workflow for pushes to your default branch and pull requests:
 
 ```yaml
-name: Visual baseline
+name: Check screenshots
 
 on:
   push:
-  workflow_dispatch:
-
-permissions:
-  contents: read
-
-jobs:
-  baseline:
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      github.ref_name == github.event.repository.default_branch
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      # Set up the application and its browser here.
-      - name: Capture every baseline screenshot
-        run: pnpm capture:screenshots -- --all --output path/to/baseline
-      - uses: dcramer/frameshift/baseline/upload@63d124db19da7dbd292c3f29b2dde1880fbf5ff3
-        with:
-          path: path/to/baseline
-```
-
-The pull request workflow restores the artifact for the exact base that GitHub
-tested. Frameshift verifies the immutable PR merge commit through GitHub and
-uses its first parent. The workflow only captures the candidate revision:
-
-```yaml
-name: Visual diff
-
-on:
   pull_request:
+  workflow_dispatch:
 
 permissions:
   actions: read
   contents: read
 
 jobs:
-  visual-diff:
-    if: github.event.pull_request.head.repo.full_name == github.repository
+  screenshots:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      # Set up the application and its browser here.
-      - name: Capture candidate screenshots
-        run: pnpm capture:screenshots -- --output "${{ runner.temp }}/frameshift/candidate"
-      - uses: dcramer/frameshift/baseline@63d124db19da7dbd292c3f29b2dde1880fbf5ff3
-        id: baseline
+      # Set up your app and browser here.
+      - name: Take screenshots
+        run: pnpm capture:screenshots -- --all --output "${{ runner.temp }}/screenshots"
+      - uses: dcramer/frameshift/ci@2c52603751a6c29dbe3802587bec832ad1df0581
         with:
-          path: ${{ runner.temp }}/frameshift/baseline
-      - name: Compare screenshots
-        id: visual-diff
-        uses: dcramer/frameshift@63d124db19da7dbd292c3f29b2dde1880fbf5ff3
-        with:
-          baseline: ${{ runner.temp }}/frameshift/baseline
-          candidate: ${{ runner.temp }}/frameshift/candidate
-          output: ${{ runner.temp }}/frameshift/report
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: frameshift-report
-          path: ${{ runner.temp }}/frameshift/report
-          if-no-files-found: error
+          screenshots: ${{ runner.temp }}/screenshots
 ```
 
-That is the complete baseline plumbing. The Actions default to the
-`frameshift-baseline-v1` baseline ID, the current SHA during upload, and the
-workflow token during restore. The restore Action outputs the selected SHA as
-`steps.baseline.outputs.sha` when another step needs to validate a manifest.
+After a push to the default branch, Frameshift saves the screenshots with the
+full Git commit ID. On a pull request, it downloads that exact set, compares
+it with the new screenshots, and saves the report for the publishing job.
 
-The restore Action checks the artifact name and source SHA. It waits briefly
-when the default-branch workflow is still uploading. It does not silently
-regenerate a missing baseline. See [`baseline/README.md`](baseline/README.md)
-for overrides, retention, and partial-capture details.
+Pull requests from forks are skipped because fork code must not receive the
+Actions read token. See [`baseline/README.md`](baseline/README.md) if you need
+more than one screenshot set or want to use the lower-level Actions.
 
-Override `name` only when the repository has multiple screenshot suites or
-when a capture-contract change must invalidate existing artifacts. Restore
-uses this ID plus the full base SHA; it never follows a branch name or chooses
-a nearby artifact.
+Use full Git commit IDs for Frameshift and every other third-party Action. The
+`changes` output counts screenshots that changed, were added, or were removed.
+A screenshot change does not fail the Action.
 
-Pin Frameshift and other third-party actions to full commit SHAs. The
-`changes` output counts changed, added, and removed images. A visual change does
-not fail the action.
+Make screenshot runs repeatable. Use fixed test data, the same browser and
+window size, a fixed language and time zone, loaded fonts, reduced motion, and
+no animation. The same relative PNG path means the same page in both sets.
 
-Your capture command must make both revisions reproducible. Use fixed test
-data, a mock API, pinned browser versions, explicit viewports, a fixed locale
-and timezone, loaded fonts, reduced motion, and disabled animations. Matching
-relative PNG paths identify the same screenshot.
+Reports contain `report.json` and the images needed for review. A changed
+screenshot has before, after, and highlighted-change images. A new or removed
+screenshot has the one available image.
 
-The output directory contains `report.json` and only the images required for
-review. Changed pairs include baseline, candidate, and pixel-diff images. Added
-or removed files include only the available image.
+## Add the report to GitHub
 
-The action reads and writes local files only. It does not call the GitHub API
-and does not need a token.
-
-## Publish a GitHub report
-
-Keep the Vercel app static. Run Frameshift's publisher after the untrusted pull
-request workflow completes. The wrapper downloads `frameshift-report` from the
-completed run, validates it, and publishes it:
+Publish from a separate job on your default branch after the screenshot check
+finishes. This job does not run pull-request code:
 
 ```yaml
 on:
   workflow_run:
-    workflows: [Visual diff]
+    workflows: [Check screenshots]
     types: [completed]
 
 permissions:
@@ -147,25 +92,21 @@ jobs:
       github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
-      - uses: dcramer/frameshift/publish/workflow@63d124db19da7dbd292c3f29b2dde1880fbf5ff3
+      - uses: dcramer/frameshift/publish/workflow@2c52603751a6c29dbe3802587bec832ad1df0581
 ```
 
-The publisher validates the Zod report contract, preserves the report with an
-immutable Git tag, and creates a native commit status. Its pull request comment
-contains a compact change summary, candidate thumbnails, and a link to the
-review UI:
+The publishing Action downloads the report, checks every file, saves it under
+a Git tag that never moves, and adds a GitHub status and pull request comment.
+The comment shows the after screenshots and links to the full report:
 
 ```text
-https://frameshift.pub/report/?repo=owner/repository&ref=0123456789abcdef0123456789abcdef01234567
+https://frameshift.pub/report/?repo=owner/project&ref=0123456789abcdef0123456789abcdef01234567
 ```
 
-The `Action self-test` workflow proves this flow in this repository. Report
-tags do not trigger Vercel preview deployments.
-
-Only the publishing job receives `contents: write` and `statuses: write`.
-Frameshift's comparison Action remains token-free. The examples skip fork pull
-requests because baseline restore needs an Actions read token and untrusted
-pull request code must not receive it.
+Only this publishing job needs `contents: write` and `statuses: write`. Never
+give write access to a job that runs pull-request code. These examples skip
+pull requests from forks because downloading saved screenshots needs an
+Actions read token, which fork code must not receive.
 
 ## Run locally
 
@@ -175,106 +116,99 @@ pnpm install
 pnpm dev
 ```
 
-Open the local URL and enter a public GitHub repository plus the immutable
-commit SHA that contains `report.json` and its `images/` directory.
+Open the local URL and enter a public GitHub project plus the full Git commit
+ID that contains `report.json` and its `images/` folder.
 
-Select **View the sample report** to open the committed mixed-change fixture. The
-static production build includes this fixture, so the sample works on the live
-site without a server or external request.
+Select **View the sample report** or open `/sample/` to see changed, new,
+removed, and matching pages. The sample ships with the website and makes no
+outside request.
 
-Start directly in the committed mixed-change fixture when working on the
-review UI:
+Start there directly while working on the review UI:
 
 ```sh
 pnpm dev:fixture
 ```
 
-This opens `/sample/`. The same fixture is available in a normal dev server at
-that path.
-
-You can also open a report directly:
+You can also open a saved GitHub report directly:
 
 ```text
-http://localhost:5173/report/?repo=owner/repository&ref=0123456789abcdef0123456789abcdef01234567
+http://localhost:5173/report/?repo=owner/project&ref=0123456789abcdef0123456789abcdef01234567
 ```
 
-### Generate and view a local report
+### Create and view a local report
 
-Frameshift produces a report bundle, not a standalone JSON file. The bundle
-contains `report.json` plus each image referenced by that report. Generate one
-from two PNG directories:
+A report is a folder containing `report.json` and every image named in that
+file. Create one from two PNG folders:
 
 ```sh
 pnpm compare -- \
-  --baseline path/to/baseline \
-  --candidate path/to/candidate \
+  --baseline path/to/before \
+  --candidate path/to/after \
   --output .frameshift/report
 ```
 
-Validate and open that exact output in the local viewer:
+Check and open that folder:
 
 ```sh
 pnpm report:check -- .frameshift/report
 pnpm dev:report -- .frameshift/report
 ```
 
-`dev:report` accepts either the bundle directory or its `report.json` path. It
-validates the Zod contract and rejects missing, extra, or linked files before
-it serves anything. `.frameshift` is ignored by Git.
+`dev:report` accepts the report folder or its `report.json` file. It checks the
+report and refuses missing files, extra files, and symbolic links before it
+serves anything. `.frameshift` is ignored by Git.
 
-## Report contract
+## Report format
 
-`packages/report` owns the versioned Zod parser. TypeScript types are inferred
-from that schema. The generated [JSON Schema](schemas/report-v2.schema.json)
-supports producers in other languages. Run `pnpm schema:build` after an
-intentional schema change; CI rejects a stale generated schema.
+`packages/report` defines what `report.json` may contain. The generated
+[JSON Schema](schemas/report-v2.schema.json) lets tools written in other
+languages create reports. After changing the format, run
+`pnpm schema:build`. Project checks fail if the generated file is out of date.
 
-Report version 2 gives changed images baseline, candidate, and diff files.
-Added and unchanged images use the candidate capture. Removed images use the
-baseline capture. This keeps every screenshot available in the review report.
+Report version 2 stores before, after, and highlighted-change images for a
+changed screenshot. New and matching screenshots use the after image. Removed
+screenshots use the before image. This keeps every screenshot available for
+review.
 
-All report paths are relative to `report.json`. The viewer validates them
-before it creates image URLs.
+Every path is relative to `report.json`. The website checks paths before it
+creates image URLs.
 
-The committed `fixtures/mixed` report covers changed, added, removed, and
-unchanged files. Regenerate it through the real comparison code and validate
-all fixture schemas and image references with:
+The `fixtures/mixed` folder is the sample report. It covers changed, new,
+removed, and matching screenshots. Rebuild and check it with:
 
 ```sh
 pnpm fixture:generate
 pnpm fixtures:check
 ```
 
-## Develop the action
+## Work on the Action
 
 Run the comparison without GitHub Actions:
 
 ```sh
 pnpm compare -- \
-  --baseline path/to/baseline \
-  --candidate path/to/candidate \
+  --baseline path/to/before \
+  --candidate path/to/after \
   --output path/to/report
 ```
 
-After action source or dependencies change, rebuild the committed bundle:
+After changing Action code or its dependencies, rebuild the file that GitHub
+runs:
 
 ```sh
 pnpm action:build
 ```
 
-Tests fail when `dist/index.mjs` or its third-party license notices do not match
-the source.
+Tests fail when `dist/index.mjs` or its license notices do not match the source.
 
-Run the bundled action against changed, added, and removed PNG fixtures:
+Run a quick end-to-end check of the built Action:
 
 ```sh
 pnpm action:smoke
 ```
 
-The `Action self-test` workflow invokes the checked-out action through
-`uses: ./` on every pull request and push to `main`. It uses deterministic PNG
-inputs and verifies the change count, complete report, schema, and referenced
-images. The workflow publishes the report at an immutable Git commit, links it
-from a native `Frameshift` status, and retains the workflow artifact for seven
-days. Run the workflow manually from GitHub when you need to test the current
-`main` branch again.
+The `Action self-test` workflow runs the checked-out Action on every pull
+request and push to `main`. It checks the reported change count and every
+report file. It also saves the report, adds a `Frameshift` status, and keeps the
+GitHub Actions upload for seven days. Run the workflow by hand when you need to
+test the current `main` branch again.

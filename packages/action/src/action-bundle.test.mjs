@@ -97,7 +97,7 @@ describe("built screenshot comparison Action", () => {
 describe("built report publishing Action", () => {
   it("matches the source", async () => {
     const output = await fs.mkdtemp(
-      path.join(os.tmpdir(), "frameshift-publisher-action-"),
+      path.join(os.tmpdir(), "frameshift-publish-action-"),
     );
     tempDirectories.push(output);
     execFileSync(

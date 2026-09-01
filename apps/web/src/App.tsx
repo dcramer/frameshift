@@ -201,57 +201,26 @@ function SetupPage() {
         <header className="setup-intro">
           <h1>Set up Frameshift</h1>
           <p>
-            Capture screenshots before and after a change. Frameshift compares
-            them and builds a report you can open in any browser.
+            Your tests take screenshots. Frameshift saves, compares, and shares
+            them from GitHub Actions.
           </p>
         </header>
 
         <section className="setup-section">
-          <h2>Save the current screenshots</h2>
+          <h2>Check screenshots</h2>
           <p>
-            After code lands on your default branch, capture every screenshot.
-            GitHub saves each set with the code that created it.
-          </p>
-          {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- The code block scrolls on narrow screens. */}
-          <pre tabIndex={0}>
-            <code>{`name: Save screenshots
-
-on:
-  push:
-  workflow_dispatch:
-
-permissions:
-  contents: read
-
-jobs:
-  screenshots:
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      github.ref_name == github.event.repository.default_branch
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      # Set up your app and browser here.
-      - run: pnpm capture:screenshots -- --all --output path/to/current-screenshots
-      - uses: dcramer/frameshift/baseline/upload@63d124db19da7dbd292c3f29b2dde1880fbf5ff3
-        with:
-          path: path/to/current-screenshots`}</code>
-          </pre>
-        </section>
-
-        <section className="setup-section">
-          <h2>Check a pull request</h2>
-          <p>
-            Capture screenshots from the pull request. Frameshift downloads the
-            saved screenshots for the exact code GitHub tested. It does not need
-            the full Git history.
+            Use the same workflow for your default branch and pull requests.
+            Frameshift saves the current screenshots or compares a proposed
+            change automatically.
           </p>
           {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- The code block scrolls on narrow screens. */}
           <pre tabIndex={0}>
             <code>{`name: Check screenshots
 
 on:
+  push:
   pull_request:
+  workflow_dispatch:
 
 permissions:
   actions: read
@@ -259,26 +228,14 @@ permissions:
 
 jobs:
   screenshots:
-    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # Set up your app and browser here.
-      - run: pnpm capture:screenshots -- --output \${{ runner.temp }}/frameshift/after
-      - uses: dcramer/frameshift/baseline@63d124db19da7dbd292c3f29b2dde1880fbf5ff3
+      - run: pnpm capture:screenshots -- --all --output \${{ runner.temp }}/screenshots
+      - uses: dcramer/frameshift/ci@2c52603751a6c29dbe3802587bec832ad1df0581
         with:
-          path: \${{ runner.temp }}/frameshift/before
-      - uses: dcramer/frameshift@63d124db19da7dbd292c3f29b2dde1880fbf5ff3
-        with:
-          baseline: \${{ runner.temp }}/frameshift/before
-          candidate: \${{ runner.temp }}/frameshift/after
-          output: \${{ runner.temp }}/frameshift/report
-
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: frameshift-report
-          path: \${{ runner.temp }}/frameshift/report
-          if-no-files-found: error`}</code>
+          screenshots: \${{ runner.temp }}/screenshots`}</code>
           </pre>
         </section>
 
@@ -311,7 +268,7 @@ jobs:
       github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
-      - uses: dcramer/frameshift/publish/workflow@63d124db19da7dbd292c3f29b2dde1880fbf5ff3`}</code>
+      - uses: dcramer/frameshift/publish/workflow@2c52603751a6c29dbe3802587bec832ad1df0581`}</code>
           </pre>
         </section>
 
@@ -366,23 +323,17 @@ function ImagePanel({
     };
   }
 
-  function previewFigure(label: string, path: string, className?: string) {
+  function previewButton(label: string, path: string, className?: string) {
     const preview = previewImage(label, path);
     return (
-      <figure className={className}>
-        <figcaption>
-          <span>{label}</span>
-          <small aria-hidden="true">Open</small>
-        </figcaption>
-        <button
-          aria-label={`Open ${label.toLowerCase()} image full screen`}
-          className="image-trigger"
-          onClick={() => onPreview(preview)}
-          type="button"
-        >
-          <img alt={preview.alt} src={preview.src} />
-        </button>
-      </figure>
+      <button
+        aria-label={`Open ${label.toLowerCase()} image full screen`}
+        className={`image-trigger ${className ?? ""}`.trim()}
+        onClick={() => onPreview(preview)}
+        type="button"
+      >
+        <img alt={preview.alt} src={preview.src} />
+      </button>
     );
   }
 
@@ -499,7 +450,7 @@ function ImagePanel({
               ) : (
                 <div className="opacity-control">
                   <input
-                    aria-label="After image opacity"
+                    aria-label="Show after image"
                     max="100"
                     min="0"
                     onChange={(event) => setBlend(Number(event.target.value))}
@@ -558,7 +509,7 @@ function ImagePanel({
 
   const image =
     file.status === "removed" ? file.images.baseline : file.images.candidate;
-  return previewFigure(
+  return previewButton(
     file.status === "added"
       ? "Added"
       : file.status === "removed"
