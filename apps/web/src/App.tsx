@@ -224,8 +224,8 @@ jobs:
         <section className="setup-section">
           <h2>Compare the pull request</h2>
           <p>
-            Keep the default checkout. Capture only the candidate; Frameshift
-            restores the exact base that GitHub tested.
+            Capture only the candidate. Frameshift restores the exact base that
+            GitHub tested without fetching full Git history.
           </p>
           {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- The code block scrolls on narrow screens. */}
           <pre tabIndex={0}>

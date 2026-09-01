@@ -80,8 +80,9 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           BASELINE_SHA: ${{ steps.baseline.outputs.sha }}
+          EXPECTED_BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
-          test "$BASELINE_SHA" = "$(git rev-parse '${{ github.sha }}^1')"
+          test "$BASELINE_SHA" = "$EXPECTED_BASE_SHA"
           test -f "$RUNNER_TEMP/frameshift-base-report/report.json"
 
   publish:

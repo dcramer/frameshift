@@ -24,8 +24,7 @@ jobs:
 ```
 
 Restore the artifact for the exact base that GitHub tested before comparing it
-with candidate screenshots. The default checkout must keep GitHub's synthetic
-PR merge commit:
+with candidate screenshots:
 
 ```yaml
 permissions:
@@ -41,10 +40,10 @@ steps:
 ```
 
 The upload Action defaults to the `frameshift-baseline-v1` ID and
-`github.sha`. The restore Action uses `github.token` and derives the exact base
-from the checked-out PR merge commit. It verifies that the commit's second
-parent is the PR head before it accepts the first parent as the base. This
-avoids stale `pull_request.base.sha` event data.
+`github.sha`. The restore Action uses `github.token` and reads the immutable PR
+merge commit from GitHub. It verifies that the commit's second parent is the PR
+head before it accepts the first parent as the base. This avoids stale
+`pull_request.base.sha` event data and does not require full Git history.
 
 Restore rejects expired artifacts and waits briefly when the default-branch
 workflow is still uploading one. It does not silently regenerate a baseline.

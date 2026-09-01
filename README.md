@@ -50,9 +50,8 @@ jobs:
 ```
 
 The pull request workflow restores the artifact for the exact base that GitHub
-tested. Keep the default checkout behavior so Frameshift can verify the PR
-merge commit and derive its immutable first parent. The workflow only captures
-the candidate revision:
+tested. Frameshift verifies the immutable PR merge commit through GitHub and
+uses its first parent. The workflow only captures the candidate revision:
 
 ```yaml
 name: Visual diff

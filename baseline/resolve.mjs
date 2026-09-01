@@ -1,4 +1,3 @@
-import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import { pathToFileURL } from "node:url";
 
@@ -36,7 +35,23 @@ export function pullRequestBaseSha({ event, githubSha, parents }) {
   return baseSha;
 }
 
-function resolveSha(inputSha) {
+async function githubJson(token, url) {
+  const response = await fetch(url, {
+    headers: {
+      accept: "application/vnd.github+json",
+      authorization: `Bearer ${token}`,
+      "x-github-api-version": "2022-11-28",
+    },
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!response.ok) {
+    const details = (await response.text()).slice(0, 500);
+    throw new Error(`GitHub API ${response.status}: ${details}`);
+  }
+  return response.json();
+}
+
+async function resolveSha(inputSha, token, repository) {
   if (inputSha) return normalizeCommitSha(inputSha);
   if (process.env.GITHUB_EVENT_NAME !== "pull_request") {
     throw new Error("sha is required outside a pull_request workflow");
@@ -46,13 +61,12 @@ function resolveSha(inputSha) {
     fs.readFileSync(process.env.GITHUB_EVENT_PATH, "utf8"),
   );
   const githubSha = normalizeCommitSha(process.env.GITHUB_SHA);
-  const parents = execFileSync(
-    "git",
-    ["show", "--no-patch", "--format=%P", githubSha],
-    { encoding: "utf8" },
-  )
-    .trim()
-    .split(/\s+/);
+  const apiUrl = process.env.GITHUB_API_URL ?? "https://api.github.com";
+  const commit = await githubJson(
+    token,
+    `${apiUrl}/repos/${repository}/git/commits/${githubSha}`,
+  );
+  const parents = commit.parents?.map((parent) => parent.sha) ?? [];
   return pullRequestBaseSha({ event, githubSha, parents });
 }
 
@@ -73,19 +87,7 @@ async function listArtifacts(token, repository, name) {
   const apiUrl = process.env.GITHUB_API_URL ?? "https://api.github.com";
   const url = new URL(`${apiUrl}/repos/${repository}/actions/artifacts`);
   url.search = new URLSearchParams({ name, per_page: "100" }).toString();
-  const response = await fetch(url, {
-    headers: {
-      accept: "application/vnd.github+json",
-      authorization: `Bearer ${token}`,
-      "x-github-api-version": "2022-11-28",
-    },
-    signal: AbortSignal.timeout(15_000),
-  });
-  if (!response.ok) {
-    const details = (await response.text()).slice(0, 500);
-    throw new Error(`GitHub API ${response.status}: ${details}`);
-  }
-  return (await response.json()).artifacts ?? [];
+  return (await githubJson(token, url)).artifacts ?? [];
 }
 
 function setOutput(name, value) {
@@ -100,7 +102,7 @@ async function main() {
   const repository = validateRepository(
     process.env.BASELINE_REPOSITORY || process.env.GITHUB_REPOSITORY,
   );
-  const sha = resolveSha(process.env.BASELINE_SHA);
+  const sha = await resolveSha(process.env.BASELINE_SHA, token, repository);
   const expectedName = artifactName(process.env.BASELINE_NAME, sha);
   const attempts =
     Math.floor(waitMilliseconds(process.env.BASELINE_WAIT_SECONDS) / 5_000) + 1;
