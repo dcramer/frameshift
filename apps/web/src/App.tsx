@@ -110,6 +110,30 @@ function ComparisonModeIcon({ mode }: { mode: ComparisonMode }) {
   );
 }
 
+function ImageScaleIcon({ scale }: { scale: ImageScale }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className="mode-icon"
+      fill="none"
+      focusable="false"
+      viewBox="0 0 24 18"
+    >
+      {scale === "fit" ? (
+        <>
+          <rect height="16" width="22" x="1" y="1" />
+          <rect height="8" width="12" x="6" y="5" />
+        </>
+      ) : (
+        <>
+          <path d="M8 1H1v7M16 1h7v7M23 10v7h-7M8 17H1v-7" />
+          <rect fill="currentColor" height="4" width="4" x="10" y="7" />
+        </>
+      )}
+    </svg>
+  );
+}
+
 function GitHubIcon() {
   return (
     <svg aria-hidden="true" viewBox="0 0 24 24">
@@ -372,18 +396,26 @@ function ImagePanel({
         <header className="comparison-toolbar">
           <fieldset className="scale-switch" aria-label="Image size">
             <button
+              aria-label="Fit image"
               aria-pressed={scale === "fit"}
+              data-label="Fit image"
               onClick={() => setScale("fit")}
+              title="Fit image"
               type="button"
             >
-              Fit
+              <ImageScaleIcon scale="fit" />
+              <span>Fit</span>
             </button>
             <button
+              aria-label="Full-size image"
               aria-pressed={scale === "actual"}
+              data-label="Full size"
               onClick={() => setScale("actual")}
+              title="Full size"
               type="button"
             >
-              Full size
+              <ImageScaleIcon scale="actual" />
+              <span>Full size</span>
             </button>
           </fieldset>
           <fieldset className="mode-switch" aria-label="View">

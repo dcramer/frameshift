@@ -745,7 +745,6 @@ h1 {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  border-bottom: 1px solid var(--line);
   background: var(--surface);
   padding: 7px 10px;
 }
@@ -777,8 +776,6 @@ h1 {
 }
 
 .scale-switch button {
-  width: auto;
-  padding: 0 10px;
   font:
     9px ui-monospace,
     SFMono-Regular,
@@ -798,8 +795,11 @@ h1 {
 }
 
 .scale-switch button[aria-pressed="true"] {
+  width: auto;
+  gap: 8px;
   background: var(--surface-selected);
   color: var(--text);
+  padding: 0 10px;
 }
 
 .mode-switch button[aria-pressed="true"] {
@@ -810,6 +810,7 @@ h1 {
   padding: 0 10px;
 }
 
+.scale-switch button > span,
 .mode-switch button > span {
   max-width: 0;
   overflow: hidden;
@@ -825,11 +826,13 @@ h1 {
   white-space: nowrap;
 }
 
+.scale-switch button[aria-pressed="true"] > span,
 .mode-switch button[aria-pressed="true"] > span {
   max-width: 90px;
   opacity: 1;
 }
 
+.scale-switch button::after,
 .mode-switch button::after {
   position: absolute;
   z-index: 5;
@@ -855,12 +858,15 @@ h1 {
   white-space: nowrap;
 }
 
+.scale-switch button:hover::after,
+.scale-switch button:focus-visible::after,
 .mode-switch button:hover::after,
 .mode-switch button:focus-visible::after {
   opacity: 1;
   transform: translate(-50%, 0);
 }
 
+.scale-switch button[aria-pressed="true"]::after,
 .mode-switch button[aria-pressed="true"]::after {
   display: none;
 }
@@ -1644,6 +1650,8 @@ figcaption small {
   .loading-pulse,
   .image-trigger::after,
   .image-trigger img,
+  .scale-switch button,
+  .scale-switch button > span,
   .mode-switch button,
   .mode-switch button > span,
   .mobile-screenshot-picker > summary b {
