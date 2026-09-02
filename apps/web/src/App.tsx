@@ -697,7 +697,7 @@ function ImageLightbox({
                 onClick={() => setSize("actual")}
                 type="button"
               >
-                Full size
+                Maximize
               </button>
             </fieldset>
             <a href={image.src} rel="noreferrer" target="_blank">

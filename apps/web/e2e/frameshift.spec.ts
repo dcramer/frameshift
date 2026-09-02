@@ -151,6 +151,36 @@ test("fit mode never enlarges screenshots", async ({ page }) => {
   await expectNaturalSizeOrSmaller(page.locator(".single-figure img"));
 });
 
+test("the full-screen preview maximizes screenshots and allows overflow", async ({
+  page,
+}) => {
+  await page.goto("/sample/");
+
+  await page
+    .getByRole("button", { name: "Open highlighted changes full screen" })
+    .click();
+
+  const canvas = page.getByRole("region", { name: "Highlights image" });
+  const image = canvas.getByRole("img");
+  const dimensions = await image.evaluate((element: HTMLImageElement) => ({
+    naturalWidth: element.naturalWidth,
+    renderedWidth: element.getBoundingClientRect().width,
+  }));
+
+  expect(dimensions.renderedWidth).toBeGreaterThan(dimensions.naturalWidth);
+  await expect(page.getByRole("button", { name: "Maximize" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  expect(
+    await canvas.evaluate(
+      (element) =>
+        element.scrollWidth > element.clientWidth ||
+        element.scrollHeight > element.clientHeight,
+    ),
+  ).toBe(true);
+});
+
 test("the report stays usable on a phone-sized screen", async ({ page }) => {
   await page.setViewportSize({ height: 844, width: 390 });
   await page.goto("/sample/");
