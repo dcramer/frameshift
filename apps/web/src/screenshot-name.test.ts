@@ -47,11 +47,11 @@ describe("screenshot names", () => {
         items: [
           {
             file: { file: "settings/profile__desktop.png" },
-            label: "settings · profile · desktop",
+            label: "desktop",
           },
         ],
         key: "settings\0profile",
-        label: undefined,
+        label: "settings / profile",
       },
     ]);
   });
