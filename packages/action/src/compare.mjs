@@ -10,7 +10,7 @@ const COMPARISON_OPTIONS = {
   alignHeightChanges: true,
   antialiasing: true,
   minimumRegionPixels: 2,
-  threshold: 2,
+  threshold: 3.5,
 };
 
 async function listPngs(root) {

@@ -102,6 +102,27 @@ describe("compareDirectories", () => {
     ).resolves.toBeDefined();
   });
 
+  it("suppresses low-contrast surface rendering drift", async () => {
+    const paths = await makeDirectories();
+    await Promise.all([
+      writePng(path.join(paths.baseline, "home.png"), {
+        color: [247, 248, 245, 255],
+      }),
+      writePng(path.join(paths.candidate, "home.png"), {
+        color: [235, 238, 231, 255],
+      }),
+    ]);
+
+    const report = await compareDirectories(paths);
+
+    expect(report.summary).toEqual({
+      added: 0,
+      changed: 0,
+      removed: 0,
+      unchanged: 1,
+    });
+  });
+
   it("includes optional report metadata", async () => {
     const paths = await makeDirectories();
     const metadata = {
