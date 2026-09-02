@@ -555,8 +555,8 @@ h1 {
 
 .report-layout {
   display: grid;
-  grid-template-columns: 288px minmax(0, 1fr);
-  grid-template-rows: 64px minmax(0, 1fr);
+  grid-template-columns: 264px minmax(0, 1fr);
+  grid-template-rows: 48px minmax(0, 1fr);
   min-height: 100dvh;
 }
 
@@ -571,24 +571,38 @@ h1 {
   display: grid;
   min-width: 0;
   grid-column: 1 / -1;
-  grid-template-columns: 288px minmax(0, 1fr);
+  grid-template-columns: 264px minmax(0, 1fr);
   border-bottom: 1px solid var(--line);
-  background: var(--surface);
+  background: var(--bg);
 }
 
 .report-layout > .report-index {
   position: sticky;
-  top: 64px;
-  height: calc(100dvh - 64px);
-  min-height: calc(100dvh - 64px);
+  top: 48px;
+  height: calc(100dvh - 48px);
+  min-height: calc(100dvh - 48px);
   overflow-y: auto;
   border-right: 1px solid var(--line);
+  background: var(--bg);
 }
 
 .report-brand {
   min-width: 0;
-  padding: 0 24px;
+  gap: 9px;
+  padding: 0 18px;
+  font-size: 13px;
   text-decoration: none;
+}
+
+.report-brand .brand-mark {
+  width: 18px;
+  height: 18px;
+}
+
+.report-brand .brand-mark::before,
+.report-brand .brand-mark::after {
+  width: 11px;
+  height: 11px;
 }
 
 .report-brand:hover span:last-child {
@@ -599,8 +613,8 @@ h1 {
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 28px;
-  padding: 0 32px;
+  gap: 24px;
+  padding: 0 24px;
 }
 
 .report-github {
@@ -608,14 +622,14 @@ h1 {
   min-width: 0;
   flex: none;
   align-items: center;
-  gap: 9px;
+  gap: 7px;
 }
 
 .report-github > a {
   min-width: 0;
   color: var(--text);
-  font-size: 13px;
-  font-weight: 650;
+  font-size: 12px;
+  font-weight: 600;
   letter-spacing: -0.02em;
   text-decoration: none;
 }
@@ -626,8 +640,8 @@ h1 {
 }
 
 .report-github svg {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   flex: none;
 }
 
@@ -640,22 +654,22 @@ h1 {
 .report-github .report-commit {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-left: 3px;
-  padding-left: 3px;
+  gap: 5px;
+  margin-left: 5px;
   color: var(--faint);
-  font-size: 9px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-weight: 400;
+}
+
+.report-github .report-commit svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 1.5;
 }
 
 .report-commit code {
   color: var(--faint);
   font-size: 10px;
   font-weight: 400;
-  letter-spacing: 0;
-  text-transform: none;
 }
 
 .report-pull-request {
@@ -691,36 +705,73 @@ h1 {
 .report-index nav {
   display: grid;
   gap: 2px;
-  padding: 10px 8px;
+  padding: 10px 6px;
 }
 
-.screenshot-tree-branch > h2 {
-  overflow: hidden;
-  margin: 0;
+.screenshot-tree-branch,
+.screenshot-tree-children {
+  display: grid;
+}
+
+.screenshot-tree-branch > summary {
+  display: grid;
+  min-height: 29px;
+  grid-template-columns: 12px minmax(0, 1fr) auto;
+  align-items: center;
+  color: var(--text);
+  cursor: pointer;
+  list-style: none;
+  padding: 5px 9px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.screenshot-tree-branch > summary::-webkit-details-marker {
+  display: none;
+}
+
+.screenshot-tree-branch > summary::before {
   color: var(--faint);
-  padding: 7px 12px 2px 16px;
+  content: "›";
+}
+
+.screenshot-tree-branch[open] > summary::before {
+  content: "⌄";
+}
+
+.screenshot-tree-branch > summary:hover {
+  color: var(--text);
+}
+
+.screenshot-tree-branch > summary > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.screenshot-tree-branch > summary > small {
+  color: var(--faint);
   font:
-    10px/12px ui-monospace,
+    9px ui-monospace,
     SFMono-Regular,
     Menlo,
     monospace;
-  text-overflow: ellipsis;
-  text-transform: capitalize;
-  white-space: nowrap;
 }
 
 .report-index nav button {
   display: grid;
   width: 100%;
+  min-height: 29px;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
   border: 0;
-  border-left: 2px solid transparent;
   background: transparent;
   color: var(--muted);
   cursor: pointer;
-  font-size: 13px;
-  padding: 11px 12px;
+  font-size: 12px;
+  padding: 5px 9px;
   text-align: left;
   text-transform: capitalize;
 }
@@ -731,16 +782,12 @@ h1 {
 }
 
 .report-index nav button.selected {
-  border-left-color: var(--accent-text);
   background: var(--surface-selected);
   color: var(--text);
 }
 
-.report-index nav .screenshot-tree-branch-grouped button {
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding-left: 21px;
-  font-size: 12px;
+.report-index nav .screenshot-tree-children button {
+  padding-left: 28px;
 }
 
 .report-index nav button > span {
@@ -755,12 +802,11 @@ h1 {
   justify-self: end;
   color: var(--faint);
   font:
-    9px ui-monospace,
+    11px ui-monospace,
     SFMono-Regular,
     Menlo,
     monospace;
   text-align: right;
-  text-transform: uppercase;
   white-space: nowrap;
 }
 
@@ -782,29 +828,9 @@ h1 {
 
 .review-stage {
   min-width: 0;
-  min-height: calc(100dvh - 64px);
+  min-height: calc(100dvh - 48px);
   background: var(--bg);
-  padding: 32px;
-}
-
-.review-header {
-  display: flex;
-  min-width: 0;
-  align-items: end;
-  justify-content: space-between;
-  gap: 24px;
-  margin-bottom: 20px;
-}
-
-.review-heading {
-  min-width: 0;
-}
-
-.review-title-row {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 12px;
+  padding: 14px 24px 24px;
 }
 
 .review-stage h1 {
@@ -816,39 +842,6 @@ h1 {
   white-space: nowrap;
 }
 
-.review-stage code {
-  display: block;
-  max-width: 100%;
-  overflow: hidden;
-  margin-top: 6px;
-  color: var(--faint);
-  font-size: 10px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.review-shortcuts {
-  display: flex;
-  flex: none;
-  align-items: center;
-  gap: 14px;
-  color: var(--faint);
-  font:
-    9px ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    monospace;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.review-shortcuts span {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.review-shortcuts kbd,
 .keyboard-view-cue kbd {
   min-width: 20px;
   border: 1px solid var(--line-strong);
@@ -857,10 +850,6 @@ h1 {
   padding: 3px 5px;
   font: inherit;
   text-align: center;
-}
-
-.review-shortcuts kbd + kbd {
-  margin-left: -3px;
 }
 
 .review-content[data-navigation="up"] {
@@ -885,54 +874,30 @@ h1 {
   }
 }
 
-.status-badge {
-  flex: none;
-  border: 1px solid currentColor;
-  color: var(--faint);
-  padding: 4px 6px 3px;
-  font:
-    8px ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    monospace;
-  text-transform: uppercase;
-}
-
-.status-badge[data-status="changed"] {
-  color: var(--changed);
-}
-
-.status-badge[data-status="added"] {
-  color: var(--added);
-}
-
-.status-badge[data-status="removed"] {
-  color: var(--removed);
-}
-
 .comparison-viewer {
   position: relative;
   overflow: hidden;
-  background: var(--canvas);
+  background: transparent;
 }
 
 .comparison-toolbar {
   display: flex;
-  min-height: 50px;
+  min-height: 38px;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  background: var(--surface);
-  padding: 7px 10px;
+  margin-bottom: 14px;
+  padding: 4px 6px;
 }
 
 .scale-switch,
 .mode-switch {
   display: flex;
   flex: none;
+  gap: 2px;
   min-inline-size: 0;
   margin: 0;
-  border: 1px solid var(--line-strong);
+  border: 0;
   padding: 0;
 }
 
@@ -940,73 +905,32 @@ h1 {
 .mode-switch button {
   position: relative;
   display: flex;
-  width: 38px;
-  height: 34px;
+  width: 36px;
+  height: 30px;
   align-items: center;
   justify-content: center;
-  gap: 0;
   border: 0;
   background: transparent;
   color: var(--muted);
   cursor: pointer;
+  line-height: 0;
   padding: 0;
-}
-
-.scale-switch button {
-  font:
-    9px ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    monospace;
-}
-
-.scale-switch button + button,
-.mode-switch button + button {
-  border-left: 1px solid var(--line-strong);
 }
 
 .scale-switch button:hover,
 .mode-switch button:hover {
-  background: var(--surface-hover);
   color: var(--text);
 }
 
-.scale-switch button[aria-pressed="true"] {
-  width: auto;
-  gap: 8px;
-  background: var(--surface-selected);
-  color: var(--text);
-  padding: 0 10px;
-}
-
+.scale-switch button[aria-pressed="true"],
 .mode-switch button[aria-pressed="true"] {
-  width: auto;
-  gap: 8px;
-  background: var(--accent);
-  color: var(--accent-ink);
-  padding: 0 10px;
+  color: var(--accent-text);
 }
 
-.scale-switch button > span,
-.mode-switch button > span {
-  max-width: 0;
-  overflow: hidden;
-  opacity: 0;
-  font:
-    10px ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    monospace;
-  transition:
-    max-width 140ms ease,
-    opacity 100ms ease;
-  white-space: nowrap;
-}
-
-.scale-switch button[aria-pressed="true"] > span,
-.mode-switch button[aria-pressed="true"] > span {
-  max-width: 90px;
-  opacity: 1;
+.scale-switch button:focus-visible,
+.mode-switch button:focus-visible {
+  outline: 0;
+  color: var(--accent-text);
 }
 
 .scale-switch button::after,
@@ -1049,12 +973,12 @@ h1 {
 }
 
 .mode-icon {
-  width: 22px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   stroke: currentColor;
-  stroke-linecap: square;
-  stroke-linejoin: miter;
-  stroke-width: 1.35;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.65;
   vector-effect: non-scaling-stroke;
 }
 
@@ -1088,7 +1012,7 @@ h1 {
 }
 
 .keyboard-view-cue[data-side="before"] {
-  left: 288px;
+  left: 264px;
   border-left: 0;
   animation: keyboard-cue-left 160ms ease-out;
 }
@@ -1642,10 +1566,6 @@ h1 {
     grid-template-rows: auto auto minmax(0, 1fr);
   }
 
-  .review-shortcuts {
-    display: none;
-  }
-
   .keyboard-view-cue[data-side="before"] {
     left: 0;
   }
@@ -1669,11 +1589,11 @@ h1 {
   }
 
   .report-brand {
-    min-height: 64px;
+    min-height: 48px;
   }
 
   .report-context {
-    min-height: 64px;
+    min-height: 48px;
     gap: 12px;
     padding: 8px 18px;
   }
@@ -1703,7 +1623,7 @@ h1 {
   .mobile-screenshot-picker > summary {
     display: grid;
     min-width: 0;
-    min-height: 64px;
+    min-height: 48px;
     grid-template-columns: minmax(0, 1fr) auto auto;
     align-items: center;
     gap: 10px;
@@ -1913,20 +1833,12 @@ h1 {
   }
 
   .review-stage {
-    padding: 24px 16px;
-  }
-
-  .review-title-row {
-    align-items: flex-start;
-  }
-
-  .review-stage code {
-    font-size: 8px;
+    padding: 14px 16px 20px;
   }
 
   .comparison-toolbar {
     gap: 8px;
-    padding: 7px 0;
+    padding: 4px 0;
   }
 
   .comparison-pair {
@@ -1971,20 +1883,6 @@ h1 {
   }
 }
 
-@media (max-width: 360px) {
-  .scale-switch button[aria-pressed="true"],
-  .mode-switch button[aria-pressed="true"] {
-    width: 38px;
-    gap: 0;
-    padding: 0;
-  }
-
-  .scale-switch button > span,
-  .mode-switch button > span {
-    display: none;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .comparison-scroll,
   .keyboard-view-cue,
@@ -1993,9 +1891,7 @@ h1 {
   .image-trigger::after,
   .image-trigger img,
   .scale-switch button,
-  .scale-switch button > span,
   .mode-switch button,
-  .mode-switch button > span,
   .mobile-screenshot-picker > summary b {
     animation: none;
     transition: none;

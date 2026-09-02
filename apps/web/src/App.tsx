@@ -183,29 +183,27 @@ function ComparisonModeIcon({ mode }: { mode: ComparisonMode }) {
       className="mode-icon"
       fill="none"
       focusable="false"
-      viewBox="0 0 24 18"
+      viewBox="0 0 24 24"
     >
       {mode === "difference" ? (
         <>
-          <rect height="16" width="22" x="1" y="1" />
-          <path d="M5 4h4v4H5zM15 4h4v4h-4zM5 11h4v3H5z" fill="currentColor" />
-          <path d="M15 11h4v3h-4z" />
+          <rect height="16" width="18" x="3" y="4" />
+          <path d="M12 4v16M7.5 8v6M4.5 11h6M15 11h4.5" />
         </>
       ) : mode === "split" ? (
         <>
-          <rect height="16" width="22" x="1" y="1" />
-          <path d="M12 1v16M9 6 6 9l3 3M15 6l3 3-3 3" />
+          <rect height="16" width="18" x="3" y="4" />
+          <path d="M12 4v16M9 9l-3 3 3 3M15 9l3 3-3 3" />
         </>
       ) : mode === "side-by-side" ? (
         <>
-          <rect height="16" width="9" x="1" y="1" />
-          <rect height="16" width="9" x="14" y="1" />
+          <rect height="16" width="18" x="3" y="4" />
+          <path d="M12 4v16" />
         </>
       ) : (
         <>
-          <rect height="12" width="15" x="1" y="1" />
-          <rect height="12" width="15" x="8" y="5" />
-          <path d="M8 5h8v8H8z" fill="currentColor" opacity="0.35" />
+          <circle cx="9" cy="12" r="6" />
+          <circle cx="15" cy="12" r="6" />
         </>
       )}
     </svg>
@@ -219,19 +217,30 @@ function ImageScaleIcon({ scale }: { scale: ImageScale }) {
       className="mode-icon"
       fill="none"
       focusable="false"
-      viewBox="0 0 24 18"
+      viewBox="0 0 24 24"
     >
       {scale === "fit" ? (
         <>
-          <rect height="16" width="22" x="1" y="1" />
-          <rect height="8" width="12" x="6" y="5" />
+          <path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5" />
+          <rect height="8" width="8" x="8" y="8" />
         </>
       ) : (
-        <>
-          <path d="M8 1H1v7M16 1h7v7M23 10v7h-7M8 17H1v-7" />
-          <rect fill="currentColor" height="4" width="4" x="10" y="7" />
-        </>
+        <path d="m9 9-5-5M4 8V4h4M15 9l5-5M16 4h4v4M9 15l-5 5M4 16v4h4M15 15l5 5M16 20h4v-4" />
       )}
+    </svg>
+  );
+}
+
+function GitCommitIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path d="M3 12h6m6 0h6" fill="none" />
+      <circle cx="12" cy="12" fill="none" r="3" />
     </svg>
   );
 }
@@ -462,7 +471,6 @@ function ImagePanel({
               type="button"
             >
               <ImageScaleIcon scale="fit" />
-              <span>Fit</span>
             </button>
             <button
               aria-label="Full-size image"
@@ -473,7 +481,6 @@ function ImagePanel({
               type="button"
             >
               <ImageScaleIcon scale="actual" />
-              <span>Full size</span>
             </button>
           </fieldset>
           <fieldset className="mode-switch" aria-label="View">
@@ -488,7 +495,6 @@ function ImagePanel({
                 type="button"
               >
                 <ComparisonModeIcon mode={item.value} />
-                <span>{item.label}</span>
               </button>
             ))}
           </fieldset>
@@ -726,6 +732,13 @@ function ImageLightbox({
   );
 }
 
+function statusMarker(status: VisualDiffFile["status"]) {
+  if (status === "added") return "+";
+  if (status === "removed") return "−";
+  if (status === "changed") return "~";
+  return null;
+}
+
 function ScreenshotList({
   files,
   onSelect,
@@ -735,31 +748,53 @@ function ScreenshotList({
   onSelect(file: string): void;
   selectedFile?: string;
 }) {
-  return screenshotBranches(files).map((branch) => (
-    <div
-      className={
-        branch.label
-          ? "screenshot-tree-branch screenshot-tree-branch-grouped"
-          : "screenshot-tree-branch"
-      }
-      key={branch.key ? `parent:${branch.key}` : "root"}
-    >
-      {branch.label && <h2 title={branch.label}>{branch.label}</h2>}
-      {branch.items.map(({ file, label }) => (
-        <button
-          aria-label={`${displayName(file.file)}, ${file.status}`}
-          className={file.file === selectedFile ? "selected" : ""}
-          data-screenshot={file.file}
-          key={file.file}
-          onClick={() => onSelect(file.file)}
-          type="button"
-        >
-          <span>{label}</span>
-          <small data-status={file.status}>{file.status}</small>
-        </button>
-      ))}
-    </div>
-  ));
+  function screenshotButton(file: VisualDiffFile, label: string) {
+    const marker = statusMarker(file.status);
+    return (
+      <button
+        aria-label={`${displayName(file.file)}, ${file.status}`}
+        className={file.file === selectedFile ? "selected" : ""}
+        data-screenshot={file.file}
+        key={file.file}
+        onClick={() => onSelect(file.file)}
+        type="button"
+      >
+        <span>{label}</span>
+        {marker && (
+          <small aria-hidden="true" data-status={file.status}>
+            {marker}
+          </small>
+        )}
+      </button>
+    );
+  }
+
+  return screenshotBranches(files).map((branch) => {
+    const key = branch.key ? `parent:${branch.key}` : "root";
+    if (!branch.label) {
+      return (
+        <div className="screenshot-tree-branch" key={key}>
+          {branch.items.map(({ file, label }) => screenshotButton(file, label))}
+        </div>
+      );
+    }
+
+    return (
+      <details
+        className="screenshot-tree-branch screenshot-tree-branch-grouped"
+        key={key}
+        open={branch.items.some(({ file }) => file.file === selectedFile)}
+      >
+        <summary title={branch.label}>
+          <span>{branch.label}</span>
+          <small>{branch.items.length}</small>
+        </summary>
+        <div className="screenshot-tree-children">
+          {branch.items.map(({ file, label }) => screenshotButton(file, label))}
+        </div>
+      </details>
+    );
+  });
 }
 
 function ReportViewer({
@@ -952,7 +987,7 @@ function ReportViewer({
                   href={sourceDetails.commitHref ?? undefined}
                   title={sourceDetails.ref}
                 >
-                  <span>Commit</span>
+                  <GitCommitIcon />
                   <code>{sourceDetails.ref.slice(0, 7)}</code>
                 </a>
               )}
@@ -1006,37 +1041,6 @@ function ReportViewer({
             data-navigation={navigationDirection ?? undefined}
             key={selected.file}
           >
-            <header className="review-header">
-              <div className="review-heading">
-                <div className="review-title-row">
-                  <h1>{displayName(selected.file)}</h1>
-                  <span className="status-badge" data-status={selected.status}>
-                    {selected.status}
-                  </span>
-                </div>
-                <code>{selected.file}</code>
-              </div>
-              <div
-                aria-label="Keyboard shortcuts: Up and down change screenshots. Left shows before. Right shows after."
-                className="review-shortcuts"
-                role="note"
-              >
-                <span>
-                  <kbd>↑</kbd>
-                  <kbd>↓</kbd> Screenshots
-                </span>
-                {selected.status === "changed" && (
-                  <>
-                    <span>
-                      <kbd>←</kbd> Before
-                    </span>
-                    <span>
-                      After <kbd>→</kbd>
-                    </span>
-                  </>
-                )}
-              </div>
-            </header>
             <ImagePanel
               file={selected}
               mode={mode}
