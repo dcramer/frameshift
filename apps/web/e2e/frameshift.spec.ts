@@ -95,6 +95,22 @@ test("the report sidebar groups related screenshots", async ({ page }) => {
 
   await expect(category).toBeVisible();
   await expect(variants).toHaveText(["desktop", "tablet"]);
+
+  const added = navigation
+    .locator(".screenshot-tree-branch > h2")
+    .filter({ hasText: /^team itinerary$/i });
+  await expect(added).toBeVisible();
+  await expect(added.locator("..").getByRole("button")).toHaveText(
+    /desktopadded/i,
+  );
+
+  const removed = navigation
+    .locator(".screenshot-tree-branch > h2")
+    .filter({ hasText: /^approvals queue$/i });
+  await expect(removed).toBeVisible();
+  await expect(removed.locator("..").getByRole("button")).toHaveText(
+    /desktopremoved/i,
+  );
 });
 
 test("the comparison slider keeps control of its arrow keys", async ({
