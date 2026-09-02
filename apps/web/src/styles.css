@@ -1913,20 +1913,38 @@ h1 {
   }
 
   .review-stage {
-    padding: 24px 16px;
+    padding: 0;
   }
 
-  .review-title-row {
-    align-items: flex-start;
+  .review-header {
+    display: none;
   }
 
-  .review-stage code {
-    font-size: 8px;
+  .mobile-screenshot-picker > summary {
+    min-height: 56px;
   }
 
   .comparison-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 8px;
-    padding: 7px 0;
+    padding: 8px;
+  }
+
+  .scale-switch,
+  .mode-switch {
+    width: 100%;
+  }
+
+  .scale-switch button,
+  .mode-switch button {
+    min-width: 44px;
+    flex: 1;
+  }
+
+  .scale-switch button[aria-pressed="true"],
+  .mode-switch button[aria-pressed="true"] {
+    flex: 2;
   }
 
   .comparison-pair {
@@ -1952,6 +1970,10 @@ h1 {
     gap: 6px;
   }
 
+  .comparison-viewer[data-scale="actual"] .comparison-scroll {
+    max-height: calc(100dvh - 212px);
+  }
+
   .lightbox-frame > header {
     flex-wrap: wrap;
     padding: 10px 12px;
@@ -1968,20 +1990,6 @@ h1 {
 
   .lightbox-image-stage {
     padding: 8px;
-  }
-}
-
-@media (max-width: 360px) {
-  .scale-switch button[aria-pressed="true"],
-  .mode-switch button[aria-pressed="true"] {
-    width: 38px;
-    gap: 0;
-    padding: 0;
-  }
-
-  .scale-switch button > span,
-  .mode-switch button > span {
-    display: none;
   }
 }
 

@@ -187,6 +187,21 @@ test("the report stays usable on a phone-sized screen", async ({ page }) => {
 
   const picker = page.locator(".mobile-screenshot-picker");
   await expect(picker).toBeVisible();
+  await expect(page.locator(".review-header")).toBeHidden();
+  const [scaleBox, modeBox] = await Promise.all([
+    page.locator(".scale-switch").boundingBox(),
+    page.locator(".mode-switch").boundingBox(),
+  ]);
+  expect(scaleBox).not.toBeNull();
+  expect(modeBox).not.toBeNull();
+  expect(modeBox!.y).toBeGreaterThan(scaleBox!.y);
+  expect(modeBox!.width).toBe(scaleBox!.width);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+
   await picker.locator("summary").click();
   await expect(
     picker.getByRole("button", { name: "team itinerary · desktop, added" }),
