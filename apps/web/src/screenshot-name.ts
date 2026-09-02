@@ -59,11 +59,14 @@ export function screenshotBranches<T extends ScreenshotFile>(
   }
 
   return [...branches.values()].map((branch) => {
-    const grouped = Boolean(branch.label);
+    const grouped = branch.files.length > 1 && Boolean(branch.label);
     return {
       items: branch.files.map((file) => {
         const name = screenshotName(file.file);
-        return { file, label: grouped ? name.leaf : name.full };
+        return {
+          file,
+          label: grouped ? name.leaf : name.parent || name.full,
+        };
       }),
       key: branch.key,
       label: grouped ? branch.label : undefined,

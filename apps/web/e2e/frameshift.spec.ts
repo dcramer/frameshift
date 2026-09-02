@@ -56,9 +56,13 @@ test("report arrow keys switch screenshots and before-and-after views", async ({
 }) => {
   await page.goto("/sample/");
 
-  const title = page.locator(".review-heading h1");
+  const selectedScreenshot = page.locator(
+    ".desktop-screenshot-nav button.selected",
+  );
   const cue = page.locator(".keyboard-view-cue");
-  await expect(title).toHaveText("trip planner · desktop");
+  await expect(selectedScreenshot).toHaveAccessibleName(
+    "trip planner · desktop, changed",
+  );
   await expect(
     page.getByRole("button", { name: "Highlights" }),
   ).toHaveAttribute("aria-pressed", "true");
@@ -79,9 +83,13 @@ test("report arrow keys switch screenshots and before-and-after views", async ({
   await page.keyboard.press("Escape");
   await expect(cue).toHaveCount(0);
   await page.keyboard.press("ArrowUp");
-  await expect(title).toHaveText("team itinerary · desktop");
+  await expect(selectedScreenshot).toHaveAccessibleName(
+    "team itinerary · desktop, added",
+  );
   await page.keyboard.press("ArrowDown");
-  await expect(title).toHaveText("trip planner · desktop");
+  await expect(selectedScreenshot).toHaveAccessibleName(
+    "trip planner · desktop, changed",
+  );
 });
 
 test("the report sidebar groups related screenshots", async ({ page }) => {
@@ -89,28 +97,24 @@ test("the report sidebar groups related screenshots", async ({ page }) => {
 
   const navigation = page.locator(".desktop-screenshot-nav");
   const category = navigation
-    .locator(".screenshot-tree-branch > h2")
-    .filter({ hasText: /^trip planner$/i });
-  const variants = category.locator("..").locator(":scope > button > span");
+    .locator(".screenshot-tree-branch > summary")
+    .filter({ has: page.getByText("trip planner", { exact: true }) });
+  const variants = category
+    .locator("..")
+    .locator(".screenshot-tree-children > button > span");
 
   await expect(category).toBeVisible();
   await expect(variants).toHaveText(["desktop", "tablet"]);
 
-  const added = navigation
-    .locator(".screenshot-tree-branch > h2")
-    .filter({ hasText: /^team itinerary$/i });
-  await expect(added).toBeVisible();
-  await expect(added.locator("..").getByRole("button")).toHaveText(
-    /desktopadded/i,
-  );
+  const added = navigation.getByRole("button", {
+    name: "team itinerary · desktop, added",
+  });
+  await expect(added).toHaveText("team itinerary+");
 
-  const removed = navigation
-    .locator(".screenshot-tree-branch > h2")
-    .filter({ hasText: /^approvals queue$/i });
-  await expect(removed).toBeVisible();
-  await expect(removed.locator("..").getByRole("button")).toHaveText(
-    /desktopremoved/i,
-  );
+  const removed = navigation.getByRole("button", {
+    name: "approvals queue · desktop, removed",
+  });
+  await expect(removed).toHaveText("approvals queue−");
 });
 
 test("the comparison slider keeps control of its arrow keys", async ({
@@ -133,9 +137,9 @@ test("fit mode never enlarges screenshots", async ({ page }) => {
   await page.setViewportSize({ height: 1000, width: 2000 });
   await page.goto("/sample/");
 
-  await expect(page.locator(".review-heading h1")).toHaveText(
-    "trip planner · desktop",
-  );
+  await expect(
+    page.locator(".desktop-screenshot-nav button.selected"),
+  ).toHaveAccessibleName("trip planner · desktop, changed");
   await expectNaturalSizeOrSmaller(page.locator(".difference-trigger img"));
 
   await page.getByRole("button", { name: "Side by side" }).click();
@@ -187,7 +191,7 @@ test("the report stays usable on a phone-sized screen", async ({ page }) => {
 
   const picker = page.locator(".mobile-screenshot-picker");
   await expect(picker).toBeVisible();
-  await picker.locator("summary").click();
+  await picker.locator(":scope > summary").click();
   await expect(
     picker.getByRole("button", { name: "team itinerary · desktop, added" }),
   ).toBeVisible();
