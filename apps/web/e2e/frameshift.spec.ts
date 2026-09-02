@@ -84,6 +84,19 @@ test("report arrow keys switch screenshots and before-and-after views", async ({
   await expect(title).toHaveText("trip planner · desktop");
 });
 
+test("the report sidebar groups related screenshots", async ({ page }) => {
+  await page.goto("/sample/");
+
+  const navigation = page.locator(".desktop-screenshot-nav");
+  const category = navigation
+    .locator(".screenshot-tree-branch > h2")
+    .filter({ hasText: /^trip planner$/i });
+  const variants = category.locator("..").locator(":scope > button > span");
+
+  await expect(category).toBeVisible();
+  await expect(variants).toHaveText(["desktop", "tablet"]);
+});
+
 test("the comparison slider keeps control of its arrow keys", async ({
   page,
 }) => {

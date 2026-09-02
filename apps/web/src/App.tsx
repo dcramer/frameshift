@@ -18,7 +18,11 @@ import {
   writeReportView,
 } from "./report-view";
 import { imageUrl, pageSource, type ImageSource } from "./scan-source";
-import { compareScreenshotNames, displayName } from "./screenshot-name";
+import {
+  compareScreenshotNames,
+  displayName,
+  screenshotBranches,
+} from "./screenshot-name";
 
 type LoadState =
   | { kind: "empty" }
@@ -731,18 +735,30 @@ function ScreenshotList({
   onSelect(file: string): void;
   selectedFile?: string;
 }) {
-  return files.map((file) => (
-    <button
-      aria-label={`${displayName(file.file)}, ${file.status}`}
-      className={file.file === selectedFile ? "selected" : ""}
-      data-screenshot={file.file}
-      key={file.file}
-      onClick={() => onSelect(file.file)}
-      type="button"
+  return screenshotBranches(files).map((branch) => (
+    <div
+      className={
+        branch.label
+          ? "screenshot-tree-branch screenshot-tree-branch-grouped"
+          : "screenshot-tree-branch"
+      }
+      key={branch.key ? `parent:${branch.key}` : "root"}
     >
-      <span>{displayName(file.file)}</span>
-      <small data-status={file.status}>{file.status}</small>
-    </button>
+      {branch.label && <h2 title={branch.label}>{branch.label}</h2>}
+      {branch.items.map(({ file, label }) => (
+        <button
+          aria-label={`${displayName(file.file)}, ${file.status}`}
+          className={file.file === selectedFile ? "selected" : ""}
+          data-screenshot={file.file}
+          key={file.file}
+          onClick={() => onSelect(file.file)}
+          type="button"
+        >
+          <span>{label}</span>
+          <small data-status={file.status}>{file.status}</small>
+        </button>
+      ))}
+    </div>
   ));
 }
 

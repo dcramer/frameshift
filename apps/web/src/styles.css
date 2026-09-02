@@ -694,6 +694,21 @@ h1 {
   padding: 10px 8px;
 }
 
+.screenshot-tree-branch > h2 {
+  overflow: hidden;
+  margin: 0;
+  color: var(--faint);
+  padding: 7px 12px 2px 16px;
+  font:
+    10px/12px ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  text-overflow: ellipsis;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
 .report-index nav button {
   display: grid;
   width: 100%;
@@ -719,6 +734,13 @@ h1 {
   border-left-color: var(--accent-text);
   background: var(--surface-selected);
   color: var(--text);
+}
+
+.report-index nav .screenshot-tree-branch-grouped button {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 21px;
+  font-size: 12px;
 }
 
 .report-index nav button > span {
