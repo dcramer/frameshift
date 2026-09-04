@@ -1,4 +1,5 @@
 {
+  "extends": "nitro/tsconfig",
   "compilerOptions": {
     "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
@@ -10,5 +11,5 @@
     "target": "ES2024",
     "types": ["node", "vite/client"]
   },
-  "include": ["e2e", "playwright.config.ts", "src", "vite.config.ts"]
+  "include": ["e2e", "playwright.config.ts", "server", "src", "vite.config.ts"]
 }

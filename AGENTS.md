@@ -2,16 +2,17 @@
 
 ## Purpose
 
-Frameshift is a static screenshot comparison viewer. It also owns a reusable
-GitHub Action for creating screenshot reports.
+Frameshift is a screenshot comparison viewer. It also owns a reusable GitHub
+Action for creating screenshot reports.
 
 ## Core Rules
 
 - Write concise, direct prose. Use short sentences and active voice.
 - Prefer the smallest design that closes a proven need.
 - Use `pnpm`. Do not use npm or Yarn.
-- Keep the web app static. Do not add a server, database, or Vercel Function
-  without a requirement that needs one.
+- Keep the home page and guide static. The report route may use one cached
+  Vercel Function to render validated public reports. Do not add a database,
+  report storage, or more server infrastructure without a requirement.
 - Treat reports and images as untrusted input.
 - Keep GitHub permissions and repository ownership explicit at each boundary.
 - Use original science-fiction visuals. Do not copy game assets, logos, fonts,
@@ -46,7 +47,8 @@ GitHub Action for creating screenshot reports.
 
 ## Architecture
 
-- `apps/web` owns the static review interface.
+- `apps/web` owns the review interface. Nitro builds the report page for
+  Vercel. Do not check in generated server files.
 - `apps/web/e2e` owns browser tests and the screenshots used to test Frameshift.
 - `packages/report` owns the versioned report format and its checks.
 - `fixtures` contains reports made by the Action for local UI work and tests

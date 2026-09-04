@@ -760,7 +760,7 @@ h1 {
     monospace;
 }
 
-.report-index nav button {
+.report-index nav a {
   display: grid;
   width: 100%;
   min-height: 29px;
@@ -773,24 +773,25 @@ h1 {
   font-size: 12px;
   padding: 5px 9px;
   text-align: left;
+  text-decoration: none;
   text-transform: capitalize;
 }
 
-.report-index nav button:hover {
+.report-index nav a:hover {
   background: var(--surface-raised);
   color: var(--text);
 }
 
-.report-index nav button.selected {
+.report-index nav a.selected {
   background: var(--surface-selected);
   color: var(--text);
 }
 
-.report-index nav .screenshot-tree-children button {
+.report-index nav .screenshot-tree-children a {
   padding-left: 28px;
 }
 
-.report-index nav button > span {
+.report-index nav a > span {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;

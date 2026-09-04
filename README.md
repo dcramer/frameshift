@@ -8,13 +8,18 @@ preview to the pull request and links to a full report.
 
 Frameshift uses the screenshot tests you already run. It does not rerun them.
 Each report stays in the GitHub project that made it. There is no Frameshift
-server, account, or database.
+account or database. Frameshift reads a report when someone opens its link.
+Vercel reuses the finished page, and images load straight from GitHub.
 
 Frameshift supports public GitHub projects. The pull request branch must belong
 to the same project. Frameshift skips pull requests from forks.
 
 Frameshift comments only when a screenshot changed, was added, or was removed.
 It still adds a passing check when every screenshot matches.
+
+Report links include the page contents before JavaScript runs. Agents and other
+tools can read screenshot names, results, and image URLs without opening a
+browser. Vercel reuses each page until the report expires.
 
 ## Setup
 
@@ -194,7 +199,7 @@ ID instead of a moving major or minor tag.
 
 ## Project layout
 
-- `apps/web`: static report viewer and setup guide.
+- `apps/web`: report viewer and setup guide.
 - `packages/action`: PNG comparison and report publishing.
 - `packages/report`: report format and checks.
 - `ci`: one-step Action for normal CI workflows.

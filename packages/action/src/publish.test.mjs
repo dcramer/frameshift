@@ -170,6 +170,19 @@ describe("Frameshift report publishing", () => {
     );
   });
 
+  test("includes the report expiration in a published viewer URL", () => {
+    expect(
+      buildViewerUrl(
+        "https://frameshift.pub/",
+        "owner/repo",
+        "abc123",
+        1_800_000_000,
+      ),
+    ).toBe(
+      "https://frameshift.pub/report/?expires=1800000000&ref=abc123&repo=owner%2Frepo",
+    );
+  });
+
   test("creates a fixed-size top crop", () => {
     const source = new PNG({ height: 120, width: 72 });
     for (let y = 0; y < source.height; y += 1) {

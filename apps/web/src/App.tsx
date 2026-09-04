@@ -14,6 +14,7 @@ import {
 import {
   type ComparisonMode,
   type ImageScale,
+  type ReportView,
   readReportView,
   writeReportView,
 } from "./report-view";
@@ -288,7 +289,7 @@ function SourceForm() {
         </a>
       </div>
       <footer className="home-note">
-        <span>Open source. No server or sign-in required.</span>
+        <span>Open source. No account. Reports stay in GitHub.</span>
         <a aria-label="Frameshift on GitHub" href={PROJECT_URL}>
           <GitHubIcon />
         </a>
@@ -741,23 +742,28 @@ function statusMarker(status: VisualDiffFile["status"]) {
 
 function ScreenshotList({
   files,
+  hrefForFile,
   onSelect,
   selectedFile,
 }: {
   files: VisualDiffFile[];
+  hrefForFile(file: string): string;
   onSelect(file: string): void;
   selectedFile?: string;
 }) {
   function screenshotButton(file: VisualDiffFile, label: string) {
     const marker = statusMarker(file.status);
     return (
-      <button
+      <a
         aria-label={`${displayName(file.file)}, ${file.status}`}
         className={file.file === selectedFile ? "selected" : ""}
         data-screenshot={file.file}
+        href={hrefForFile(file.file)}
         key={file.file}
-        onClick={() => onSelect(file.file)}
-        type="button"
+        onClick={(event) => {
+          event.preventDefault();
+          onSelect(file.file);
+        }}
       >
         <span>{label}</span>
         {marker && (
@@ -765,7 +771,7 @@ function ScreenshotList({
             {marker}
           </small>
         )}
-      </button>
+      </a>
     );
   }
 
@@ -798,9 +804,13 @@ function ScreenshotList({
 }
 
 function ReportViewer({
+  initialSearch,
+  initialView,
   report,
   source,
 }: {
+  initialSearch?: string;
+  initialView?: ReportView;
   report: VisualDiffReport;
   source: ImageSource;
 }) {
@@ -809,23 +819,35 @@ function ReportViewer({
     [report],
   );
   const changes = files.filter((file) => file.status !== "unchanged");
-  const initialView = useMemo(
-    () => readReportView(new URLSearchParams(window.location.search)),
-    [],
+  const [resolvedInitialView] = useState<ReportView>(
+    () =>
+      initialView ??
+      readReportView(
+        new URLSearchParams(
+          typeof window === "undefined" ? "" : window.location.search,
+        ),
+      ),
+  );
+  const [reportSearch] = useState(
+    () =>
+      initialSearch ??
+      (typeof window === "undefined" ? "" : window.location.search),
   );
   const defaultSelectedFile =
     changes.find((file) => file.status === "changed")?.file ??
     changes[0]?.file ??
     report.files[0]?.file;
   const [selectedFile, setSelectedFile] = useState(
-    report.files.some((file) => file.file === initialView.file)
-      ? initialView.file
+    report.files.some((file) => file.file === resolvedInitialView.file)
+      ? resolvedInitialView.file
       : defaultSelectedFile,
   );
   const [mode, setMode] = useState<ComparisonMode>(
-    initialView.mode ?? initialComparisonMode,
+    resolvedInitialView.mode ?? initialComparisonMode,
   );
-  const [scale, setScale] = useState<ImageScale>(initialView.scale ?? "fit");
+  const [scale, setScale] = useState<ImageScale>(
+    resolvedInitialView.scale ?? "fit",
+  );
   const [previewImage, setPreviewImage] = useState<PreviewImage | null>(null);
   const [quickView, setQuickView] = useState<ReportQuickView | null>(null);
   const [navigationDirection, setNavigationDirection] =
@@ -878,7 +900,7 @@ function ReportViewer({
   useEffect(() => {
     const selectedButton = [
       ...document.querySelectorAll<HTMLElement>(
-        ".desktop-screenshot-nav button[data-screenshot]",
+        ".desktop-screenshot-nav [data-screenshot]",
       ),
     ].find((button) => button.dataset.screenshot === selectedFile);
     selectedButton?.scrollIntoView({ block: "nearest" });
@@ -937,7 +959,7 @@ function ReportViewer({
         window.requestAnimationFrame(() => {
           const nextButton = [
             ...focusedNavigation.querySelectorAll<HTMLElement>(
-              "button[data-screenshot]",
+              "[data-screenshot]",
             ),
           ].find((button) => button.dataset.screenshot === nextFile);
           nextButton?.focus();
@@ -967,6 +989,10 @@ function ReportViewer({
     } catch {
       // The selected mode still works for this page when storage is blocked.
     }
+  }
+
+  function screenshotHref(file: string) {
+    return writeReportView(reportSearch, { file, mode, scale });
   }
 
   return (
@@ -1010,6 +1036,7 @@ function ReportViewer({
         <nav className="desktop-screenshot-nav" aria-label="Screenshots">
           <ScreenshotList
             files={files}
+            hrefForFile={screenshotHref}
             onSelect={selectScreenshot}
             selectedFile={selectedFile}
           />
@@ -1024,6 +1051,7 @@ function ReportViewer({
             <nav aria-label="Screenshots">
               <ScreenshotList
                 files={files}
+                hrefForFile={screenshotHref}
                 onSelect={selectScreenshot}
                 selectedFile={selectedFile}
               />
@@ -1069,6 +1097,29 @@ function ReportViewer({
         {keyboardAnnouncement}
       </output>
     </main>
+  );
+}
+
+export function ReportPage({
+  initialSearch,
+  initialView,
+  report,
+  source,
+}: {
+  initialSearch?: string;
+  initialView?: ReportView;
+  report: VisualDiffReport;
+  source: ImageSource;
+}) {
+  return (
+    <div className="app-shell report-shell">
+      <ReportViewer
+        initialSearch={initialSearch}
+        initialView={initialView}
+        report={report}
+        source={source}
+      />
+    </div>
   );
 }
 

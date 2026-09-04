@@ -30,19 +30,6 @@ describe("page metadata", () => {
     );
   });
 
-  it("keeps report links out of search results but gives them a social card", async () => {
-    const html = await fs.readFile(
-      new URL("../report/index.html", import.meta.url),
-      "utf8",
-    );
-
-    expect(html).toContain(
-      'name="robots" content="noindex, nofollow, noarchive"',
-    );
-    expect(html).toContain('property="og:title"');
-    expect(html).toContain('name="twitter:card" content="summary_large_image"');
-  });
-
   it("uses a 1200 by 630 social image", async () => {
     const image = await fs.readFile(
       new URL("./assets/frameshift-social.png", import.meta.url),

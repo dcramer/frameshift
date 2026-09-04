@@ -15,6 +15,7 @@
   "dependencies": {
     "@frameshift/report": "workspace:*",
     "highlight.js": "^11.12.0",
+    "nitro": "3.0.260610-beta",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

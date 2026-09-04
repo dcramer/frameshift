@@ -56,9 +56,7 @@ test("report arrow keys switch screenshots and before-and-after views", async ({
 }) => {
   await page.goto("/sample/");
 
-  const selectedScreenshot = page.locator(
-    ".desktop-screenshot-nav button.selected",
-  );
+  const selectedScreenshot = page.locator(".desktop-screenshot-nav a.selected");
   const cue = page.locator(".keyboard-view-cue");
   await expect(selectedScreenshot).toHaveAccessibleName(
     "trip planner · desktop, changed",
@@ -101,17 +99,17 @@ test("the report sidebar groups related screenshots", async ({ page }) => {
     .filter({ has: page.getByText("trip planner", { exact: true }) });
   const variants = category
     .locator("..")
-    .locator(".screenshot-tree-children > button > span");
+    .locator(".screenshot-tree-children > a > span");
 
   await expect(category).toBeVisible();
   await expect(variants).toHaveText(["desktop", "tablet"]);
 
-  const added = navigation.getByRole("button", {
+  const added = navigation.getByRole("link", {
     name: "team itinerary · desktop, added",
   });
   await expect(added).toHaveText("team itinerary+");
 
-  const removed = navigation.getByRole("button", {
+  const removed = navigation.getByRole("link", {
     name: "approvals queue · desktop, removed",
   });
   await expect(removed).toHaveText("approvals queue−");
@@ -138,7 +136,7 @@ test("fit mode never enlarges screenshots", async ({ page }) => {
   await page.goto("/sample/");
 
   await expect(
-    page.locator(".desktop-screenshot-nav button.selected"),
+    page.locator(".desktop-screenshot-nav a.selected"),
   ).toHaveAccessibleName("trip planner · desktop, changed");
   await expectNaturalSizeOrSmaller(page.locator(".difference-trigger img"));
 
@@ -149,7 +147,7 @@ test("fit mode never enlarges screenshots", async ({ page }) => {
   await expectNaturalSizeOrSmaller(page.locator(".comparison-canvas > img"));
 
   await page
-    .getByRole("button", { name: "team itinerary · desktop, added" })
+    .getByRole("link", { name: "team itinerary · desktop, added" })
     .first()
     .click();
   await expectNaturalSizeOrSmaller(page.locator(".single-figure img"));
@@ -193,7 +191,7 @@ test("the report stays usable on a phone-sized screen", async ({ page }) => {
   await expect(picker).toBeVisible();
   await picker.locator(":scope > summary").click();
   await expect(
-    picker.getByRole("button", { name: "team itinerary · desktop, added" }),
+    picker.getByRole("link", { name: "team itinerary · desktop, added" }),
   ).toBeVisible();
 
   await saveScreenshot(page, "report__mobile.png");
