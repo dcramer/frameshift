@@ -223,12 +223,13 @@ export function buildComment(report, viewerUrl, imageRoot) {
     .join("\n");
 }
 
-export function buildViewerUrl(baseUrl, repository, reportRef) {
+export function buildViewerUrl(baseUrl, repository, reportRef, expiresAt) {
   const viewerUrl = new URL(baseUrl);
   if (!viewerUrl.pathname.endsWith("/report/")) {
     viewerUrl.pathname = `${viewerUrl.pathname.replace(/\/?$/, "/")}report/`;
   }
   viewerUrl.search = new URLSearchParams({
+    ...(expiresAt ? { expires: String(expiresAt) } : {}),
     ref: reportRef,
     repo: repository,
   }).toString();
@@ -458,7 +459,15 @@ export async function main() {
       headSha,
       token,
     );
-    const viewerUrl = buildViewerUrl(viewerBaseUrl, repository, reportRef);
+    const expiresAt = Math.floor(
+      Date.now() / 1000 + (retentionDays * MILLISECONDS_PER_DAY) / 1000,
+    );
+    const viewerUrl = buildViewerUrl(
+      viewerBaseUrl,
+      repository,
+      reportRef,
+      expiresAt,
+    );
     const imageRoot = `https://raw.githubusercontent.com/${repository}/${reportRef}`;
     if (pullRequest) {
       await syncComment(

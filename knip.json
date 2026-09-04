@@ -2,6 +2,9 @@
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "ignore": ["**/dist/**"],
   "workspaces": {
+    "apps/web": {
+      "entry": ["server/routes/report.ts"]
+    },
     "packages/action": {
       "entry": ["src/action.mjs", "src/publish.mjs"]
     }

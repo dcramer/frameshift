@@ -3,6 +3,7 @@ node_modules/
 
 # Generated builds. Keep the published GitHub Action bundle.
 **/dist/
+**/.output/
 !/dist/
 !/dist/**
 !/publish/dist/
