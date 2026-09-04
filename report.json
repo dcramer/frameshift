@@ -1,0 +1,97 @@
+{
+  "files": [
+    {
+      "file": "added.png",
+      "image": "images/candidate/added.png",
+      "images": {
+        "candidate": "images/candidate/added.png"
+      },
+      "status": "added"
+    },
+    {
+      "file": "changed.png",
+      "height": 2,
+      "image": "images/diff/changed.png",
+      "images": {
+        "baseline": "images/baseline/changed.png",
+        "candidate": "images/candidate/changed.png",
+        "diff": "images/diff/changed.png"
+      },
+      "status": "changed",
+      "width": 2
+    },
+    {
+      "file": "guide__desktop.png",
+      "image": "images/candidate/guide__desktop.png",
+      "images": {
+        "candidate": "images/candidate/guide__desktop.png"
+      },
+      "status": "unchanged"
+    },
+    {
+      "file": "home__desktop.png",
+      "height": 720,
+      "image": "images/diff/home__desktop.png",
+      "images": {
+        "baseline": "images/baseline/home__desktop.png",
+        "candidate": "images/candidate/home__desktop.png",
+        "diff": "images/diff/home__desktop.png"
+      },
+      "status": "changed",
+      "width": 1280
+    },
+    {
+      "file": "removed.png",
+      "image": "images/baseline/removed.png",
+      "images": {
+        "baseline": "images/baseline/removed.png"
+      },
+      "status": "removed"
+    },
+    {
+      "file": "report__mobile.png",
+      "image": "images/candidate/report__mobile.png",
+      "images": {
+        "candidate": "images/candidate/report__mobile.png"
+      },
+      "status": "unchanged"
+    },
+    {
+      "file": "report-after__desktop.png",
+      "image": "images/candidate/report-after__desktop.png",
+      "images": {
+        "candidate": "images/candidate/report-after__desktop.png"
+      },
+      "status": "unchanged"
+    },
+    {
+      "file": "report-before__desktop.png",
+      "image": "images/candidate/report-before__desktop.png",
+      "images": {
+        "candidate": "images/candidate/report-before__desktop.png"
+      },
+      "status": "unchanged"
+    },
+    {
+      "file": "report-highlights__desktop.png",
+      "image": "images/candidate/report-highlights__desktop.png",
+      "images": {
+        "candidate": "images/candidate/report-highlights__desktop.png"
+      },
+      "status": "unchanged"
+    }
+  ],
+  "metadata": {
+    "pullRequest": {
+      "number": 13,
+      "title": "feat(web): make reports readable without a browser"
+    }
+  },
+  "summary": {
+    "added": 1,
+    "changed": 2,
+    "removed": 1,
+    "unchanged": 5
+  },
+  "version": 2
+}
