@@ -64,10 +64,14 @@ test("report arrow keys switch screenshots and before-and-after views", async ({
   await expect(
     page.getByRole("button", { name: "Highlights" }),
   ).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByRole("link", { name: "PR #42" })).toHaveAttribute(
-    "href",
-    "https://github.com/dcramer/frameshift/pull/42",
-  );
+  await expect(
+    page.getByRole("link", {
+      name: "PR #42 Make group trips easier to plan",
+    }),
+  ).toHaveAttribute("href", "https://github.com/dcramer/frameshift/pull/42");
+  await expect(
+    page.getByRole("link", { name: "dcramer/frameshift on GitHub" }),
+  ).toHaveAttribute("href", "https://github.com/dcramer/frameshift");
   await saveScreenshot(page, "report-highlights__desktop.png");
 
   await page.keyboard.press("ArrowLeft");
@@ -80,39 +84,75 @@ test("report arrow keys switch screenshots and before-and-after views", async ({
 
   await page.keyboard.press("Escape");
   await expect(cue).toHaveCount(0);
-  await page.keyboard.press("ArrowUp");
+  await page.keyboard.press("ArrowDown");
   await expect(selectedScreenshot).toHaveAccessibleName(
-    "team itinerary · desktop, added",
+    "trip planner · tablet, changed",
   );
   await page.keyboard.press("ArrowDown");
   await expect(selectedScreenshot).toHaveAccessibleName(
-    "trip planner · desktop, changed",
+    "team itinerary · desktop, added",
   );
 });
 
-test("the report sidebar groups related screenshots", async ({ page }) => {
+test("the report sidebar groups screenshots by review priority", async ({
+  page,
+}) => {
   await page.goto("/sample/");
 
   const navigation = page.locator(".desktop-screenshot-nav");
-  const category = navigation
-    .locator(".screenshot-tree-branch > summary")
-    .filter({ has: page.getByText("trip planner", { exact: true }) });
-  const variants = category
-    .locator("..")
-    .locator(".screenshot-tree-children > a > span");
-
-  await expect(category).toBeVisible();
-  await expect(variants).toHaveText(["desktop", "tablet"]);
+  await expect(navigation.getByRole("heading", { level: 2 })).toHaveText([
+    "Changed",
+    "Added",
+    "Removed",
+    "Unchanged",
+  ]);
+  await expect(
+    navigation
+      .locator("[data-screenshot]")
+      .evaluateAll((items) =>
+        items.map((item) => item.getAttribute("data-screenshot")),
+      ),
+  ).resolves.toEqual([
+    "trip-planner__desktop.png",
+    "trip-planner__tablet.png",
+    "team-itinerary__desktop.png",
+    "approvals-queue__desktop.png",
+    "account__desktop.png",
+  ]);
 
   const added = navigation.getByRole("link", {
     name: "team itinerary · desktop, added",
   });
-  await expect(added).toHaveText("team itinerary+");
+  await expect(added.locator(".screenshot-row-name")).toHaveText(
+    "team itinerary",
+  );
+  await expect(added.locator(".screenshot-row-context")).toHaveText("desktop");
 
   const removed = navigation.getByRole("link", {
     name: "approvals queue · desktop, removed",
   });
-  await expect(removed).toHaveText("approvals queue−");
+  await expect(removed.locator(".screenshot-row-name")).toHaveText(
+    "approvals queue",
+  );
+});
+
+test("sidebar focus follows the same order as arrow navigation", async ({
+  page,
+}) => {
+  await page.goto("/sample/");
+
+  const selected = page.locator(
+    ".desktop-screenshot-nav [data-screenshot].selected",
+  );
+  await selected.focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(selected).toHaveAccessibleName("trip planner · tablet, changed");
+  await expect(selected).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await expect(selected).toHaveAccessibleName(
+    "team itinerary · desktop, added",
+  );
+  await expect(selected).toBeFocused();
 });
 
 test("the comparison slider keeps control of its arrow keys", async ({
@@ -131,7 +171,7 @@ test("the comparison slider keeps control of its arrow keys", async ({
   await expect(page.locator(".keyboard-view-cue")).toHaveCount(0);
 });
 
-test("fit mode never enlarges screenshots", async ({ page }) => {
+test("comparison views never enlarge screenshots", async ({ page }) => {
   await page.setViewportSize({ height: 1000, width: 2000 });
   await page.goto("/sample/");
 
@@ -188,6 +228,9 @@ test("the report stays usable on a phone-sized screen", async ({ page }) => {
   await page.goto("/sample/");
 
   const picker = page.locator(".mobile-screenshot-picker");
+  await expect(
+    page.getByRole("link", { name: "Frameshift home" }),
+  ).toBeVisible();
   await expect(picker).toBeVisible();
   await picker.locator(":scope > summary").click();
   await expect(
