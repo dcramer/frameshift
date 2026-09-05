@@ -1,36 +1,41 @@
 type ScreenshotFile = { file: string };
 
-export type ScreenshotBranch<T extends ScreenshotFile> = {
-  items: { file: T; label: string }[];
-  key: string;
-  label?: string;
+type ScreenshotStatus = "added" | "changed" | "removed" | "unchanged";
+
+const statusOrder: Record<ScreenshotStatus, number> = {
+  changed: 0,
+  added: 1,
+  removed: 2,
+  unchanged: 3,
 };
 
-export function screenshotName(file: string) {
-  const rawParts = file
+export function displayName(file: string) {
+  return file
     .replace(/\.png$/i, "")
     .split("/")
     .flatMap((part) => part.split(/__|\./))
-    .filter(Boolean);
-  const parts = rawParts.map((part) => part.replace(/[-_]+/g, " "));
-  const leaf = parts.at(-1) ?? file;
+    .filter(Boolean)
+    .map((part) => part.replace(/[-_]+/g, " "))
+    .join(" · ");
+}
+
+export function sidebarScreenshotName(file: string) {
+  const path = file.replace(/\.png$/i, "").split("/");
+  const basename = path.pop() ?? file;
+  const basenameParts = basename.split(/__|\./).filter(Boolean);
+  const variant = basenameParts.length > 1 ? basenameParts.pop() : undefined;
+  const name = basenameParts.pop() ?? basename;
+  const context = [...path, ...basenameParts, ...(variant ? [variant] : [])]
+    .map((part) => part.replace(/[-_]+/g, " "))
+    .join(" / ");
 
   return {
-    full: parts.join(" · "),
-    leaf,
-    parent: parts.slice(0, -1).join(" / "),
-    parentKey: rawParts.slice(0, -1).join("\0"),
+    context,
+    name: name.replace(/[-_]+/g, " "),
   };
 }
 
-export function displayName(file: string) {
-  return screenshotName(file).full;
-}
-
-export function compareScreenshotNames(
-  left: ScreenshotFile,
-  right: ScreenshotFile,
-) {
+function compareScreenshotNames(left: ScreenshotFile, right: ScreenshotFile) {
   return displayName(left.file).localeCompare(
     displayName(right.file),
     undefined,
@@ -38,38 +43,11 @@ export function compareScreenshotNames(
   );
 }
 
-export function screenshotBranches<T extends ScreenshotFile>(
-  files: readonly T[],
-): ScreenshotBranch<T>[] {
-  const branches = new Map<
-    string,
-    { files: T[]; label: string; key: string }
-  >();
-
-  for (const file of files) {
-    const name = screenshotName(file.file);
-    const key = name.parentKey;
-    const branch = branches.get(key) ?? {
-      files: [],
-      key,
-      label: name.parent,
-    };
-    branch.files.push(file);
-    branches.set(key, branch);
-  }
-
-  return [...branches.values()].map((branch) => {
-    const grouped = branch.files.length > 1 && Boolean(branch.label);
-    return {
-      items: branch.files.map((file) => {
-        const name = screenshotName(file.file);
-        return {
-          file,
-          label: grouped ? name.leaf : name.parent || name.full,
-        };
-      }),
-      key: branch.key,
-      label: grouped ? branch.label : undefined,
-    };
-  });
+export function compareScreenshotsForReview<
+  T extends ScreenshotFile & { status: ScreenshotStatus },
+>(left: T, right: T) {
+  return (
+    statusOrder[left.status] - statusOrder[right.status] ||
+    compareScreenshotNames(left, right)
+  );
 }

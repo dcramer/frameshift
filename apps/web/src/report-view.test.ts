@@ -9,13 +9,11 @@ describe("report view", () => {
         new URLSearchParams({
           file: "account/settings__mobile.png",
           mode: "side-by-side",
-          scale: "actual",
         }),
       ),
     ).toEqual({
       file: "account/settings__mobile.png",
       mode: "side-by-side",
-      scale: "actual",
     });
   });
 
@@ -24,21 +22,28 @@ describe("report view", () => {
       readReportView(
         new URLSearchParams({ file: "", mode: "wrong", scale: "large" }),
       ),
-    ).toEqual({ file: undefined, mode: undefined, scale: undefined });
+    ).toEqual({ file: undefined, mode: undefined });
   });
 
   test("updates the view without removing the report source", () => {
     const search = writeReportView("?fixture=mixed", {
       file: "account/settings__mobile.png",
       mode: "split",
-      scale: "fit",
     });
 
     expect(Object.fromEntries(new URLSearchParams(search))).toEqual({
       file: "account/settings__mobile.png",
       fixture: "mixed",
       mode: "split",
-      scale: "fit",
     });
+  });
+
+  test("removes the retired image scale from old links", () => {
+    const search = writeReportView("?fixture=mixed&scale=actual", {
+      file: "account.png",
+      mode: "difference",
+    });
+
+    expect(new URLSearchParams(search).has("scale")).toBe(false);
   });
 });

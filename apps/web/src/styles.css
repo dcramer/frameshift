@@ -617,50 +617,57 @@ h1 {
   padding: 0 24px;
 }
 
-.report-github {
+.report-repository,
+.report-commit,
+.report-pull-request {
   display: flex;
+  height: 32px;
   min-width: 0;
-  flex: none;
   align-items: center;
-  gap: 7px;
-}
-
-.report-github > a {
-  min-width: 0;
   color: var(--text);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  line-height: 16px;
+  padding: 0 8px;
   text-decoration: none;
+  transition:
+    background 120ms ease,
+    color 120ms ease;
 }
 
-.report-github > a:hover,
-.report-pull-request a:hover {
+.report-repository:hover,
+.report-commit:hover,
+a.report-pull-request:hover {
+  background: var(--surface-raised);
   color: var(--accent-text);
 }
 
-.report-github svg {
+.report-repository {
+  flex: none;
+  gap: 7px;
+  margin-left: -8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.report-repository svg {
   width: 16px;
   height: 16px;
   flex: none;
 }
 
-.report-github > a:first-of-type {
+.report-repository > span {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.report-github .report-commit {
-  display: flex;
-  align-items: center;
+.report-commit {
+  flex: none;
   gap: 5px;
-  margin-left: 5px;
   color: var(--faint);
-  font-weight: 400;
 }
 
-.report-github .report-commit svg {
+.report-commit svg {
   width: 13px;
   height: 13px;
   stroke-width: 1.5;
@@ -670,16 +677,14 @@ h1 {
   color: var(--faint);
   font-size: 10px;
   font-weight: 400;
+  line-height: 16px;
 }
 
 .report-pull-request {
-  display: flex;
-  min-width: 0;
-  align-items: center;
+  flex: 0 1 auto;
   gap: 9px;
 }
 
-.report-pull-request > a,
 .report-pull-request > span {
   flex: none;
   color: var(--accent-text);
@@ -690,6 +695,7 @@ h1 {
     monospace;
   text-decoration: none;
   text-transform: uppercase;
+  line-height: 16px;
 }
 
 .report-pull-request strong {
@@ -698,83 +704,87 @@ h1 {
   color: var(--text);
   font-size: 14px;
   letter-spacing: -0.015em;
+  line-height: 16px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.report-pull-request b {
+  color: var(--faint);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 16px;
 }
 
 .report-index nav {
   display: grid;
-  gap: 2px;
-  padding: 10px 6px;
+  gap: 16px;
+  padding: 14px 8px 24px;
 }
 
-.screenshot-tree-branch,
-.screenshot-tree-children {
+.screenshot-status-group,
+.screenshot-status-items {
   display: grid;
 }
 
-.screenshot-tree-branch > summary {
-  display: grid;
-  min-height: 29px;
-  grid-template-columns: 12px minmax(0, 1fr) auto;
+.screenshot-status-group > header {
+  display: flex;
+  min-height: 26px;
   align-items: center;
-  color: var(--text);
-  cursor: pointer;
-  list-style: none;
-  padding: 5px 9px;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: capitalize;
+  justify-content: space-between;
+  padding: 0 9px 4px;
 }
 
-.screenshot-tree-branch > summary::-webkit-details-marker {
-  display: none;
-}
-
-.screenshot-tree-branch > summary::before {
-  color: var(--faint);
-  content: "›";
-}
-
-.screenshot-tree-branch[open] > summary::before {
-  content: "⌄";
-}
-
-.screenshot-tree-branch > summary:hover {
-  color: var(--text);
-}
-
-.screenshot-tree-branch > summary > span {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.screenshot-tree-branch > summary > small {
-  color: var(--faint);
+.screenshot-status-group > header h2,
+.screenshot-status-group > header span {
+  margin: 0;
   font:
-    9px ui-monospace,
+    10px ui-monospace,
     SFMono-Regular,
     Menlo,
     monospace;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.screenshot-status-group > header h2 {
+  color: var(--faint);
+  font-weight: 600;
+}
+
+.screenshot-status-group > header span {
+  color: var(--faint);
+}
+
+.screenshot-status-group[data-status="changed"] > header h2 {
+  color: var(--changed);
+}
+
+.screenshot-status-group[data-status="added"] > header h2 {
+  color: var(--added);
+}
+
+.screenshot-status-group[data-status="removed"] > header h2 {
+  color: var(--removed);
 }
 
 .report-index nav a {
   display: grid;
   width: 100%;
-  min-height: 29px;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
+  min-height: 48px;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  gap: 3px;
   border: 0;
   background: transparent;
   color: var(--muted);
   cursor: pointer;
-  font-size: 12px;
-  padding: 5px 9px;
+  padding: 6px 9px;
   text-align: left;
   text-decoration: none;
-  text-transform: capitalize;
+  transition:
+    background 120ms ease,
+    color 120ms ease;
 }
 
 .report-index nav a:hover {
@@ -787,40 +797,33 @@ h1 {
   color: var(--text);
 }
 
-.report-index nav .screenshot-tree-children a {
-  padding-left: 28px;
-}
-
-.report-index nav a > span {
+.report-index nav .screenshot-row-name,
+.report-index nav .screenshot-row-context {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.report-index nav small {
-  align-self: center;
-  justify-self: end;
+.report-index nav .screenshot-row-name {
+  color: inherit;
+  font-size: 13px;
+  font-weight: 520;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  text-transform: capitalize;
+}
+
+.report-index nav .screenshot-row-context {
+  direction: rtl;
   color: var(--faint);
   font:
-    11px ui-monospace,
+    10px ui-monospace,
     SFMono-Regular,
     Menlo,
     monospace;
-  text-align: right;
-  white-space: nowrap;
-}
-
-.report-index nav small[data-status="changed"] {
-  color: var(--changed);
-}
-
-.report-index nav small[data-status="added"] {
-  color: var(--added);
-}
-
-.report-index nav small[data-status="removed"] {
-  color: var(--removed);
+  line-height: 1.2;
+  text-align: left;
 }
 
 .mobile-screenshot-picker {
@@ -883,58 +886,68 @@ h1 {
 
 .comparison-toolbar {
   display: flex;
-  min-height: 38px;
+  min-height: 44px;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  justify-content: center;
   margin-bottom: 14px;
   padding: 4px 6px;
 }
 
-.scale-switch,
 .mode-switch {
   display: flex;
   flex: none;
   gap: 2px;
   min-inline-size: 0;
   margin: 0;
-  border: 0;
-  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 3px;
 }
 
-.scale-switch button,
 .mode-switch button {
   position: relative;
   display: flex;
   width: 36px;
-  height: 30px;
+  height: 32px;
   align-items: center;
   justify-content: center;
-  border: 0;
+  border: 1px solid transparent;
+  border-radius: 5px;
   background: transparent;
   color: var(--muted);
   cursor: pointer;
   line-height: 0;
   padding: 0;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
 }
 
-.scale-switch button:hover,
 .mode-switch button:hover {
+  background: var(--surface-raised);
   color: var(--text);
 }
 
-.scale-switch button[aria-pressed="true"],
 .mode-switch button[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--accent-text) 32%, transparent);
+  background: var(--surface-selected);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--text) 8%, transparent),
+    0 1px 2px #0006;
   color: var(--accent-text);
 }
 
-.scale-switch button:focus-visible,
 .mode-switch button:focus-visible {
-  outline: 0;
+  z-index: 1;
+  outline: 2px solid var(--accent-text);
+  outline-offset: 1px;
   color: var(--accent-text);
 }
 
-.scale-switch button::after,
 .mode-switch button::after {
   position: absolute;
   z-index: 5;
@@ -960,17 +973,18 @@ h1 {
   white-space: nowrap;
 }
 
-.scale-switch button:hover::after,
-.scale-switch button:focus-visible::after,
 .mode-switch button:hover::after,
 .mode-switch button:focus-visible::after {
   opacity: 1;
   transform: translate(-50%, 0);
 }
 
-.scale-switch button[aria-pressed="true"]::after,
 .mode-switch button[aria-pressed="true"]::after {
   display: none;
+}
+
+.mode-switch button:active {
+  transform: scale(0.96);
 }
 
 .mode-icon {
@@ -1173,31 +1187,6 @@ h1 {
   height: auto;
   pointer-events: none;
   user-select: none;
-}
-
-.comparison-viewer[data-scale="actual"] .comparison-scroll {
-  max-height: calc(100dvh - 170px);
-  overflow: auto;
-}
-
-.comparison-viewer[data-scale="actual"] .difference-trigger,
-.comparison-viewer[data-scale="actual"] .keyboard-image-trigger,
-.comparison-viewer[data-scale="actual"] .comparison-canvas,
-.comparison-viewer[data-scale="actual"] .comparison-pair {
-  width: max-content;
-  max-width: none;
-}
-
-.comparison-viewer[data-scale="actual"] .comparison-pair {
-  grid-template-columns: max-content max-content;
-}
-
-.comparison-viewer[data-scale="actual"] .difference-trigger img,
-.comparison-viewer[data-scale="actual"] .keyboard-image-trigger img,
-.comparison-viewer[data-scale="actual"] .comparison-canvas > img,
-.comparison-viewer[data-scale="actual"] .comparison-pane .image-trigger img {
-  width: auto;
-  max-width: none;
 }
 
 .comparison-overlay {
@@ -1599,12 +1588,8 @@ h1 {
     padding: 8px 18px;
   }
 
-  .report-github {
+  .report-repository {
     flex: 1 1 auto;
-  }
-
-  .report-github .report-commit > span {
-    display: none;
   }
 
   .report-pull-request {
@@ -1674,7 +1659,7 @@ h1 {
   }
 
   .mobile-screenshot-picker > summary b {
-    color: var(--faint);
+    color: var(--muted);
     font-size: 14px;
     font-weight: 400;
     transition: transform 120ms ease;
@@ -1734,23 +1719,37 @@ h1 {
     padding-inline: 14px;
   }
 
-  .report-github,
+  .report-repository,
   .report-pull-request {
     width: 100%;
     flex: none;
   }
 
-  .report-github svg {
+  .report-repository {
+    height: 20px;
+    margin-left: -8px;
+  }
+
+  .report-repository svg {
     width: 15px;
     height: 15px;
   }
 
-  .report-github > a {
+  .report-repository {
     font-size: 11px;
+  }
+
+  .report-pull-request {
+    height: 20px;
+    margin-left: -8px;
   }
 
   .report-pull-request strong {
     font-size: 12px;
+  }
+
+  .report-commit {
+    display: none;
   }
 
   .app-shell:not(.report-shell) {
@@ -1838,16 +1837,16 @@ h1 {
   }
 
   .comparison-toolbar {
-    gap: 8px;
     padding: 4px 0;
+  }
+
+  .mode-switch button {
+    width: 44px;
+    height: 44px;
   }
 
   .comparison-pair {
     grid-template-columns: 1fr;
-  }
-
-  .comparison-viewer[data-scale="actual"] .comparison-pair {
-    grid-template-columns: max-content;
   }
 
   .comparison-key > span {
@@ -1891,7 +1890,6 @@ h1 {
   .review-content,
   .image-trigger::after,
   .image-trigger img,
-  .scale-switch button,
   .mode-switch button,
   .mobile-screenshot-picker > summary b {
     animation: none;

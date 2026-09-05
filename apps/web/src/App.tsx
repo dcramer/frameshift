@@ -13,16 +13,15 @@ import {
 } from "./report-keyboard";
 import {
   type ComparisonMode,
-  type ImageScale,
   type ReportView,
   readReportView,
   writeReportView,
 } from "./report-view";
 import { imageUrl, pageSource, type ImageSource } from "./scan-source";
 import {
-  compareScreenshotNames,
+  compareScreenshotsForReview,
   displayName,
-  screenshotBranches,
+  sidebarScreenshotName,
 } from "./screenshot-name";
 
 type LoadState =
@@ -38,6 +37,8 @@ interface PreviewImage {
   label: string;
   src: string;
 }
+
+type ImageSize = "actual" | "fit";
 
 const COMPARISON_MODES: { label: string; value: ComparisonMode }[] = [
   { label: "Highlights", value: "difference" },
@@ -206,27 +207,6 @@ function ComparisonModeIcon({ mode }: { mode: ComparisonMode }) {
           <circle cx="9" cy="12" r="6" />
           <circle cx="15" cy="12" r="6" />
         </>
-      )}
-    </svg>
-  );
-}
-
-function ImageScaleIcon({ scale }: { scale: ImageScale }) {
-  return (
-    <svg
-      aria-hidden="true"
-      className="mode-icon"
-      fill="none"
-      focusable="false"
-      viewBox="0 0 24 24"
-    >
-      {scale === "fit" ? (
-        <>
-          <path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5" />
-          <rect height="8" width="8" x="8" y="8" />
-        </>
-      ) : (
-        <path d="m9 9-5-5M4 8V4h4M15 9l5-5M16 4h4v4M9 15l-5 5M4 16v4h4M15 15l5 5M16 20h4v-4" />
       )}
     </svg>
   );
@@ -412,18 +392,14 @@ function ImagePanel({
   mode,
   onModeChange,
   onPreview,
-  onScaleChange,
   quickView,
-  scale,
   source,
 }: {
   file: VisualDiffFile;
   mode: ComparisonMode;
   onModeChange(mode: ComparisonMode): void;
   onPreview(image: PreviewImage): void;
-  onScaleChange(scale: ImageScale): void;
   quickView: ReportQuickView | null;
-  scale: ImageScale;
   source: ImageSource;
 }) {
   const [split, setSplit] = useState(50);
@@ -460,30 +436,8 @@ function ImagePanel({
     const quickImage = quickView === "before" ? before : after;
 
     return (
-      <section className="comparison-viewer" data-scale={scale}>
+      <section className="comparison-viewer">
         <header className="comparison-toolbar">
-          <fieldset className="scale-switch" aria-label="Image size">
-            <button
-              aria-label="Fit image"
-              aria-pressed={scale === "fit"}
-              data-label="Fit image"
-              onClick={() => onScaleChange("fit")}
-              title="Fit image"
-              type="button"
-            >
-              <ImageScaleIcon scale="fit" />
-            </button>
-            <button
-              aria-label="Full-size image"
-              aria-pressed={scale === "actual"}
-              data-label="Full size"
-              onClick={() => onScaleChange("actual")}
-              title="Full size"
-              type="button"
-            >
-              <ImageScaleIcon scale="actual" />
-            </button>
-          </fieldset>
           <fieldset className="mode-switch" aria-label="View">
             {COMPARISON_MODES.map((item) => (
               <button
@@ -670,7 +624,7 @@ function ImageLightbox({
   onClose(): void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
-  const [size, setSize] = useState<ImageScale>("actual");
+  const [size, setSize] = useState<ImageSize>("actual");
 
   useEffect(() => {
     const element = dialog.current;
@@ -733,12 +687,15 @@ function ImageLightbox({
   );
 }
 
-function statusMarker(status: VisualDiffFile["status"]) {
-  if (status === "added") return "+";
-  if (status === "removed") return "−";
-  if (status === "changed") return "~";
-  return null;
-}
+const SCREENSHOT_GROUPS: {
+  label: string;
+  status: VisualDiffFile["status"];
+}[] = [
+  { label: "Changed", status: "changed" },
+  { label: "Added", status: "added" },
+  { label: "Removed", status: "removed" },
+  { label: "Unchanged", status: "unchanged" },
+];
 
 function ScreenshotList({
   files,
@@ -751,8 +708,8 @@ function ScreenshotList({
   onSelect(file: string): void;
   selectedFile?: string;
 }) {
-  function screenshotButton(file: VisualDiffFile, label: string) {
-    const marker = statusMarker(file.status);
+  function screenshotButton(file: VisualDiffFile) {
+    const name = sidebarScreenshotName(file.file);
     return (
       <a
         aria-label={`${displayName(file.file)}, ${file.status}`}
@@ -764,41 +721,33 @@ function ScreenshotList({
           event.preventDefault();
           onSelect(file.file);
         }}
+        title={file.file}
       >
-        <span>{label}</span>
-        {marker && (
-          <small aria-hidden="true" data-status={file.status}>
-            {marker}
-          </small>
+        <span className="screenshot-row-name">{name.name}</span>
+        {name.context && (
+          <small className="screenshot-row-context">{name.context}</small>
         )}
       </a>
     );
   }
 
-  return screenshotBranches(files).map((branch) => {
-    const key = branch.key ? `parent:${branch.key}` : "root";
-    if (!branch.label) {
-      return (
-        <div className="screenshot-tree-branch" key={key}>
-          {branch.items.map(({ file, label }) => screenshotButton(file, label))}
-        </div>
-      );
-    }
-
+  return SCREENSHOT_GROUPS.map(({ label, status }) => {
+    const groupFiles = files.filter((file) => file.status === status);
+    if (groupFiles.length === 0) return null;
     return (
-      <details
-        className="screenshot-tree-branch screenshot-tree-branch-grouped"
-        key={key}
-        open={branch.items.some(({ file }) => file.file === selectedFile)}
+      <section
+        className="screenshot-status-group"
+        data-status={status}
+        key={status}
       >
-        <summary title={branch.label}>
-          <span>{branch.label}</span>
-          <small>{branch.items.length}</small>
-        </summary>
-        <div className="screenshot-tree-children">
-          {branch.items.map(({ file, label }) => screenshotButton(file, label))}
+        <header>
+          <h2>{label}</h2>
+          <span>{groupFiles.length}</span>
+        </header>
+        <div className="screenshot-status-items">
+          {groupFiles.map(screenshotButton)}
         </div>
-      </details>
+      </section>
     );
   });
 }
@@ -815,7 +764,7 @@ function ReportViewer({
   source: ImageSource;
 }) {
   const files = useMemo(
-    () => report.files.toSorted(compareScreenshotNames),
+    () => report.files.toSorted(compareScreenshotsForReview),
     [report],
   );
   const changes = files.filter((file) => file.status !== "unchanged");
@@ -844,9 +793,6 @@ function ReportViewer({
   );
   const [mode, setMode] = useState<ComparisonMode>(
     resolvedInitialView.mode ?? initialComparisonMode,
-  );
-  const [scale, setScale] = useState<ImageScale>(
-    resolvedInitialView.scale ?? "fit",
   );
   const [previewImage, setPreviewImage] = useState<PreviewImage | null>(null);
   const [quickView, setQuickView] = useState<ReportQuickView | null>(null);
@@ -888,14 +834,13 @@ function ReportViewer({
     const search = writeReportView(window.location.search, {
       file: selectedFile,
       mode,
-      scale,
     });
     window.history.replaceState(
       window.history.state,
       "",
       `${window.location.pathname}${search}${window.location.hash}`,
     );
-  }, [mode, scale, selectedFile]);
+  }, [mode, selectedFile]);
 
   useEffect(() => {
     const selectedButton = [
@@ -992,43 +937,50 @@ function ReportViewer({
   }
 
   function screenshotHref(file: string) {
-    return writeReportView(reportSearch, { file, mode, scale });
+    return writeReportView(reportSearch, { file, mode });
   }
 
   return (
     <main className="report-layout">
       <header className="report-header">
-        <a className="report-brand" href="/">
+        <a aria-label="Frameshift home" className="report-brand" href="/">
           <BrandMark />
           <span>Frameshift</span>
         </a>
         <div className="report-context">
           {sourceDetails && (
-            <div className="report-github">
+            <a
+              aria-label={`${sourceDetails.repo} on GitHub`}
+              className="report-repository"
+              href={sourceDetails.repoHref}
+            >
               <GitHubIcon />
-              <a href={sourceDetails.repoHref}>{sourceDetails.repo}</a>
-              {sourceDetails.ref && (
-                <a
-                  className="report-commit"
-                  href={sourceDetails.commitHref ?? undefined}
-                  title={sourceDetails.ref}
-                >
-                  <GitCommitIcon />
-                  <code>{sourceDetails.ref.slice(0, 7)}</code>
-                </a>
-              )}
-            </div>
+              <span>{sourceDetails.repo}</span>
+            </a>
           )}
-          {pullRequest && (
-            <div className="report-pull-request">
-              {pullRequest.number &&
-                (pullRequestHref ? (
-                  <a href={pullRequestHref}>PR #{pullRequest.number}</a>
-                ) : (
-                  <span>PR #{pullRequest.number}</span>
-                ))}
-              <strong title={pullRequest.title}>{pullRequest.title}</strong>
-            </div>
+          {pullRequest &&
+            (pullRequestHref ? (
+              <a className="report-pull-request" href={pullRequestHref}>
+                {pullRequest.number && <span>PR #{pullRequest.number}</span>}
+                <strong title={pullRequest.title}>{pullRequest.title}</strong>
+                <b aria-hidden="true">↗</b>
+              </a>
+            ) : (
+              <div className="report-pull-request">
+                {pullRequest.number && <span>PR #{pullRequest.number}</span>}
+                <strong title={pullRequest.title}>{pullRequest.title}</strong>
+              </div>
+            ))}
+          {sourceDetails?.ref && (
+            <a
+              aria-label={`Commit ${sourceDetails.ref}`}
+              className="report-commit"
+              href={sourceDetails.commitHref ?? undefined}
+              title={sourceDetails.ref}
+            >
+              <GitCommitIcon />
+              <code>{sourceDetails.ref.slice(0, 7)}</code>
+            </a>
           )}
         </div>
       </header>
@@ -1074,9 +1026,7 @@ function ReportViewer({
               mode={mode}
               onModeChange={selectMode}
               onPreview={setPreviewImage}
-              onScaleChange={setScale}
               quickView={quickView}
-              scale={scale}
               source={source}
             />
           </div>
