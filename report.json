@@ -1,0 +1,109 @@
+{
+  "files": [
+    {
+      "file": "added.png",
+      "image": "images/candidate/added.png",
+      "images": {
+        "candidate": "images/candidate/added.png"
+      },
+      "status": "added"
+    },
+    {
+      "file": "changed.png",
+      "height": 2,
+      "image": "images/diff/changed.png",
+      "images": {
+        "baseline": "images/baseline/changed.png",
+        "candidate": "images/candidate/changed.png",
+        "diff": "images/diff/changed.png"
+      },
+      "status": "changed",
+      "width": 2
+    },
+    {
+      "file": "guide__desktop.png",
+      "image": "images/candidate/guide__desktop.png",
+      "images": {
+        "candidate": "images/candidate/guide__desktop.png"
+      },
+      "status": "unchanged"
+    },
+    {
+      "file": "home__desktop.png",
+      "image": "images/candidate/home__desktop.png",
+      "images": {
+        "candidate": "images/candidate/home__desktop.png"
+      },
+      "status": "unchanged"
+    },
+    {
+      "file": "removed.png",
+      "image": "images/baseline/removed.png",
+      "images": {
+        "baseline": "images/baseline/removed.png"
+      },
+      "status": "removed"
+    },
+    {
+      "file": "report__mobile.png",
+      "height": 844,
+      "image": "images/diff/report__mobile.png",
+      "images": {
+        "baseline": "images/baseline/report__mobile.png",
+        "candidate": "images/candidate/report__mobile.png",
+        "diff": "images/diff/report__mobile.png"
+      },
+      "status": "changed",
+      "width": 390
+    },
+    {
+      "file": "report-after__desktop.png",
+      "height": 720,
+      "image": "images/diff/report-after__desktop.png",
+      "images": {
+        "baseline": "images/baseline/report-after__desktop.png",
+        "candidate": "images/candidate/report-after__desktop.png",
+        "diff": "images/diff/report-after__desktop.png"
+      },
+      "status": "changed",
+      "width": 1280
+    },
+    {
+      "file": "report-before__desktop.png",
+      "height": 720,
+      "image": "images/diff/report-before__desktop.png",
+      "images": {
+        "baseline": "images/baseline/report-before__desktop.png",
+        "candidate": "images/candidate/report-before__desktop.png",
+        "diff": "images/diff/report-before__desktop.png"
+      },
+      "status": "changed",
+      "width": 1280
+    },
+    {
+      "file": "report-highlights__desktop.png",
+      "height": 720,
+      "image": "images/diff/report-highlights__desktop.png",
+      "images": {
+        "baseline": "images/baseline/report-highlights__desktop.png",
+        "candidate": "images/candidate/report-highlights__desktop.png",
+        "diff": "images/diff/report-highlights__desktop.png"
+      },
+      "status": "changed",
+      "width": 1280
+    }
+  ],
+  "metadata": {
+    "pullRequest": {
+      "number": 14,
+      "title": "feat(web): streamline screenshot review navigation"
+    }
+  },
+  "summary": {
+    "added": 1,
+    "changed": 5,
+    "removed": 1,
+    "unchanged": 2
+  },
+  "version": 2
+}
