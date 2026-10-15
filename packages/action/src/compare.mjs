@@ -5,6 +5,8 @@ import path from "node:path";
 import { compare, getDimensions } from "@vizzly-testing/honeydiff";
 import { PNG } from "pngjs";
 
+import { isGlyphPositionDrift } from "./glyph-drift.mjs";
+
 const REPORT_VERSION = 2;
 const COMPARISON_OPTIONS = {
   alignHeightChanges: true,
@@ -58,7 +60,11 @@ async function comparisonInputs(baselinePath, candidatePath) {
     getDimensions(candidatePath),
   ]);
   if (baselineSize.width === candidateSize.width) {
-    return [baselinePath, candidatePath];
+    return {
+      baselineInput: baselinePath,
+      candidateInput: candidatePath,
+      sameSize: baselineSize.height === candidateSize.height,
+    };
   }
 
   const width = Math.max(baselineSize.width, candidateSize.width);
@@ -66,10 +72,11 @@ async function comparisonInputs(baselinePath, candidatePath) {
     fs.readFile(baselinePath).then(PNG.sync.read),
     fs.readFile(candidatePath).then(PNG.sync.read),
   ]);
-  return [
-    PNG.sync.write(fitWidth(baseline, width)),
-    PNG.sync.write(fitWidth(candidate, width)),
-  ];
+  return {
+    baselineInput: PNG.sync.write(fitWidth(baseline, width)),
+    candidateInput: PNG.sync.write(fitWidth(candidate, width)),
+    sameSize: false,
+  };
 }
 
 async function copyReportImage(source, output, kind, relative) {
@@ -82,7 +89,7 @@ async function copyReportImage(source, output, kind, relative) {
 async function comparePair(baselinePath, candidatePath, output, relative) {
   const diffImage = path.join(output, "images", "diff", ...relative.split("/"));
   await fs.mkdir(path.dirname(diffImage), { recursive: true });
-  const [baselineInput, candidateInput] = await comparisonInputs(
+  const { baselineInput, candidateInput, sameSize } = await comparisonInputs(
     baselinePath,
     candidatePath,
   );
@@ -97,7 +104,24 @@ async function comparePair(baselinePath, candidatePath, output, relative) {
     },
   );
 
-  if (!analysis.different) {
+  let glyphPositionDrift = false;
+  if (
+    analysis.different &&
+    sameSize &&
+    !analysis.heightChange?.alignmentApplied
+  ) {
+    const [baseline, candidate] = await Promise.all([
+      fs.readFile(baselinePath).then(PNG.sync.read),
+      fs.readFile(candidatePath).then(PNG.sync.read),
+    ]);
+    glyphPositionDrift = isGlyphPositionDrift(
+      baseline,
+      candidate,
+      analysis.difference.regions.map((region) => region.spatial.bounds),
+    );
+  }
+
+  if (!analysis.different || glyphPositionDrift) {
     await fs.rm(diffImage, { force: true });
     const candidateImage = await copyReportImage(
       candidatePath,

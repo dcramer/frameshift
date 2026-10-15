@@ -57,6 +57,66 @@ async function writeRowPattern(file, rows) {
   await fs.writeFile(file, PNG.sync.write(image));
 }
 
+function linearChannel(value) {
+  const channel = value / 255;
+  return channel <= 0.04045
+    ? channel / 12.92
+    : ((channel + 0.055) / 1.055) ** 2.4;
+}
+
+function srgbChannel(value) {
+  const channel =
+    value <= 0.0031308 ? value * 12.92 : 1.055 * value ** (1 / 2.4) - 0.055;
+  return Math.round(channel * 255);
+}
+
+async function writeGlyph(
+  file,
+  { color = [176, 200, 224], letter = "E", x = 12 } = {},
+) {
+  const background = [20, 24, 28];
+  const image = new PNG({ height: 32, width: 48 });
+  const rectangles = [
+    { height: 16, width: 2, x, y: 8 },
+    { height: 2, width: 10, x, y: 8 },
+    { height: 2, width: letter === "E" ? 8 : 10, x, y: 15 },
+    ...(letter === "E" ? [{ height: 2, width: 10, x, y: 22 }] : []),
+    ...(letter === "F" ? [{ height: 6, width: 2, x: x + 8, y: 18 }] : []),
+  ];
+
+  for (let row = 0; row < image.height; row += 1) {
+    for (let column = 0; column < image.width; column += 1) {
+      const coverage = Math.max(
+        0,
+        ...rectangles.map((rectangle) => {
+          const horizontal = Math.max(
+            0,
+            Math.min(column + 1, rectangle.x + rectangle.width) -
+              Math.max(column, rectangle.x),
+          );
+          const vertical = Math.max(
+            0,
+            Math.min(row + 1, rectangle.y + rectangle.height) -
+              Math.max(row, rectangle.y),
+          );
+          return horizontal * vertical;
+        }),
+      );
+      const offset = (row * image.width + column) * 4;
+      for (let channel = 0; channel < 3; channel += 1) {
+        const mixed =
+          linearChannel(background[channel]) * (1 - coverage) +
+          linearChannel(color[channel]) * coverage;
+        image.data[offset + channel] = srgbChannel(mixed);
+      }
+      image.data[offset + 3] = 255;
+    }
+  }
+
+  await fs.mkdir(path.dirname(file), { recursive: true });
+  await fs.writeFile(file, PNG.sync.write(image));
+}
+
 afterEach(async () => {
   await Promise.all(
     tempDirectories
@@ -176,6 +236,40 @@ describe("compareDirectories", () => {
     ).resolves.toBeDefined();
     await expect(
       fs.stat(path.join(paths.output, "images/candidate/home.png")),
+    ).resolves.toBeDefined();
+  });
+
+  it("treats a quarter-pixel glyph shift as unchanged", async () => {
+    const paths = await makeDirectories();
+    await Promise.all([
+      writeGlyph(path.join(paths.baseline, "label.png")),
+      writeGlyph(path.join(paths.candidate, "label.png"), { x: 12.25 }),
+    ]);
+
+    const report = await compareDirectories(paths);
+
+    expect(report.summary.unchanged).toBe(1);
+    await expect(
+      fs.stat(path.join(paths.output, "images/diff/label.png")),
+    ).rejects.toMatchObject({ code: "ENOENT" });
+  });
+
+  it.each([
+    ["a whole-pixel move", { x: 13 }],
+    ["new ink color", { color: [224, 176, 200] }],
+    ["a different letter", { letter: "F" }],
+  ])("keeps %s as changed", async (_name, candidateOptions) => {
+    const paths = await makeDirectories();
+    await Promise.all([
+      writeGlyph(path.join(paths.baseline, "label.png")),
+      writeGlyph(path.join(paths.candidate, "label.png"), candidateOptions),
+    ]);
+
+    const report = await compareDirectories(paths);
+
+    expect(report.summary.changed).toBe(1);
+    await expect(
+      fs.stat(path.join(paths.output, "images/diff/label.png")),
     ).resolves.toBeDefined();
   });
 
