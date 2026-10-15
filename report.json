@@ -1,0 +1,81 @@
+{
+  "files": [
+    {
+      "file": "added.png",
+      "image": "images/candidate/added.png",
+      "images": {
+        "candidate": "images/candidate/added.png"
+      },
+      "status": "added"
+    },
+    {
+      "file": "changed.png",
+      "image": "images/candidate/changed.png",
+      "images": {
+        "candidate": "images/candidate/changed.png"
+      },
+      "status": "added"
+    },
+    {
+      "file": "guide__desktop.png",
+      "image": "images/candidate/guide__desktop.png",
+      "images": {
+        "candidate": "images/candidate/guide__desktop.png"
+      },
+      "status": "added"
+    },
+    {
+      "file": "home__desktop.png",
+      "image": "images/candidate/home__desktop.png",
+      "images": {
+        "candidate": "images/candidate/home__desktop.png"
+      },
+      "status": "added"
+    },
+    {
+      "file": "report__mobile.png",
+      "image": "images/candidate/report__mobile.png",
+      "images": {
+        "candidate": "images/candidate/report__mobile.png"
+      },
+      "status": "added"
+    },
+    {
+      "file": "report-after__desktop.png",
+      "image": "images/candidate/report-after__desktop.png",
+      "images": {
+        "candidate": "images/candidate/report-after__desktop.png"
+      },
+      "status": "added"
+    },
+    {
+      "file": "report-before__desktop.png",
+      "image": "images/candidate/report-before__desktop.png",
+      "images": {
+        "candidate": "images/candidate/report-before__desktop.png"
+      },
+      "status": "added"
+    },
+    {
+      "file": "report-highlights__desktop.png",
+      "image": "images/candidate/report-highlights__desktop.png",
+      "images": {
+        "candidate": "images/candidate/report-highlights__desktop.png"
+      },
+      "status": "added"
+    }
+  ],
+  "metadata": {
+    "pullRequest": {
+      "number": 17,
+      "title": "fix(action): ignore sub-pixel glyph drift"
+    }
+  },
+  "summary": {
+    "added": 8,
+    "changed": 0,
+    "removed": 0,
+    "unchanged": 0
+  },
+  "version": 2
+}
