@@ -34,7 +34,7 @@
                     "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$"
                   },
                   {
-                    "pattern": "^images\\/candidate\\/.*"
+                    "pattern": "^images\\/candidate\\/"
                   }
                 ],
                 "description": "The main image for this screenshot."
@@ -49,7 +49,7 @@
                         "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$"
                       },
                       {
-                        "pattern": "^images\\/candidate\\/.*"
+                        "pattern": "^images\\/candidate\\/"
                       }
                     ],
                     "description": "The screenshot after the change."
@@ -102,7 +102,7 @@
                     "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$"
                   },
                   {
-                    "pattern": "^images\\/diff\\/.*"
+                    "pattern": "^images\\/diff\\/"
                   }
                 ],
                 "description": "The main image for this screenshot."
@@ -117,7 +117,7 @@
                         "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$"
                       },
                       {
-                        "pattern": "^images\\/baseline\\/.*"
+                        "pattern": "^images\\/baseline\\/"
                       }
                     ],
                     "description": "The screenshot before the change."
@@ -129,7 +129,7 @@
                         "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$"
                       },
                       {
-                        "pattern": "^images\\/candidate\\/.*"
+                        "pattern": "^images\\/candidate\\/"
                       }
                     ],
                     "description": "The screenshot after the change."
@@ -141,7 +141,7 @@
                         "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$"
                       },
                       {
-                        "pattern": "^images\\/diff\\/.*"
+                        "pattern": "^images\\/diff\\/"
                       }
                     ],
                     "description": "The image that highlights the changes."
@@ -196,7 +196,7 @@
                     "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$"
                   },
                   {
-                    "pattern": "^images\\/baseline\\/.*"
+                    "pattern": "^images\\/baseline\\/"
                   }
                 ],
                 "description": "The main image for this screenshot."
@@ -211,7 +211,7 @@
                         "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$"
                       },
                       {
-                        "pattern": "^images\\/baseline\\/.*"
+                        "pattern": "^images\\/baseline\\/"
                       }
                     ],
                     "description": "The screenshot before the change."
@@ -264,7 +264,7 @@
                     "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$"
                   },
                   {
-                    "pattern": "^images\\/candidate\\/.*"
+                    "pattern": "^images\\/candidate\\/"
                   }
                 ],
                 "description": "The main image for this screenshot."
@@ -279,7 +279,7 @@
                         "pattern": "^(?!\\/)(?!.*\\\\)(?!.*(?:^|\\/)\\.\\.(?:\\/|$)).+\\.png$"
                       },
                       {
-                        "pattern": "^images\\/candidate\\/.*"
+                        "pattern": "^images\\/candidate\\/"
                       }
                     ],
                     "description": "The screenshot after the change."

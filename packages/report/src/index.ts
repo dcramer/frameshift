@@ -15,13 +15,13 @@ const pngPathSchema = z
   .regex(safePngPathPattern, "Expected a safe relative PNG path")
   .meta({ description: "A PNG path relative to report.json." });
 const baselineImagePathSchema = pngPathSchema
-  .startsWith("images/baseline/")
+  .regex(/^images\/baseline\//, "Expected a path in images/baseline/")
   .meta({ description: "The screenshot before the change." });
 const candidateImagePathSchema = pngPathSchema
-  .startsWith("images/candidate/")
+  .regex(/^images\/candidate\//, "Expected a path in images/candidate/")
   .meta({ description: "The screenshot after the change." });
 const diffImagePathSchema = pngPathSchema
-  .startsWith("images/diff/")
+  .regex(/^images\/diff\//, "Expected a path in images/diff/")
   .meta({ description: "The image that highlights the changes." });
 const dimensionSchema = z
   .int()

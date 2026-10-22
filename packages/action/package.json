@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@frameshift/report": "workspace:*",
-    "@vizzly-testing/honeydiff": "^0.16.0",
+    "@vizzly-testing/honeydiff": "^0.17.0",
     "pngjs": "catalog:"
   },
   "devDependencies": {

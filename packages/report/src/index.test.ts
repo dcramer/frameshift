@@ -170,4 +170,10 @@ describe("parseVisualDiffReport", () => {
     });
     expect(JSON.stringify(schema)).not.toContain("visual diff");
   });
+
+  test("emits only standard JSON Schema formats", () => {
+    expect(JSON.stringify(visualDiffReportV2JsonSchema())).not.toContain(
+      '"format"',
+    );
+  });
 });
