@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -36,13 +36,39 @@ function setOutput(name, value) {
   }
 }
 
-function git(args, options = {}) {
-  return execFileSync("git", args, {
-    cwd: options.cwd,
-    encoding: "utf8",
-    env: options.env ?? process.env,
-    stdio: options.stdio ?? ["ignore", "pipe", "pipe"],
+export function run(command, args, options = {}) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      cwd: options.cwd,
+      env: options.env ?? process.env,
+      stdio: options.stdio ?? ["ignore", "pipe", "pipe"],
+    });
+    let stdout = "";
+    let stderr = "";
+    child.stdout?.setEncoding("utf8").on("data", (chunk) => {
+      stdout += chunk;
+    });
+    child.stderr?.setEncoding("utf8").on("data", (chunk) => {
+      stderr += chunk;
+    });
+    child.on("error", reject);
+    child.on("close", (code, signal) => {
+      if (code === 0) {
+        resolve(stdout);
+        return;
+      }
+      const reason = signal ? `signal ${signal}` : `exit code ${code}`;
+      const error = new Error(
+        `Command failed (${reason}): ${command} ${args.join(" ")}\n${stderr}`,
+      );
+      Object.assign(error, { signal, status: code, stderr, stdout });
+      reject(error);
+    });
   });
+}
+
+function git(args, options = {}) {
+  return run("git", args, options);
 }
 
 function validateRepository(repository) {
@@ -236,20 +262,74 @@ export function buildViewerUrl(baseUrl, repository, reportRef, expiresAt) {
   return viewerUrl.href;
 }
 
-async function githubRequest(token, endpoint, options = {}) {
-  const response = await fetch(
-    `${process.env.GITHUB_API_URL ?? "https://api.github.com"}/${endpoint}`,
-    {
-      ...options,
-      headers: {
-        accept: "application/vnd.github+json",
-        authorization: `Bearer ${token}`,
-        "content-type": "application/json",
-        "x-github-api-version": "2022-11-28",
-        ...options.headers,
-      },
-    },
+const RETRYABLE_CONNECTION_ERRORS = new Set([
+  "ECONNREFUSED",
+  "ECONNRESET",
+  "EPIPE",
+  "UND_ERR_CLOSED",
+  "UND_ERR_SOCKET",
+]);
+
+function canRepeatRequest(method, endpoint) {
+  if (method === "GET" || method === "PATCH" || method === "DELETE") {
+    return true;
+  }
+  return (
+    method === "POST" &&
+    /^repos\/[^/]+\/[^/]+\/statuses\/[^/?]+$/.test(endpoint)
   );
+}
+
+function isConnectionError(error) {
+  return (
+    error instanceof TypeError &&
+    RETRYABLE_CONNECTION_ERRORS.has(error.cause?.code)
+  );
+}
+
+function describeRequestError(error, method, endpoint) {
+  const cause = error?.cause;
+  let detail = "";
+  if (cause) {
+    detail = cause.code ? `${cause.code}: ${cause.message}` : cause.message;
+  }
+  const message = error instanceof Error ? error.message : String(error);
+  return `${message}${detail ? ` (${detail})` : ""} for ${method} ${endpoint}`;
+}
+
+export async function githubRequest(token, endpoint, options = {}) {
+  const method = (options.method ?? "GET").toUpperCase();
+  const url = `${process.env.GITHUB_API_URL ?? "https://api.github.com"}/${endpoint}`;
+  const init = {
+    ...options,
+    headers: {
+      accept: "application/vnd.github+json",
+      authorization: `Bearer ${token}`,
+      "content-type": "application/json",
+      "x-github-api-version": "2022-11-28",
+      ...options.headers,
+    },
+  };
+  let response;
+  try {
+    response = await fetch(url, init);
+  } catch (error) {
+    if (!isConnectionError(error) || !canRepeatRequest(method, endpoint)) {
+      throw new Error(describeRequestError(error, method, endpoint), {
+        cause: error,
+      });
+    }
+    console.warn(
+      `Retrying GitHub request: ${describeRequestError(error, method, endpoint)}`,
+    );
+    try {
+      response = await fetch(url, init);
+    } catch (retryError) {
+      throw new Error(describeRequestError(retryError, method, endpoint), {
+        cause: retryError,
+      });
+    }
+  }
   if (!response.ok) {
     const details = (await response.text()).slice(0, 500);
     throw new Error(`GitHub API ${response.status}: ${details}`);
@@ -365,19 +445,25 @@ export async function syncComment(
   );
 }
 
-function publishReport(reportDirectory, report, repository, headSha, token) {
+async function publishReport(
+  reportDirectory,
+  report,
+  repository,
+  headSha,
+  token,
+) {
   const tempDirectory = fs.mkdtempSync(
     path.join(os.tmpdir(), "frameshift-publish-"),
   );
   try {
     fs.cpSync(reportDirectory, tempDirectory, { recursive: true });
     writeThumbnails(tempDirectory, report);
-    git(["init", "-q"], { cwd: tempDirectory });
-    git(["checkout", "--orphan", "frameshift-report"], {
+    await git(["init", "-q"], { cwd: tempDirectory });
+    await git(["checkout", "--orphan", "frameshift-report"], {
       cwd: tempDirectory,
     });
-    git(["add", "."], { cwd: tempDirectory });
-    git(
+    await git(["add", "."], { cwd: tempDirectory });
+    await git(
       [
         "-c",
         "user.name=frameshift[bot]",
@@ -389,9 +475,9 @@ function publishReport(reportDirectory, report, repository, headSha, token) {
       ],
       { cwd: tempDirectory },
     );
-    const reportRef = git(["rev-parse", "HEAD"], {
-      cwd: tempDirectory,
-    }).trim();
+    const reportRef = (
+      await git(["rev-parse", "HEAD"], { cwd: tempDirectory })
+    ).trim();
     const runId = process.env.GITHUB_RUN_ID;
     const runAttempt = process.env.GITHUB_RUN_ATTEMPT;
     if (!/^[0-9]+$/.test(runId ?? "") || !/^[0-9]+$/.test(runAttempt ?? "")) {
@@ -399,8 +485,8 @@ function publishReport(reportDirectory, report, repository, headSha, token) {
     }
     const publishedAt = Math.floor(Date.now() / 1000);
     const reportTag = `frameshift-report/at-${publishedAt}/${headSha}/${runId}-${runAttempt}`;
-    git(["tag", reportTag], { cwd: tempDirectory });
-    git(
+    await git(["tag", reportTag], { cwd: tempDirectory });
+    await git(
       [
         "remote",
         "add",
@@ -418,7 +504,7 @@ function publishReport(reportDirectory, report, repository, headSha, token) {
       GIT_CONFIG_KEY_0: "http.https://github.com/.extraheader",
       GIT_CONFIG_VALUE_0: `AUTHORIZATION: basic ${authorization}`,
     };
-    git(["push", "origin", `refs/tags/${reportTag}`], {
+    await git(["push", "origin", `refs/tags/${reportTag}`], {
       cwd: tempDirectory,
       env: gitEnvironment,
     });
@@ -452,7 +538,7 @@ export async function main() {
   try {
     const report = await checkReportDirectory(reportDirectory);
     const changes = changeCount(report);
-    const reportRef = publishReport(
+    const reportRef = await publishReport(
       reportDirectory,
       report,
       repository,
