@@ -1,12 +1,16 @@
+import net from "node:net";
+
 import { PNG } from "pngjs";
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 
 import {
   COMMENT_MARKER,
   buildComment,
   buildViewerUrl,
   createThumbnail,
+  githubRequest,
   pruneExpiredReports,
+  run,
   shouldComment,
   syncComment,
 } from "./publish.mjs";
@@ -249,5 +253,178 @@ describe("Frameshift report publishing", () => {
       `repos/owner/repo/git/refs/tags/frameshift-report/at-${oldTimestamp}/old/report`,
       "repos/owner/repo/git/refs/tags/frameshift-report/legacy/report",
     ]);
+  });
+});
+
+function connectionReset() {
+  return new TypeError("fetch failed", {
+    cause: Object.assign(new Error("read ECONNRESET"), {
+      code: "ECONNRESET",
+    }),
+  });
+}
+
+function jsonResponse(body) {
+  return new Response(JSON.stringify(body), {
+    headers: { "content-type": "application/json" },
+    status: 200,
+  });
+}
+
+// Emulates a network path that silently drops idle flows: a reused
+// connection that sends data after more than two idle seconds is reset.
+async function startIdleDroppingServer() {
+  const sockets = new Set();
+  const state = { resets: 0 };
+  const server = net.createServer((socket) => {
+    sockets.add(socket);
+    socket.on("close", () => sockets.delete(socket));
+    socket.on("error", () => undefined);
+    let buffer = "";
+    let lastResponseAt;
+    socket.on("data", (chunk) => {
+      if (lastResponseAt && Date.now() - lastResponseAt > 2000) {
+        state.resets += 1;
+        socket.resetAndDestroy();
+        return;
+      }
+      buffer += chunk.toString("latin1");
+      let end = buffer.indexOf("\r\n\r\n");
+      while (end !== -1) {
+        buffer = buffer.slice(end + 4);
+        socket.write(
+          "HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-length: 2\r\n\r\n[]",
+        );
+        lastResponseAt = Date.now();
+        end = buffer.indexOf("\r\n\r\n");
+      }
+    });
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const { port } = server.address();
+  return {
+    close: () =>
+      new Promise((resolve) => {
+        for (const socket of sockets) socket.destroy();
+        server.close(resolve);
+      }),
+    state,
+    url: `http://127.0.0.1:${port}`,
+  };
+}
+
+describe("GitHub requests", () => {
+  const originalApiUrl = process.env.GITHUB_API_URL;
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+    if (originalApiUrl === undefined) delete process.env.GITHUB_API_URL;
+    else process.env.GITHUB_API_URL = originalApiUrl;
+  });
+
+  test("keeps idle connections usable while a slow command runs", async () => {
+    const server = await startIdleDroppingServer();
+    process.env.GITHUB_API_URL = server.url;
+    try {
+      await expect(
+        githubRequest("token", "repos/owner/repo/issues/1/comments"),
+      ).resolves.toEqual([]);
+      // Let undici return the socket to its pool, as the report check does
+      // between the pending status and the git commands.
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      await run("sleep", ["6"]);
+      await expect(
+        syncComment("token", "owner/repo", 1, undefined),
+      ).resolves.toBeUndefined();
+      expect(server.state.resets).toBe(0);
+    } finally {
+      await server.close();
+    }
+  }, 15_000);
+
+  test.each([
+    ["GET", "repos/owner/repo/issues/1/comments?per_page=100&page=1"],
+    ["PATCH", "repos/owner/repo/issues/comments/7"],
+    ["DELETE", "repos/owner/repo/issues/comments/7"],
+    ["POST", `repos/owner/repo/statuses/${"a".repeat(40)}`],
+  ])(
+    "retries %s %s once after a connection reset",
+    async (method, endpoint) => {
+      vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const fetch = vi
+        .fn()
+        .mockRejectedValueOnce(connectionReset())
+        .mockResolvedValueOnce(jsonResponse({ ok: true }));
+      vi.stubGlobal("fetch", fetch);
+
+      await expect(
+        githubRequest("token", endpoint, { method }),
+      ).resolves.toEqual({ ok: true });
+      expect(fetch).toHaveBeenCalledTimes(2);
+    },
+  );
+
+  test("does not retry creating a comment", async () => {
+    const fetch = vi
+      .fn()
+      .mockRejectedValueOnce(connectionReset())
+      .mockResolvedValueOnce(jsonResponse({ id: 1 }));
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(
+      githubRequest("token", "repos/owner/repo/issues/1/comments", {
+        body: "{}",
+        method: "POST",
+      }),
+    ).rejects.toThrow(
+      "fetch failed (ECONNRESET: read ECONNRESET) for POST repos/owner/repo/issues/1/comments",
+    );
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  test("reports the cause when the retry also fails", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const fetch = vi
+      .fn()
+      .mockRejectedValueOnce(connectionReset())
+      .mockRejectedValueOnce(connectionReset());
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(
+      githubRequest("token", "repos/owner/repo/issues/1/comments"),
+    ).rejects.toThrow(
+      "fetch failed (ECONNRESET: read ECONNRESET) for GET repos/owner/repo/issues/1/comments",
+    );
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  test("does not retry HTTP error responses", async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValue(new Response("unavailable", { status: 502 }));
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(
+      githubRequest("token", "repos/owner/repo/issues/1/comments"),
+    ).rejects.toThrow("GitHub API 502: unavailable");
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("command runner", () => {
+  test("includes stderr when a command fails", async () => {
+    await expect(
+      run(process.execPath, [
+        "-e",
+        "process.stderr.write('boom'); process.exit(3)",
+      ]),
+    ).rejects.toThrow(/exit code 3[\s\S]*boom/);
+  });
+
+  test("returns stdout", async () => {
+    await expect(
+      run(process.execPath, ["-e", "process.stdout.write('ok')"]),
+    ).resolves.toBe("ok");
   });
 });
